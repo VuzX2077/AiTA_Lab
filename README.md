@@ -1,19 +1,20 @@
-AiTA Lab Project
+# AiTA Lab Project
+
 ## 1. Project Overview
 
 The system is designed to manage and display information about a research lab, including members, publications, and user authentication with role-based access control.
 
+### Project Goals
+
 The main goal of this project is to demonstrate:
 
- - Client–Server Architecture
+- Client–Server Architecture
+- RESTful API design
+- Authentication and Authorization
+- Role-based Access Control (RBAC)
+- Basic Software Engineering documentation and design principles
 
- - RESTful API design
-
- - Authentication and Authorization
-
- - Role-based Access Control (RBAC)
-
- - Basic Software Engineering documentation and design principles
+---
 
 ## 2. System Architecture
 
@@ -23,181 +24,194 @@ The system follows a 3-tier architecture:
 Client (Browser)
       ↓
 Frontend (HTML, CSS, JavaScript)
-      ↓ HTTP Requests
+      ↓ HTTP Requests (REST API)
 Backend (Node.js + Express)
       ↓
 Database (SQLite)
 ```
 
+---
+
 ## 3. Technology Stack
-Frontend:
 
- - HTML5
+### Frontend
+- HTML5  
+- CSS3  
+- JavaScript (Vanilla JS)  
+- Fetch API  
 
- - CSS3
+### Backend
+- Node.js  
+- Express.js  
 
- - JavaScript (Vanilla JS)
+### Database
+- SQLite  
 
- - Fetch API
+### Authentication & Security
+- JWT (JSON Web Token)  
+- bcrypt (Password hashing)  
 
-Backend: 
+### Deployment
+- Frontend: GitHub Pages  
+- Backend: Render  
 
- - Node.js
-
- - Express.js
-
-Database:
-
- - SQLite
-
-Authentication & Security:
-
- - JWT (JSON Web Token)
-
- - bcrypt (Password hashing)
-
-Deployment:
-
- - Frontend: GitHub Pages
-
- - Backend: Render
+---
 
 ## 4. Main Features
-Public (Guest):
 
- - View homepage
+### Public (Guest)
+- View homepage  
+- View publications  
+- View members  
+- Register account  
+- Login  
 
- - View publications
+### Authenticated User
+- Logout  
+- View protected content  
 
- - View members
+### Admin
+- Create publication  
+- Update publication  
+- Delete publication  
+- Add member  
+- Delete member  
 
- - Register account
+---
 
- - Login
-
-User:
-
- - Logout
-
- - View protected content
-
-Admin:
-
- - Create publication
-
- - Update publication
-
- - Delete publication
-
- - Add member
-
- - Delete member
-
-## 5. Role-Based Access Control
+## 5. Role-Based Access Control (RBAC)
 
 The system implements two roles:
 
- - admin
+- `admin`
+- `user`
 
- - user
+### Access Rules
 
-Access rules:
+- Only **admin** can create, update, or delete data.
+- Normal **users** can only view data.
+- Unauthorized access is blocked using backend middleware.
 
-Only admin can create, update, or delete data.
-
-Normal users can only view data.
-
-Unauthorized access is blocked using middleware in backend.
+---
 
 ## 6. Database Design
-Users Table:
 
- - id (Primary Key)
+### Users Table
+- id (Primary Key)  
+- username  
+- password (hashed)  
+- role (admin / user)  
 
- - username
+### Publications Table
+- id (Primary Key)  
+- title  
+- author  
+- year  
+- description  
 
- - password (hashed)
+### Members Table
+- id (Primary Key)  
+- name  
+- position  
+- bio  
 
- - role (admin / user)
-
-Publications Table:
-
- - id (Primary Key)
-
- - title
-
- - author
-
- - year
-
- - description
-
-Members Table:
-
- - id (Primary Key)
-
- - name
-
- - position
-
- - bio
+---
 
 ## 7. API Endpoints
-Authentication:
 
- - POST /register
+### Authentication
+- `POST /register`
+- `POST /login`
 
- - POST /login
+### Publications
+- `GET /publications`
+- `POST /publications` (admin only)
+- `DELETE /publications/:id` (admin only)
 
-Publications:
+### Members
+- `GET /members`
+- `POST /members` (admin only)
 
- - GET /publications
-
- - POST /publications (admin only)
-
- - DELETE /publications/:id (admin only)
-
-Members:
-
- - GET /members
-
- - POST /members (admin only)
+---
 
 ## 8. Security Mechanism
 
-Passwords are hashed using bcrypt before storing in the database.
+- Passwords are hashed using **bcrypt** before storing in the database.
+- JWT is generated after successful login.
+- Protected routes require a valid token.
+- Role-based middleware checks user permissions before allowing access.
 
-JWT is generated after successful login.
-
-Protected routes require a valid token.
-
-Role-based middleware checks user permissions before allowing access.
+---
 
 ## 9. Installation & Setup
-1. Clone the repository
 
+### 1. Clone the repository
+
+```bash
 git clone <your-repository-url>
+```
 
-2. Install backend dependencies
+---
 
+## 9.1 Backend Setup (Development Mode)
+
+### Install backend dependencies
+
+```bash
 cd backend
 npm install
+```
 
-3. Run backend server
+### Run backend server
 
+```bash
 node server.js
+```
 
-Server runs on:
+Backend runs at:
+
+```
 http://localhost:3000
+```
 
-4. Open frontend
+---
 
-Open index.html in browser
-or use Live Server extension
+## 9.2 Frontend Setup (Development Mode)
 
-## 10. Project Structure
+### Navigate to frontend folder
 
-/project-root
+```bash
+cd frontend
+```
+
+You can run the frontend in one of the following ways:
+
+**Option 1:**
+- Open `index.html` directly in your browser.
+
+**Option 2 (Recommended):**
+- Use **Live Server extension** in VS Code.
+
+---
+
+## 10. Deployment (Production)
+
+### Backend
+Deployed on Render:
+```
+https://your-backend-url.onrender.com
+```
+
+### Frontend
+Deployed on GitHub Pages:
+```
+https://yourname.github.io/project-name/
+```
+
+---
+
+## 11. Project Structure
+
 ```
 project-root/
 │
