@@ -24,7 +24,13 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         localStorage.setItem("role", data.role);
 
         alert("Login successful!");
-        window.location.href = "index.html";
+        if (data.role === "admin") {
+            window.location.href = "adminDashboard.html";
+        } else if (data.role === "user") {
+            window.location.href = "userDashboard.html";
+        } else {
+            window.location.href = "index.html";
+        }
 
     } catch (error) {
         alert("Server error");

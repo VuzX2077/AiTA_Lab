@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>User Dashboard - AiTA Lab</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header>
+    <nav class="nav-container">
+        <div class="logo">
+            <a href="index.html">AiTA Lab</a>
+        </div>
+
+        <ul class="menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#">Publications</a></li>
+            <li><a href="#">Research</a></li>
+        </ul>
+
+        <div class="auth">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+</header>
+
+<main class="dashboard">
+
+    <section class="dashboard-section">
+        <h2>My Profile</h2>
+        <div id="profileInfo"></div>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Publications (Read Only)</h2>
+        <div id="publicationList"></div>
+    </section>
+
+</main>
+
+<script src="js/userDashboard.js"></script>
+</body>
+</html>

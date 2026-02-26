@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Admin Dashboard - AiTA Lab</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header>
+    <nav class="nav-container">
+        <div class="logo">
+            <a href="index.html">AiTA Lab</a>
+        </div>
+
+        <ul class="menu">
+            <li><a href="#">Manage Members</a></li>
+            <li><a href="#">Manage Publications</a></li>
+        </ul>
+
+        <div class="auth">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+</header>
+
+<main class="dashboard">
+
+    <section class="dashboard-section">
+        <h2>Create Publication</h2>
+
+        <form id="createPubForm">
+            <input type="text" id="title" placeholder="Title" required>
+            <textarea id="abstract" placeholder="Abstract" required></textarea>
+            <button type="submit">Create</button>
+        </form>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>All Publications</h2>
+        <div id="publicationList"></div>
+    </section>
+
+</main>
+
+<script src="js/adminDashboard.js"></script>
+</body>
+</html>
