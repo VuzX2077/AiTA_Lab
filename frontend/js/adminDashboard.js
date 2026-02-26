@@ -63,5 +63,6 @@ async function deletePub(id) {
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     window.location.href = "index.html";
 });
