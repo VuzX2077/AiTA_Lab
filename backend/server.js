@@ -1,22 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-require("dotenv").config();
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, "frontend")));
+app.use(express.static(path.join(__dirname, "..", "frontend")));
 
-// Routes
-const authRoutes = require("./backend/routes/auth");
+const authRoutes = require("./routes/auth");
 app.use("/api", authRoutes);
 
-const protectedRoutes = require("./backend/routes/protected");
+const protectedRoutes = require("./routes/protected");
 app.use("/api", protectedRoutes);
 
 app.listen(PORT, () => {

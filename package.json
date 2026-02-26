@@ -2,8 +2,9 @@
   "name": "aita_lab",
   "version": "1.0.0",
   "description": "The system is designed to manage and display information about a research lab, including members, publications, and user authentication with role-based access control.",
-  "main": "index.js",
+  "main": "backend/server.js",
   "scripts": {
+    "start": "node backend/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
