@@ -4,7 +4,7 @@ const { verifyToken, authorizeRole } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Route cho user & admin
-router.get("/profile", verifyToken, (req, res) => {
+router.get("/profile", verifyToken, authorizeRole(["user", "admin"]), (req, res) => {
     res.json({
         message: "This is protected profile data",
         user: req.user
