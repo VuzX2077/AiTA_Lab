@@ -1,32 +1,40 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const pool = require("../../db.js");
 
 const router = express.Router();
 
-// Fake user database (tạm thời)
-const users = [
-  { id: 1, email: "admin@test.com", password: "123456", role: "admin" },
-  { id: 2, email: "user@test.com", password: "123456", role: "user" }
-];
+router.post("/login", async (req, res) => {
+    const { email, password } = req.body;
 
-router.post("/login", (req, res) => {
-  const { email, password } = req.body;
+    try {
+        const result = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
+            [email]
+        );
 
-  const user = users.find(
-    u => u.email === email && u.password === password
-  );
+        if (result.rows.length === 0) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+        const user = result.rows[0];
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+        if (user.password !== password) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
 
-  res.json({ token, role: user.role });
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        res.json({ token, role: user.role });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 module.exports = router;
