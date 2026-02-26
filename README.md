@@ -133,7 +133,7 @@ Role-based middleware ensures that only authorized roles can perform restricted 
 
 ### Users Table
 - id (Primary Key)  
-- username (unique)  
+- email (unique)  
 - password (hashed)  
 - role (admin / user)  
 
@@ -288,39 +288,30 @@ https://yourname.github.io/project-name/
 ## 11. Project Structure
 
 ```
-project-root/
+AITA-Lab/
 │
 ├── frontend/
 │   ├── index.html
 │   ├── login.html
-│   ├── publications.html
-│   └── script.js
+│   ├── user-dashboard.html
+│   ├── admin-dashboard.html
+│   ├── css/
+│   └── js/
 │
 ├── backend/
 │   ├── server.js
+│   ├── db.js
 │   ├── routes/
 │   ├── controllers/
 │   ├── middleware/
 │   ├── config/
 │   └── .env
 │
+├── node_modules/
+├── .gitignore
+├── package.json
+├── package-lock.json
 └── README.md
 ```
 
 ---
-
-## 12. System Limitations
-
-- The system is designed for academic and small-scale usage.
-- Performance optimization and advanced security hardening are not fully implemented.
-- For large-scale production, additional monitoring and scaling strategies are required.
-
----
-
-## 13. Future Improvements
-
-- Add pagination and filtering features
-- Improve UI/UX design
-- Implement password reset functionality
-- Add logging and monitoring
-- Dockerize the application
