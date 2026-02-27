@@ -23,7 +23,6 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
 
-        alert("Login successful!");
         if (data.role === "admin") {
             window.location.href = "adminDashboard.html";
         } else if (data.role === "user") {

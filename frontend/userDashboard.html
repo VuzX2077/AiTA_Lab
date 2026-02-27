@@ -16,7 +16,7 @@
 
         <ul class="menu">
             <li><a href="index.html">Home</a></li>
-            <li><a href="#">Publications</a></li>
+            <li><a href="publications.html">Publications</a></li>
             <li><a href="#">Research</a></li>
         </ul>
 
@@ -29,12 +29,22 @@
 <main class="dashboard">
 
     <section class="dashboard-section">
-        <h2>My Profile</h2>
+        <h2>Authenticated Member</h2>
         <div id="profileInfo"></div>
     </section>
 
     <section class="dashboard-section">
-        <h2>Publications (Read Only)</h2>
+        <h2>Create New Publication</h2>
+        <form id="createPubForm">
+            <input type="text" id="title" placeholder="Title" required>
+            <input type="number" id="year" placeholder="Year" required>
+            <textarea id="description" placeholder="Description" required></textarea>
+            <button type="submit">Create</button>
+        </form>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Edit / Delete My Publications</h2>
         <div id="publicationList"></div>
     </section>
 

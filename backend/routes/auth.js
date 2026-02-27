@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const pool = require("../db.js");
 
 const router = express.Router();
@@ -7,10 +8,14 @@ const router = express.Router();
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+    }
+
     try {
         const result = await pool.query(
             "SELECT * FROM users WHERE email = $1",
-            [email]
+            [email.trim()]
         );
 
         if (result.rows.length === 0) {
@@ -19,7 +24,9 @@ router.post("/login", async (req, res) => {
 
         const user = result.rows[0];
 
-        if (user.password !== password) {
+        const validPassword = await bcrypt.compare(password, user.password);
+
+        if (!validPassword) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 

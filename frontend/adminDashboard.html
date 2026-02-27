@@ -16,7 +16,7 @@
 
         <ul class="menu">
             <li><a href="#">Manage Members</a></li>
-            <li><a href="#">Manage Publications</a></li>
+            <li><a href="publications.html">Publications</a></li>
         </ul>
 
         <div class="auth">
@@ -28,17 +28,33 @@
 <main class="dashboard">
 
     <section class="dashboard-section">
-        <h2>Create Publication</h2>
+        <h2>Review & Approve Publications</h2>
+        <div id="pendingPublicationList"></div>
+    </section>
 
-        <form id="createPubForm">
-            <input type="text" id="title" placeholder="Title" required>
-            <textarea id="abstract" placeholder="Abstract" required></textarea>
-            <button type="submit">Create</button>
+    <section class="dashboard-section">
+        <h2>Add New Member</h2>
+        <form id="createMemberForm">
+            <input type="text" id="memberName" placeholder="Full Name" required>
+            <input type="email" id="memberEmail" placeholder="Member Email" required>
+            <input type="password" id="memberPassword" placeholder="Temporary Password" required>
+            <input type="text" id="memberPosition" placeholder="Position">
+            <textarea id="memberBio" placeholder="Bio"></textarea>
+            <select id="memberRole">
+                <option value="user" selected>User</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button type="submit">Add Member</button>
         </form>
     </section>
 
     <section class="dashboard-section">
-        <h2>All Publications</h2>
+        <h2>Manage Members</h2>
+        <div id="memberList"></div>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>All Publications (Delete if necessary)</h2>
         <div id="publicationList"></div>
     </section>
 
