@@ -313,14 +313,15 @@ AITA-Lab/
 │
 ├── backend/
 │   ├── server.js
+│   ├── app.js
 │   ├── db.js
+│   ├── config/
 │   ├── routes/
 │   ├── controllers/
+│   ├── services/
 │   ├── middleware/
-│   ├── config/
 │   └── .env
-│
-├── node_modules/
+|
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
