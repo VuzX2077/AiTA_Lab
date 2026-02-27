@@ -1,42 +1,13 @@
-const pool = require("../db.js");
-
-let memberSchemaInitialized = false;
-
-async function ensureMemberSchema() {
-    if (memberSchemaInitialized) {
-        return;
-    }
-
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS members (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            position TEXT,
-            bio TEXT,
-            user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
-    memberSchemaInitialized = true;
-}
+const memberService = require("../services/memberService");
 
 async function getProfile(req, res) {
     try {
-        await ensureMemberSchema();
-
-        const profile = await pool.query(
-            `
-            SELECT m.id, m.name, m.position, m.bio
-            FROM members m
-            WHERE m.user_id = $1
-            `,
-            [req.user.id]
-        );
+        const profile = await memberService.getProfileByUserId(req.user.id);
 
         res.json({
             message: "This is protected profile data",
             user: req.user,
-            member: profile.rows[0] || null
+            member: profile
         });
     } catch (err) {
         console.error(err);
@@ -45,6 +16,5 @@ async function getProfile(req, res) {
 }
 
 module.exports = {
-    ensureMemberSchema,
     getProfile
 };

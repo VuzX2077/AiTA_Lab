@@ -1,11 +1,8 @@
-const bcrypt = require("bcrypt");
-const pool = require("../db.js");
-const publicationService = require("../services/publicationService");
-const { ensureMemberSchema } = require("./memberController");
+const adminService = require("../services/adminService");
 
 async function getPendingPublications(req, res) {
     try {
-        const rows = await publicationService.getPendingPublications();
+        const rows = await adminService.getPendingPublications();
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -20,7 +17,7 @@ async function approvePublication(req, res) {
     }
 
     try {
-        const approved = await publicationService.approvePublication(publicationId);
+        const approved = await adminService.approvePublication(publicationId);
         if (!approved) {
             return res.status(404).json({ message: "Publication not found" });
         }
@@ -39,7 +36,7 @@ async function deletePublication(req, res) {
     }
 
     try {
-        const deleted = await publicationService.deletePublicationByAdmin(publicationId);
+        const deleted = await adminService.deletePublication(publicationId);
         if (!deleted) {
             return res.status(404).json({ message: "Publication not found" });
         }
@@ -53,17 +50,8 @@ async function deletePublication(req, res) {
 
 async function getMembers(req, res) {
     try {
-        await ensureMemberSchema();
-        const result = await pool.query(
-            `
-            SELECT u.id AS user_id, u.email, u.role, m.id AS member_id, m.name, m.position, m.bio
-            FROM users u
-            LEFT JOIN members m ON m.user_id = u.id
-            ORDER BY u.id ASC
-            `
-        );
-
-        res.json(result.rows);
+        const rows = await adminService.getMembers();
+        res.json(rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Failed to load members" });
@@ -78,53 +66,27 @@ async function createMember(req, res) {
         return res.status(400).json({ message: "Email, password and name are required" });
     }
 
-    const client = await pool.connect();
     try {
-        await ensureMemberSchema();
-        await client.query("BEGIN");
+        const created = await adminService.createMember({
+            email: email.trim(),
+            password,
+            role: memberRole,
+            name: name.trim(),
+            position: position ? position.trim() : "",
+            bio: bio ? bio.trim() : ""
+        });
 
-        const exists = await client.query(
-            "SELECT id FROM users WHERE email = $1",
-            [email.trim()]
-        );
-
-        if (exists.rows.length > 0) {
-            await client.query("ROLLBACK");
+        if (created.conflict) {
             return res.status(409).json({ message: "Email already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userResult = await client.query(
-            `
-            INSERT INTO users (email, password, role)
-            VALUES ($1, $2, $3)
-            RETURNING id, email, role
-            `,
-            [email.trim(), hashedPassword, memberRole]
-        );
-
-        const userId = userResult.rows[0].id;
-        const memberResult = await client.query(
-            `
-            INSERT INTO members (name, position, bio, user_id)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id, name, position, bio, user_id
-            `,
-            [name.trim(), position ? position.trim() : "", bio ? bio.trim() : "", userId]
-        );
-
-        await client.query("COMMIT");
-
         res.status(201).json({
-            user: userResult.rows[0],
-            member: memberResult.rows[0]
+            user: created.user,
+            member: created.member
         });
     } catch (err) {
-        await client.query("ROLLBACK");
         console.error(err);
         res.status(500).json({ message: "Failed to add member" });
-    } finally {
-        client.release();
     }
 }
 
@@ -138,27 +100,17 @@ async function deleteMember(req, res) {
         return res.status(400).json({ message: "You cannot delete your own admin account" });
     }
 
-    const client = await pool.connect();
     try {
-        await ensureMemberSchema();
-        await client.query("BEGIN");
+        const deleted = await adminService.deleteMember(userId);
 
-        await client.query("DELETE FROM members WHERE user_id = $1", [userId]);
-        const result = await client.query("DELETE FROM users WHERE id = $1 RETURNING id", [userId]);
-
-        if (result.rows.length === 0) {
-            await client.query("ROLLBACK");
+        if (!deleted) {
             return res.status(404).json({ message: "Member not found" });
         }
 
-        await client.query("COMMIT");
         res.json({ message: "Member deleted" });
     } catch (err) {
-        await client.query("ROLLBACK");
         console.error(err);
         res.status(500).json({ message: "Failed to delete member" });
-    } finally {
-        client.release();
     }
 }
 
