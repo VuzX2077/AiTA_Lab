@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const pool = require("../db.js");
+const { ensurePublicationSchema } = require("./publicationService");
 
 let memberSchemaInitialized = false;
 
@@ -126,10 +127,80 @@ async function getProfileByUserId(userId) {
     return profile.rows[0] || null;
 }
 
+async function getMyPublications(userId) {
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        `
+        SELECT id, title, year, description, status, author_id, created_at
+        FROM publications
+        WHERE author_id = $1
+        ORDER BY created_at DESC
+        `,
+        [userId]
+    );
+
+    return result.rows;
+}
+
+async function createPublication({ title, year, description, authorId }) {
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        `
+        INSERT INTO publications (title, author_id, year, description, status)
+        VALUES ($1, $2, $3, $4, 'pending')
+        RETURNING id, title, year, description, status, author_id, created_at
+        `,
+        [title, authorId, year, description]
+    );
+
+    return result.rows[0];
+}
+
+async function updateOwnPublication({ publicationId, userId, title, year, description }) {
+    await ensurePublicationSchema();
+    const ownPublication = await pool.query(
+        "SELECT id FROM publications WHERE id = $1 AND author_id = $2",
+        [publicationId, userId]
+    );
+
+    if (ownPublication.rows.length === 0) {
+        return null;
+    }
+
+    const updated = await pool.query(
+        `
+        UPDATE publications
+        SET title = $1,
+            year = $2,
+            description = $3,
+            status = 'pending'
+        WHERE id = $4
+        RETURNING id, title, year, description, status, author_id, created_at
+        `,
+        [title, year, description, publicationId]
+    );
+
+    return updated.rows[0];
+}
+
+async function deleteOwnPublication(publicationId, userId) {
+    await ensurePublicationSchema();
+    const deleted = await pool.query(
+        "DELETE FROM publications WHERE id = $1 AND author_id = $2 RETURNING id",
+        [publicationId, userId]
+    );
+
+    return deleted.rows.length > 0;
+}
+
 module.exports = {
     ensureMemberSchema,
     getMembers,
     createMemberWithUser,
     deleteMemberByUserId,
-    getProfileByUserId
+    getProfileByUserId,
+    getMyPublications,
+    createPublication,
+    updateOwnPublication,
+    deleteOwnPublication
 };

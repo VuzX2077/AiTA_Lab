@@ -1,16 +1,45 @@
-const publicationService = require("./publicationService");
+const pool = require("../db.js");
+const { ensurePublicationSchema } = require("./publicationService");
 const memberService = require("./memberService");
 
 async function getPendingPublications() {
-    return publicationService.getPendingPublications();
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        `
+        SELECT p.id, p.title, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        FROM publications p
+        LEFT JOIN users u ON u.id = p.author_id
+        WHERE p.status = 'pending'
+        ORDER BY p.created_at DESC
+        `
+    );
+
+    return result.rows;
 }
 
 async function approvePublication(publicationId) {
-    return publicationService.approvePublication(publicationId);
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        `
+        UPDATE publications
+        SET status = 'approved'
+        WHERE id = $1
+        RETURNING id, title, year, description, status, author_id, created_at
+        `,
+        [publicationId]
+    );
+
+    return result.rows[0] || null;
 }
 
 async function deletePublication(publicationId) {
-    return publicationService.deletePublicationByAdmin(publicationId);
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        "DELETE FROM publications WHERE id = $1 RETURNING id",
+        [publicationId]
+    );
+
+    return result.rows.length > 0;
 }
 
 async function getMembers() {
