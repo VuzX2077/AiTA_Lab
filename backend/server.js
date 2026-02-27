@@ -11,11 +11,15 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "frontend")));
 
-const authRoutes = require("./routes/auth");
-app.use("/api", authRoutes);
+const authRoutes = require("./routes/authRoutes");
+const publicationRoutes = require("./routes/publicationRoutes");
+const memberRoutes = require("./routes/memberRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
-const protectedRoutes = require("./routes/protected");
-app.use("/api", protectedRoutes);
+app.use("/api", authRoutes);
+app.use("/api", publicationRoutes);
+app.use("/api", memberRoutes);
+app.use("/api", adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

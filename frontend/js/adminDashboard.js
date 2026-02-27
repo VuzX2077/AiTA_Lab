@@ -125,7 +125,7 @@ async function approvePublication(id) {
 
 async function deletePublication(id) {
     try {
-        await request(`/api/publications/${id}`, { method: "DELETE" });
+        await request(`/api/admin/publications/${id}`, { method: "DELETE" });
         await loadPendingPublications();
         await loadAllPublications();
     } catch (error) {
