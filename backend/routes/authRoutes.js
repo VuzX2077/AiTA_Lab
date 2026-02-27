@@ -5,6 +5,10 @@ const pool = require("../db.js");
 
 const router = express.Router();
 
+function isBcryptHash(passwordValue) {
+    return typeof passwordValue === "string" && /^\$2[aby]\$\d{2}\$/.test(passwordValue);
+}
+
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -23,7 +27,21 @@ router.post("/login", async (req, res) => {
         }
 
         const user = result.rows[0];
-        const validPassword = await bcrypt.compare(password, user.password);
+        let validPassword = false;
+
+        if (isBcryptHash(user.password)) {
+            validPassword = await bcrypt.compare(password, user.password);
+        } else {
+            validPassword = password === user.password;
+
+            if (validPassword) {
+                const hashedPassword = await bcrypt.hash(password, 10);
+                await pool.query(
+                    "UPDATE users SET password = $1 WHERE id = $2",
+                    [hashedPassword, user.id]
+                );
+            }
+        }
 
         if (!validPassword) {
             return res.status(401).json({ message: "Invalid credentials" });
