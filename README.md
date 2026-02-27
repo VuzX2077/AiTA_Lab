@@ -74,19 +74,22 @@ PostgreSQL (Cloud Database)
 - View homepage  
 - View publications  
 - View members  
-- Register account  
-- Login  
+- Cannot login as member without credentials
+- Cannot create, edit, or delete any data
 
-### Authenticated User
-- Logout  
-- View protected content  
+### Authenticated Member
+- Login / Logout  
+- Create new publication  
+- Eite their own publication  
+- Delete their own publication
+- Cannot approve publications
+- Cannote manage members
 
 ### Admin
-- Create publication  
-- Update publication  
-- Delete publication  
-- Add member  
-- Delete member  
+- Review and approve publications
+- Delete publication (if necessary)
+- Add new members  
+- Delete members  
 
 ---
 
@@ -95,37 +98,28 @@ PostgreSQL (Cloud Database)
 The system supports three access levels:
 
 1. Guest (Unauthenticated user)
-   - Can view public content only.
-   - Cannot access protected endpoints.
+   - Can access public endpoints only
+   - Cannot access protected routes
+   - Has no permission to modify any data
 
-2. User (Authenticated user)
-   - Can view protected content.
-   - Cannot modify system data.
+2. Member (Authenticated user)
+   - Must provide a valid JWT token.
+   - Can create, update and delete publications created my themselves only
+   - Cannot approve publications
+   - Cannot add or remove members
 
 3. Admin
-   - Full access to create, update, and delete system data.
+   - Must provide a valid JWT token.
+   - Can approve or reject publications.
+   - Can delete publications
+   - Can add new members
+   - Can remove existing members
 
 ### Access Rules
-
-Access control is enforced using authentication and role-based authorization middleware in the backend.
-
-1. Guest (Unauthenticated)
-   - Can access public endpoints only.
-   - Cannot access protected routes.
-   - Does not have permission to modify any data.
-
-2. User (Authenticated)
-   - Must provide a valid JWT token.
-   - Can access protected read-only endpoints.
-   - Cannot create, update, or delete system data.
-
-3. Admin
-   - Must provide a valid JWT token.
-   - Has full access to all protected endpoints.
-   - Can create, update, and delete publications and members.
-
-All protected routes require authentication.
-Role-based middleware ensures that only authorized roles can perform restricted operations.
+ - All protected routes require authentication via JWT.
+ - Authorization middleware verifies user role.
+ - Additional ownership validation ensures members can only modify their own publications.
+ - Admin-only routes are strictly protected by role-check middleware.
 
 ---
 
@@ -135,37 +129,55 @@ Role-based middleware ensures that only authorized roles can perform restricted 
 - id (Primary Key)  
 - email (unique)  
 - password (hashed)  
-- role (admin / user)  
+- role (admin / user)
+- create at
 
 ### Publications Table
 - id (Primary Key)  
 - title  
-- author  
+- author_id (Foreign Key -> Users.id) 
 - year  
-- description  
+- description
+- status (pending/approved/rejected)
+- create at
 
 ### Members Table
 - id (Primary Key)  
 - name  
 - position  
-- bio  
+- bio
+- user_id (Foreign Key -> Users.id)
 
 ---
 
 ## 7. API Endpoints
 
 ### Authentication
-- `POST /register`
+- `POST /register` (Admin only - create member account)
 - `POST /login`
 
 ### Publications
-- `GET /publications`
-- `POST /publications` (admin only)
-- `DELETE /publications/:id` (admin only)
+
+#### Public
+- `GET /publications` (Approved publications only)
+
+#### Member
+- `POST /publications`
+- `PUT /publications/:id` (only if owner)
+- `DELETE /publications/:id` (only if owner)
+
+#### Admin
+- `GET /admin/publications` (view all publications including pending)
+- `PATCH /admin/publication/:id/approve`
+- `DELETE /admin/publication/:id`
 
 ### Members
+#### Public
 - `GET /members`
-- `POST /members` (admin only)
+
+#### Admin Only
+- `POST /members`
+- `DELETE /members`
 
 ---
 
@@ -175,6 +187,7 @@ Role-based middleware ensures that only authorized roles can perform restricted 
 - JWT is generated after successful login.
 - Protected routes require a valid token.
 - Role-based middleware checks user permissions before allowing access.
+- Ownership validation ensures members can only modify their own publications.
 - Environment variables are used to protect database credentials.
 
 ---
