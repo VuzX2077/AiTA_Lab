@@ -131,7 +131,7 @@ async function getMyPublications(userId) {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        SELECT id, title, year, description, status, author_id, created_at
+        SELECT id, title, authors, journal, doi, year, description, status, author_id, created_at
         FROM publications
         WHERE author_id = $1
         ORDER BY created_at DESC
@@ -142,21 +142,21 @@ async function getMyPublications(userId) {
     return result.rows;
 }
 
-async function createPublication({ title, year, description, authorId }) {
+async function createPublication({ title, authors, journal, doi, year, description, authorId }) {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        INSERT INTO publications (title, author_id, year, description, status)
-        VALUES ($1, $2, $3, $4, 'pending')
-        RETURNING id, title, year, description, status, author_id, created_at
+        INSERT INTO publications (title, authors, journal, doi, author_id, year, description, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, authorId, year, description]
+        [title, authors, journal, doi, authorId, year, description]
     );
 
     return result.rows[0];
 }
 
-async function updateOwnPublication({ publicationId, userId, title, year, description }) {
+async function updateOwnPublication({ publicationId, userId, title, authors, journal, doi, year, description }) {
     await ensurePublicationSchema();
     const ownPublication = await pool.query(
         "SELECT id FROM publications WHERE id = $1 AND author_id = $2",
@@ -171,13 +171,16 @@ async function updateOwnPublication({ publicationId, userId, title, year, descri
         `
         UPDATE publications
         SET title = $1,
-            year = $2,
-            description = $3,
+            authors = $2,
+            journal = $3,
+            doi = $4,
+            year = $5,
+            description = $6,
             status = 'pending'
-        WHERE id = $4
-        RETURNING id, title, year, description, status, author_id, created_at
+        WHERE id = $7
+        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, year, description, publicationId]
+        [title, authors, journal, doi, year, description, publicationId]
     );
 
     return updated.rows[0];

@@ -106,7 +106,10 @@ async function loadMyPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
+                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>
+                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
                     <p>${pub.description}</p>
                 </div>
                 <div>
@@ -145,22 +148,26 @@ if (isAuthValid) {
         e.preventDefault();
 
         const title = document.getElementById("title").value.trim();
+        const authors = document.getElementById("authors").value.trim();
+        const journal = document.getElementById("journal").value.trim();
         const year = document.getElementById("year").value;
         const description = document.getElementById("description").value.trim();
+        const doiInput = document.getElementById("doi").value.trim();
+        const doi = doiInput || null;
         const submitButton = e.target.querySelector("button[type='submit']");
 
         try {
             if (editingPublicationId) {
                 await request(`/api/publications/${editingPublicationId}`, {
                     method: "PUT",
-                    body: JSON.stringify({ title, year, description })
+                    body: JSON.stringify({ title, authors, journal, year, description, doi })
                 });
                 editingPublicationId = null;
                 submitButton.textContent = "Create";
             } else {
                 await request("/api/publications", {
                     method: "POST",
-                    body: JSON.stringify({ title, year, description })
+                    body: JSON.stringify({ title, authors, journal, year, description, doi })
                 });
             }
 
@@ -175,8 +182,11 @@ if (isAuthValid) {
 function startEditPublication(publication) {
     editingPublicationId = publication.id;
     document.getElementById("title").value = publication.title;
+    document.getElementById("authors").value = publication.authors || "";
+    document.getElementById("journal").value = publication.journal || "";
     document.getElementById("year").value = publication.year || "";
     document.getElementById("description").value = publication.description;
+    document.getElementById("doi").value = publication.doi || "";
     document.querySelector("#createPubForm button[type='submit']").textContent = "Update";
 }
 

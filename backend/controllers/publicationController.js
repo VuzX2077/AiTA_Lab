@@ -2,10 +2,10 @@ const publicationService = require("../services/publicationService");
 const memberService = require("../services/memberService");
 
 function parsePublicationPayload(req, res) {
-    const { title, year, description } = req.body;
+    const { title, authors, journal, year, description, doi } = req.body;
 
-    if (!title || !description || !year) {
-        res.status(400).json({ message: "Title, year and description are required" });
+    if (!title || !authors || !journal || !description || !year) {
+        res.status(400).json({ message: "Title, authors, journal, year and description are required" });
         return null;
     }
 
@@ -17,6 +17,9 @@ function parsePublicationPayload(req, res) {
 
     return {
         title: title.trim(),
+        authors: authors.trim(),
+        journal: journal.trim(),
+        doi: doi ? doi.trim() : null,
         year: parsedYear,
         description: description.trim()
     };

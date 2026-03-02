@@ -67,7 +67,10 @@ async function loadPendingPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong></p>
+                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>
+                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
                     <p>${pub.description}</p>
                     <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
                 </div>
@@ -97,7 +100,10 @@ async function loadAllPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
+                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>
+                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
                     <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
                 </div>
                 <button onclick="deletePublication(${pub.id})">Delete</button>
