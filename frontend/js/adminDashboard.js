@@ -53,6 +53,7 @@ async function loadPendingPublications() {
                 </div>
                 <div>
                     <button onclick="approvePublication(${pub.id})">Approve</button>
+                    <button onclick="rejectPublication(${pub.id})">Reject</button>
                     <button onclick="deletePublication(${pub.id})">Delete</button>
                 </div>
             </div>
@@ -123,6 +124,16 @@ async function approvePublication(id) {
     }
 }
 
+async function rejectPublication(id) {
+    try {
+        await request(`/api/publications/${id}/reject`, { method: "PATCH" });
+        await loadPendingPublications();
+        await loadAllPublications();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 async function deletePublication(id) {
     try {
         await request(`/api/admin/publications/${id}`, { method: "DELETE" });
@@ -166,6 +177,7 @@ async function deleteMember(id) {
 }
 
 window.approvePublication = approvePublication;
+window.rejectPublication = rejectPublication;
 window.deletePublication = deletePublication;
 window.deleteMember = deleteMember;
 

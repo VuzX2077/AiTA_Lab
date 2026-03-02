@@ -32,6 +32,21 @@ async function approvePublication(publicationId) {
     return result.rows[0] || null;
 }
 
+async function rejectPublication(publicationId) {
+    await ensurePublicationSchema();
+    const result = await pool.query(
+        `
+        UPDATE publications
+        SET status = 'rejected'
+        WHERE id = $1
+        RETURNING id, title, year, description, status, author_id, created_at
+        `,
+        [publicationId]
+    );
+
+    return result.rows[0] || null;
+}
+
 async function deletePublication(publicationId) {
     await ensurePublicationSchema();
     const result = await pool.query(
@@ -57,6 +72,7 @@ async function deleteMember(userId) {
 module.exports = {
     getPendingPublications,
     approvePublication,
+    rejectPublication,
     deletePublication,
     getMembers,
     createMember,

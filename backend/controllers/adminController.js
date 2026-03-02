@@ -29,6 +29,25 @@ async function approvePublication(req, res) {
     }
 }
 
+async function rejectPublication(req, res) {
+    const publicationId = Number(req.params.id);
+    if (!Number.isInteger(publicationId)) {
+        return res.status(400).json({ message: "Invalid publication id" });
+    }
+
+    try {
+        const rejected = await adminService.rejectPublication(publicationId);
+        if (!rejected) {
+            return res.status(404).json({ message: "Publication not found" });
+        }
+
+        res.json(rejected);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to reject publication" });
+    }
+}
+
 async function deletePublication(req, res) {
     const publicationId = Number(req.params.id);
     if (!Number.isInteger(publicationId)) {
@@ -117,6 +136,7 @@ async function deleteMember(req, res) {
 module.exports = {
     getPendingPublications,
     approvePublication,
+    rejectPublication,
     deletePublication,
     getMembers,
     createMember,
