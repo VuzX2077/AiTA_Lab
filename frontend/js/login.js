@@ -1,3 +1,40 @@
+function clearAuth() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+}
+
+function parseJwt(token) {
+    try {
+        return JSON.parse(atob(token.split(".")[1]));
+    } catch (error) {
+        return null;
+    }
+}
+
+function getValidSession() {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (!token) {
+        return null;
+    }
+
+    const payload = parseJwt(token);
+    const isExpired = !payload || !payload.exp || payload.exp * 1000 <= Date.now();
+
+    if (isExpired) {
+        clearAuth();
+        return null;
+    }
+
+    return { role };
+}
+
+const session = getValidSession();
+if (session) {
+    window.location.href = session.role === "admin" ? "adminDashboard.html" : "userDashboard.html";
+}
+
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 

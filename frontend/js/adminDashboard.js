@@ -1,16 +1,32 @@
+function clearAuth() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+}
+
 const token = localStorage.getItem("token");
+let isAuthValid = true;
 
 if (!token) {
+    isAuthValid = false;
     window.location.href = "login.html";
 }
 
 function parseJwt(token) {
-    return JSON.parse(atob(token.split('.')[1]));
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch (error) {
+        return null;
+    }
 }
 
 const user = parseJwt(token);
 
-if (user.role !== "admin") {
+if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
+    clearAuth();
+    isAuthValid = false;
+    window.location.href = "login.html";
+} else if (user.role !== "admin") {
+    isAuthValid = false;
     window.location.href = "userDashboard.html";
 }
 
@@ -27,6 +43,10 @@ async function request(url, options = {}) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            clearAuth();
+            window.location.href = "login.html";
+        }
         throw new Error(data.message || "Request failed");
     }
 
@@ -144,28 +164,30 @@ async function deletePublication(id) {
     }
 }
 
-document.getElementById("createMemberForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+if (isAuthValid) {
+    document.getElementById("createMemberForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    const email = document.getElementById("memberEmail").value.trim();
-    const password = document.getElementById("memberPassword").value;
-    const role = document.getElementById("memberRole").value;
-    const name = document.getElementById("memberName").value.trim();
-    const position = document.getElementById("memberPosition").value.trim();
-    const bio = document.getElementById("memberBio").value.trim();
+        const email = document.getElementById("memberEmail").value.trim();
+        const password = document.getElementById("memberPassword").value;
+        const role = document.getElementById("memberRole").value;
+        const name = document.getElementById("memberName").value.trim();
+        const position = document.getElementById("memberPosition").value.trim();
+        const bio = document.getElementById("memberBio").value.trim();
 
-    try {
-        await request("/api/members", {
-            method: "POST",
-            body: JSON.stringify({ email, password, role, name, position, bio })
-        });
+        try {
+            await request("/api/members", {
+                method: "POST",
+                body: JSON.stringify({ email, password, role, name, position, bio })
+            });
 
-        document.getElementById("createMemberForm").reset();
-        await loadMembers();
-    } catch (error) {
-        alert(error.message);
-    }
-});
+            document.getElementById("createMemberForm").reset();
+            await loadMembers();
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+}
 
 async function deleteMember(id) {
     try {
@@ -181,12 +203,13 @@ window.rejectPublication = rejectPublication;
 window.deletePublication = deletePublication;
 window.deleteMember = deleteMember;
 
-loadPendingPublications();
-loadAllPublications();
-loadMembers();
+if (isAuthValid) {
+    loadPendingPublications();
+    loadAllPublications();
+    loadMembers();
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "index.html";
-});
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        clearAuth();
+        window.location.href = "index.html";
+    });
+}
