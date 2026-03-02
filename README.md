@@ -138,6 +138,7 @@ The system supports three access levels:
 - author_id (Foreign Key -> Users.id) 
 - year  
 - description
+- DOI
 - status (pending/approved/rejected)
 - create at
 
