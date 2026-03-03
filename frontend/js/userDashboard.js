@@ -34,6 +34,25 @@ if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
 let editingPublicationId = null;
 let myPublications = [];
 
+const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
+const dashboardPanels = document.querySelectorAll(".dashboard-panel");
+
+function showSection(sectionId) {
+    dashboardPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.id === sectionId);
+    });
+
+    sidebarLinks.forEach((link) => {
+        link.classList.toggle("active", link.dataset.target === sectionId);
+    });
+}
+
+sidebarLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+        showSection(link.dataset.target);
+    });
+});
+
 async function request(url, options = {}) {
     const response = await fetch(url, {
         ...options,
@@ -95,6 +114,7 @@ async function loadMyPublications() {
     try {
         const data = await request("/api/my-publications", { method: "GET" });
         myPublications = data;
+        updateOverviewStats(data);
         const list = document.getElementById("publicationList");
 
         if (data.length === 0) {
@@ -143,6 +163,18 @@ async function loadMyPublications() {
     }
 }
 
+function updateOverviewStats(publications) {
+    const total = publications.length;
+    const approved = publications.filter((pub) => String(pub.status || "").toLowerCase() === "approved").length;
+    const pending = publications.filter((pub) => String(pub.status || "").toLowerCase() === "pending").length;
+    const rejected = publications.filter((pub) => String(pub.status || "").toLowerCase() === "rejected").length;
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statApproved").textContent = approved;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statRejected").textContent = rejected;
+}
+
 if (isAuthValid) {
     document.getElementById("createPubForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -181,6 +213,7 @@ if (isAuthValid) {
 
 function startEditPublication(publication) {
     editingPublicationId = publication.id;
+    showSection("submitSection");
     document.getElementById("title").value = publication.title;
     document.getElementById("authors").value = publication.authors || "";
     document.getElementById("journal").value = publication.journal || "";
@@ -210,6 +243,7 @@ window.startEditPublication = startEditPublication;
 
 if (isAuthValid) {
     loadMyPublications();
+    showSection("profileSection");
 
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", () => {

@@ -2,331 +2,198 @@
 
 ## 1. Project Overview
 
-The system is designed to manage and display information about a research lab, including members, publications, and user authentication with role-based access control.
+AiTA Lab is a web application for managing research publications and members with role-based access control.
 
-### Project Goals
-
-The main goal of this project is to demonstrate:
-
-- Client–Server Architecture
-- RESTful API design
-- Authentication and Authorization
-- Role-based Access Control (RBAC)
-- Basic Software Engineering documentation and design principles
+- Public users can view approved publications.
+- Authenticated members can create/update/delete their own publications.
+- Admin can approve/reject publications and manage members.
 
 ---
 
 ## 2. System Architecture
 
-The system follows a 3-tier architecture:
-
-```
-Client (Browser)
-      ↓
-Frontend (HTML, CSS, JavaScript)
-      ↓ HTTP Requests (REST API)
-Backend (Node.js + Express)
-      ↓
-Cloud Database (PostgreSQL)
-```
-
-### Production Architecture
-
-```
-Frontend (GitHub Pages)
+```text
+Browser (Frontend: HTML/CSS/JS)
+        ↓ HTTP (REST API)
+Node.js + Express (Backend)
         ↓
-Backend (Render)
-        ↓
-PostgreSQL (Cloud Database)
+PostgreSQL
 ```
+
+The backend also serves static frontend files from `frontend/`.
 
 ---
 
 ## 3. Technology Stack
 
 ### Frontend
-- HTML5  
-- CSS3  
-- JavaScript (Vanilla JS)  
-- Fetch API  
+- HTML5
+- CSS3
+- Vanilla JavaScript (Fetch API)
 
 ### Backend
-- Node.js  
-- Express.js  
+- Node.js
+- Express
 
 ### Database
-- PostgreSQL (Cloud-hosted)
+- PostgreSQL (`pg`)
 
-### Authentication & Security
-- JWT (JSON Web Token)  
-- bcrypt (Password hashing)  
-
-### Deployment
-- Frontend: GitHub Pages  
-- Backend: Render  
-- Database: Render PostgreSQL / Railway / Supabase  
+### Security
+- JWT (`jsonwebtoken`)
+- Password hashing (`bcrypt`)
 
 ---
 
 ## 4. Main Features
 
-### Public (Guest)
-- View homepage  
-- View publications  
-- View members  
-- Cannot login as member without credentials
-- Cannot create, edit, or delete any data
+### Public
+- View homepage
+- View approved publications
 
-### Authenticated Member
-- Login / Logout  
-- Create new publication  
-- Eite their own publication  
-- Delete their own publication
-- Cannot approve publications
-- Cannote manage members
+### Member (`role: user`)
+- Login / Logout
+- View profile
+- View own publications
+- Create publication
+- Edit/Delete own publication only
 
-### Admin
-- Review and approve publications
-- Delete publication (if necessary)
-- Add new members  
-- Delete members  
+### Admin (`role: admin`)
+- Review pending publications
+- Approve/Reject publications
+- Delete publications
+- Add/Delete members
 
 ---
 
-## 5. Role-Based Access Control (RBAC)
+## 5. API Endpoints (Current)
 
-The system supports three access levels:
+Base prefix: `/api`
 
-1. Guest (Unauthenticated user)
-   - Can access public endpoints only
-   - Cannot access protected routes
-   - Has no permission to modify any data
+### Auth
+- `POST /api/login`
+- `POST /api/register`
 
-2. Member (Authenticated user)
-   - Must provide a valid JWT token.
-   - Can create, update and delete publications created my themselves only
-   - Cannot approve publications
-   - Cannot add or remove members
-
-3. Admin
-   - Must provide a valid JWT token.
-   - Can approve or reject publications.
-   - Can delete publications
-   - Can add new members
-   - Can remove existing members
-
-### Access Rules
- - All protected routes require authentication via JWT.
- - Authorization middleware verifies user role.
- - Additional ownership validation ensures members can only modify their own publications.
- - Admin-only routes are strictly protected by role-check middleware.
-
----
-
-## 6. Database Design
-
-### Users Table
-- id (Primary Key)  
-- email (unique)  
-- password (hashed)  
-- role (admin / user)
-- create at
-
-### Publications Table
-- id (Primary Key)  
-- title  
-- author_id (Foreign Key -> Users.id) 
-- year  
-- description
-- DOI
-- status (pending/approved/rejected)
-- create at
-
-### Members Table
-- id (Primary Key)  
-- name  
-- position  
-- bio
-- user_id (Foreign Key -> Users.id)
-
----
-
-## 7. API Endpoints
-
-### Authentication
-- `POST /register` (Admin only - create member account)
-- `POST /login`
+### Member / Profile
+- `GET /api/profile` (user/admin)
 
 ### Publications
+- `GET /api/publications/public` (public approved list)
+- `GET /api/publications` (user/admin)
+- `GET /api/my-publications` (user/admin)
+- `POST /api/publications` (user/admin)
+- `PUT /api/publications/:id` (user/admin, ownership checked)
+- `DELETE /api/publications/:id` (user/admin, ownership checked)
 
-#### Public
-- `GET /publications` (Approved publications only)
-
-#### Member
-- `POST /publications`
-- `PUT /publications/:id` (only if owner)
-- `DELETE /publications/:id` (only if owner)
-
-#### Admin
-- `GET /admin/publications` (view all publications including pending)
-- `PATCH /admin/publication/:id/approve`
-- `DELETE /admin/publication/:id`
-
-### Members
-#### Public
-- `GET /members`
-
-#### Admin Only
-- `POST /members`
-- `DELETE /members`
+### Admin
+- `GET /api/publications/pending` (admin)
+- `PATCH /api/publications/:id/approve` (admin)
+- `PATCH /api/publications/:id/reject` (admin)
+- `DELETE /api/admin/publications/:id` (admin)
+- `GET /api/members` (admin)
+- `POST /api/members` (admin)
+- `DELETE /api/members/:id` (admin)
 
 ---
 
-## 8. Security Mechanism
+## 6. Setup & Run (Local)
 
-- Passwords are hashed using **bcrypt** before storing in the database.
-- JWT is generated after successful login.
-- Protected routes require a valid token.
-- Role-based middleware checks user permissions before allowing access.
-- Ownership validation ensures members can only modify their own publications.
-- Environment variables are used to protect database credentials.
-
----
-
-## 9. Installation & Setup
-
-### 1. Clone the repository
+### 1) Install dependencies
+Run at project root:
 
 ```bash
-git clone <your-repository-url>
-```
-
----
-
-## 9.1 Backend Setup (Development Mode)
-
-### Install backend dependencies
-
-```bash
-cd backend
 npm install
 ```
 
-### Create `.env` file
+### 2) Create environment file
+Create `backend/.env`:
 
-Create a `.env` file inside the backend folder:
-
-```
+```env
 PORT=3000
 DATABASE_URL=your_postgresql_connection_string
 JWT_SECRET=your_secret_key
 ```
 
-### Run backend server
+### 3) Start server
+Run at project root:
 
 ```bash
-node server.js
+npm start
 ```
 
-Backend runs at:
+Server runs at:
 
-```
+```text
 http://localhost:3000
 ```
 
 ---
 
-## 9.2 Frontend Setup (Development Mode)
+## 7. Frontend CSS Architecture
 
-### Navigate to frontend folder
+`frontend/css/` has been split into focused files:
 
-```bash
-cd frontend
-```
-
-You can run the frontend in one of the following ways:
-
-**Option 1:**
-- Open `index.html` directly in your browser.
-
-**Option 2 (Recommended):**
-- Use **Live Server extension** in VS Code.
+- `base.css`: global foundation (body, container)
+- `layout.css`: header, nav, footer, dashboard layout, sidebar layout
+- `components.css`: buttons, forms, cards/lists, reusable UI blocks
+- `admin.css`: admin-only overrides/styles
+- `member.css`: member dashboard/overview/profile/settings styles
+- `public.css`: public pages (index, login, general public sections)
 
 ---
 
-## 10. Deployment (Production)
+## 8. Current Project Structure
 
-### Backend Deployment (Render)
-
-1. Push project to GitHub.
-2. Connect repository to Render.
-3. Add environment variables:
-   - `DATABASE_URL`
-   - `JWT_SECRET`
-4. Deploy the service.
-
-Backend example URL:
-
-```
-https://your-backend-url.onrender.com
-```
-
----
-
-### Database Deployment (PostgreSQL)
-
-Create a PostgreSQL database using:
-
-- Render PostgreSQL
-- Railway
-- Supabase
-
-Copy the generated `DATABASE_URL` and set it in the backend environment variables.
-
----
-
-### Frontend Deployment (GitHub Pages)
-
-1. Push frontend to GitHub.
-2. Enable GitHub Pages in repository settings.
-3. Set branch to `main` (or `gh-pages`).
-
-Frontend example URL:
-
-```
-https://yourname.github.io/project-name/
-```
-
----
-
-## 11. Project Structure
-
-```
-AITA-Lab/
-│
-├── frontend/
-│   ├── index.html
-│   ├── login.html
-│   ├── user-dashboard.html
-│   ├── admin-dashboard.html
-│   ├── css/
-│   └── js/
-│
-├── backend/
-│   ├── server.js
-│   ├── app.js
-│   ├── db.js
-│   ├── config/
-│   ├── routes/
-│   ├── controllers/
-│   ├── services/
-│   ├── middleware/
-│   └── .env
-|
-├── .gitignore
+```text
+AiTA_Lab/
 ├── package.json
-├── package-lock.json
-└── README.md
+├── README.md
+├── backend/
+│   ├── db.js
+│   ├── server.js
+│   ├── controllers/
+│   │   ├── adminController.js
+│   │   ├── authController.js
+│   │   ├── memberController.js
+│   │   └── publicationController.js
+│   ├── middleware/
+│   │   └── authMiddleware.js
+│   ├── routes/
+│   │   ├── adminRoutes.js
+│   │   ├── authRoutes.js
+│   │   ├── memberRoutes.js
+│   │   └── publicationRoutes.js
+│   └── services/
+│       ├── adminService.js
+│       ├── authService.js
+│       ├── memberService.js
+│       └── publicationService.js
+└── frontend/
+    ├── adminDashboard.html
+    ├── index.html
+    ├── login.html
+    ├── publications.html
+    ├── register.html
+    ├── script.js
+    ├── userDashboard.html
+    ├── css/
+    │   ├── admin.css
+    │   ├── base.css
+    │   ├── components.css
+    │   ├── layout.css
+    │   ├── member.css
+    │   └── public.css
+    └── js/
+        ├── adminDashboard.js
+        ├── login.js
+        ├── main.js
+        ├── publications.js
+        └── userDashboard.js
 ```
 
 ---
+
+## 9. Notes
+
+- Authentication is JWT-based; protected routes require `Authorization: Bearer <token>`.
+- `register.html` currently exists in structure but is empty.
+- If deploying frontend separately (e.g., GitHub Pages), update API base URL in frontend JS as needed.
