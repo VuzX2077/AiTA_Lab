@@ -96,7 +96,7 @@ async function request(url, options = {}) {
         }
 
         if (response.status === 404 && url.includes("/members/") && url.includes("/role")) {
-            throw new Error("Role API chưa sẵn sàng. Hãy restart backend server rồi thử lại.");
+            throw new Error("Role API is not available yet. Please restart the backend server and try again.");
         }
 
         throw new Error(data.message || response.statusText || "Request failed");
@@ -237,12 +237,12 @@ async function loadMembers() {
                 const nextRole = roleSelect ? roleSelect.value : "user";
 
                 if (userId === currentAdminId) {
-                    alert("Bạn không thể đổi role của chính mình.");
+                    alert("You cannot change your own role.");
                     return;
                 }
 
                 if (nextRole === currentRole) {
-                    alert("Role không thay đổi.");
+                    alert("Role is unchanged.");
                     return;
                 }
 
