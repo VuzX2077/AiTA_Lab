@@ -76,6 +76,38 @@
     margin: 0 0 6px;
 }
 
+.roles-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.roles-actions select {
+    width: 140px;
+    margin: 0;
+    padding: 8px 10px;
+}
+
+.save-role-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.save-role-btn:hover {
+    background-color: #333;
+}
+
+.roles-actions select:disabled,
+.save-role-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
     .admin-stats-grid {
         grid-template-columns: 1fr;

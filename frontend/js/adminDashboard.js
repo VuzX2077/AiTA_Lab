@@ -20,6 +20,7 @@ function parseJwt(token) {
 }
 
 const user = parseJwt(token);
+const currentAdminId = user ? Number(user.id) : null;
 
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const adminPanels = document.querySelectorAll(".admin-panel");
@@ -77,14 +78,28 @@ async function request(url, options = {}) {
         }
     });
 
-    const data = await response.json().catch(() => ({}));
+    const rawText = await response.text();
+    let data = {};
+
+    if (rawText) {
+        try {
+            data = JSON.parse(rawText);
+        } catch (error) {
+            data = { message: rawText };
+        }
+    }
 
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
             window.location.href = "login.html";
         }
-        throw new Error(data.message || "Request failed");
+
+        if (response.status === 404 && url.includes("/members/") && url.includes("/role")) {
+            throw new Error("Role API chưa sẵn sàng. Hãy restart backend server rồi thử lại.");
+        }
+
+        throw new Error(data.message || response.statusText || "Request failed");
     }
 
     return data;
@@ -200,8 +215,40 @@ async function loadMembers() {
             <div>
                 <p><strong>${member.email}</strong></p>
                 <p><small>Current Role: ${member.role}</small></p>
+                <div class="roles-actions">
+                    <select id="roleSelect-${member.user_id}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
+                        <option value="user" ${member.role === "user" ? "selected" : ""}>User</option>
+                        <option value="admin" ${member.role === "admin" ? "selected" : ""}>Admin</option>
+                    </select>
+                    <button class="save-role-btn" data-id="${member.user_id}" data-email="${member.email}" data-current-role="${member.role}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
+                        ${Number(member.user_id) === currentAdminId ? "Protected" : "Save Role"}
+                    </button>
+                </div>
+                ${Number(member.user_id) === currentAdminId ? '<p><small>You cannot change your own role.</small></p>' : ""}
             </div>
         `).join("");
+
+        rolesList.querySelectorAll(".save-role-btn").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const userId = Number(button.dataset.id);
+                const memberEmail = button.dataset.email;
+                const currentRole = button.dataset.currentRole;
+                const roleSelect = document.getElementById(`roleSelect-${userId}`);
+                const nextRole = roleSelect ? roleSelect.value : "user";
+
+                if (userId === currentAdminId) {
+                    alert("Bạn không thể đổi role của chính mình.");
+                    return;
+                }
+
+                if (nextRole === currentRole) {
+                    alert("Role không thay đổi.");
+                    return;
+                }
+
+                await updateMemberRole(userId, nextRole, memberEmail);
+            });
+        });
 
         document.getElementById("statTotalMembers").textContent = data.length;
     } catch (error) {
@@ -309,4 +356,18 @@ if (isAuthValid) {
         clearAuth();
         window.location.href = "index.html";
     });
+}
+
+async function updateMemberRole(userId, role, memberEmail) {
+    try {
+        await request(`/api/members/${userId}/role`, {
+            method: "PATCH",
+            body: JSON.stringify({ role })
+        });
+
+        await loadMembers();
+        addActivityLog(`Updated role for ${memberEmail} to ${role}`);
+    } catch (error) {
+        alert(error.message);
+    }
 }

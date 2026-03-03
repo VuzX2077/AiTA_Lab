@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
+const pool = require("../db");
 
 // Verify token
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
     if (!process.env.JWT_SECRET) {
         return res.status(500).json({ message: "Server auth configuration error" });
     }
@@ -18,18 +19,35 @@ function verifyToken(req, res, next) {
         return res.status(401).json({ message: "Invalid authorization header format" });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: "Invalid token" });
+    let decoded;
+
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
+    if (!decoded || !decoded.id) {
+        return res.status(401).json({ message: "Invalid token payload" });
+    }
+
+    try {
+        const userResult = await pool.query(
+            "SELECT id, role FROM users WHERE id = $1",
+            [decoded.id]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({ message: "User no longer exists" });
         }
 
-        if (!decoded || !decoded.id || !decoded.role) {
-            return res.status(401).json({ message: "Invalid token payload" });
-        }
-
-        req.user = decoded; // { id, role }
+        const currentUser = userResult.rows[0];
+        req.user = { id: currentUser.id, role: currentUser.role };
         next();
-    });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Failed to verify user session" });
+    }
 }
 
 // Check role

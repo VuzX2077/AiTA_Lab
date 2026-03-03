@@ -69,6 +69,20 @@ async function deleteMember(userId) {
     return memberService.deleteMemberByUserId(userId);
 }
 
+async function updateMemberRole(userId, role) {
+    const result = await pool.query(
+        `
+        UPDATE users
+        SET role = $1
+        WHERE id = $2
+        RETURNING id, email, role
+        `,
+        [role, userId]
+    );
+
+    return result.rows[0] || null;
+}
+
 module.exports = {
     getPendingPublications,
     approvePublication,
@@ -76,5 +90,6 @@ module.exports = {
     deletePublication,
     getMembers,
     createMember,
-    deleteMember
+    deleteMember,
+    updateMemberRole
 };

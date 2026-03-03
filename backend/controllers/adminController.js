@@ -133,6 +133,36 @@ async function deleteMember(req, res) {
     }
 }
 
+async function updateMemberRole(req, res) {
+    const userId = Number(req.params.id);
+    const { role } = req.body;
+
+    if (!Number.isInteger(userId)) {
+        return res.status(400).json({ message: "Invalid member id" });
+    }
+
+    if (userId === req.user.id) {
+        return res.status(400).json({ message: "You cannot change your own role" });
+    }
+
+    if (role !== "admin" && role !== "user") {
+        return res.status(400).json({ message: "Role must be either 'admin' or 'user'" });
+    }
+
+    try {
+        const updated = await adminService.updateMemberRole(userId, role);
+
+        if (!updated) {
+            return res.status(404).json({ message: "Member not found" });
+        }
+
+        res.json({ user: updated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to update member role" });
+    }
+}
+
 module.exports = {
     getPendingPublications,
     approvePublication,
@@ -140,5 +170,6 @@ module.exports = {
     deletePublication,
     getMembers,
     createMember,
-    deleteMember
+    deleteMember,
+    updateMemberRole
 };

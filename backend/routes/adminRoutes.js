@@ -12,5 +12,6 @@ router.delete("/admin/publications/:id", verifyToken, authorizeRole("admin"), ad
 router.get("/members", verifyToken, authorizeRole("admin"), adminController.getMembers);
 router.post("/members", verifyToken, authorizeRole("admin"), adminController.createMember);
 router.delete("/members/:id", verifyToken, authorizeRole("admin"), adminController.deleteMember);
+router.patch("/members/:id/role", verifyToken, authorizeRole("admin"), adminController.updateMemberRole);
 
 module.exports = router;
