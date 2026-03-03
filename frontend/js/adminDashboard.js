@@ -21,6 +21,43 @@ function parseJwt(token) {
 
 const user = parseJwt(token);
 
+const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
+const adminPanels = document.querySelectorAll(".admin-panel");
+const activityLogs = [];
+
+function showSection(sectionId) {
+    adminPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.id === sectionId);
+    });
+
+    sidebarLinks.forEach((link) => {
+        link.classList.toggle("active", link.dataset.target === sectionId);
+    });
+}
+
+sidebarLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+        showSection(link.dataset.target);
+    });
+});
+
+function addActivityLog(message) {
+    const timestamp = new Date().toLocaleString();
+    activityLogs.unshift(`${timestamp} - ${message}`);
+
+    const list = document.getElementById("activityLogList");
+    if (!list) {
+        return;
+    }
+
+    if (activityLogs.length === 0) {
+        list.innerHTML = "<p>No activity yet.</p>";
+        return;
+    }
+
+    list.innerHTML = activityLogs.map((item) => `<p>${item}</p>`).join("");
+}
+
 if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
     clearAuth();
     isAuthValid = false;
@@ -81,6 +118,8 @@ async function loadPendingPublications() {
                 </div>
             </div>
         `).join("");
+
+        document.getElementById("statPendingPublications").textContent = data.length;
     } catch (error) {
         alert(error.message);
     }
@@ -90,13 +129,23 @@ async function loadAllPublications() {
     try {
         const data = await request("/api/publications", { method: "GET" });
         const list = document.getElementById("publicationList");
+        const approvedList = document.getElementById("approvedPublicationList");
+        const rejectedList = document.getElementById("rejectedPublicationList");
+
+        const approved = data.filter((pub) => String(pub.status || "").toLowerCase() === "approved");
+        const rejected = data.filter((pub) => String(pub.status || "").toLowerCase() === "rejected");
 
         if (data.length === 0) {
             list.innerHTML = "<p>No publications.</p>";
+            approvedList.innerHTML = "<p>No approved publications.</p>";
+            rejectedList.innerHTML = "<p>No rejected publications.</p>";
+            document.getElementById("statTotalPublications").textContent = "0";
+            document.getElementById("statApprovedPublications").textContent = "0";
+            document.getElementById("statRejectedPublications").textContent = "0";
             return;
         }
 
-        list.innerHTML = data.map(pub => `
+        const publicationTemplate = (pub) => `
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
@@ -108,7 +157,15 @@ async function loadAllPublications() {
                 </div>
                 <button onclick="deletePublication(${pub.id})">Delete</button>
             </div>
-        `).join("");
+        `;
+
+        list.innerHTML = data.map(publicationTemplate).join("");
+        approvedList.innerHTML = approved.length ? approved.map(publicationTemplate).join("") : "<p>No approved publications.</p>";
+        rejectedList.innerHTML = rejected.length ? rejected.map(publicationTemplate).join("") : "<p>No rejected publications.</p>";
+
+        document.getElementById("statTotalPublications").textContent = data.length;
+        document.getElementById("statApprovedPublications").textContent = approved.length;
+        document.getElementById("statRejectedPublications").textContent = rejected.length;
     } catch (error) {
         alert(error.message);
     }
@@ -118,9 +175,12 @@ async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
         const list = document.getElementById("memberList");
+        const rolesList = document.getElementById("rolesMemberList");
 
         if (data.length === 0) {
             list.innerHTML = "<p>No members.</p>";
+            rolesList.innerHTML = "<p>No members found.</p>";
+            document.getElementById("statTotalMembers").textContent = "0";
             return;
         }
 
@@ -135,6 +195,29 @@ async function loadMembers() {
                 <button onclick="deleteMember(${member.user_id})">Delete</button>
             </div>
         `).join("");
+
+        rolesList.innerHTML = data.map(member => `
+            <div>
+                <p><strong>${member.email}</strong></p>
+                <p><small>Current Role: ${member.role}</small></p>
+            </div>
+        `).join("");
+
+        document.getElementById("statTotalMembers").textContent = data.length;
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+async function loadAdminProfile() {
+    try {
+        const data = await request("/api/profile", { method: "GET" });
+        const profile = document.getElementById("adminProfileInfo");
+        profile.innerHTML = `
+            <p><strong>User ID:</strong> ${data.user.id}</p>
+            <p><strong>Role:</strong> ${data.user.role}</p>
+            <p><strong>Access:</strong> Publication review and member management</p>
+        `;
     } catch (error) {
         alert(error.message);
     }
@@ -145,6 +228,7 @@ async function approvePublication(id) {
         await request(`/api/publications/${id}/approve`, { method: "PATCH" });
         await loadPendingPublications();
         await loadAllPublications();
+        addActivityLog(`Approved publication #${id}`);
     } catch (error) {
         alert(error.message);
     }
@@ -155,6 +239,7 @@ async function rejectPublication(id) {
         await request(`/api/publications/${id}/reject`, { method: "PATCH" });
         await loadPendingPublications();
         await loadAllPublications();
+        addActivityLog(`Rejected publication #${id}`);
     } catch (error) {
         alert(error.message);
     }
@@ -165,6 +250,7 @@ async function deletePublication(id) {
         await request(`/api/admin/publications/${id}`, { method: "DELETE" });
         await loadPendingPublications();
         await loadAllPublications();
+        addActivityLog(`Deleted publication #${id}`);
     } catch (error) {
         alert(error.message);
     }
@@ -189,6 +275,7 @@ if (isAuthValid) {
 
             document.getElementById("createMemberForm").reset();
             await loadMembers();
+            addActivityLog(`Added member ${email} (${role})`);
         } catch (error) {
             alert(error.message);
         }
@@ -199,6 +286,7 @@ async function deleteMember(id) {
     try {
         await request(`/api/members/${id}`, { method: "DELETE" });
         await loadMembers();
+        addActivityLog(`Deleted member #${id}`);
     } catch (error) {
         alert(error.message);
     }
@@ -210,9 +298,12 @@ window.deletePublication = deletePublication;
 window.deleteMember = deleteMember;
 
 if (isAuthValid) {
+    loadAdminProfile();
     loadPendingPublications();
     loadAllPublications();
     loadMembers();
+    showSection("profileSection");
+    addActivityLog("Admin dashboard opened");
 
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
