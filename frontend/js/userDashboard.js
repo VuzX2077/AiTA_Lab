@@ -8,7 +8,7 @@ let isAuthValid = true;
 
 if (!token) {
     isAuthValid = false;
-    window.location.href = "../auth/login.html";
+    window.location.href = "/login";
 }
 
 // Decode JWT
@@ -25,10 +25,10 @@ const user = parseJwt(token);
 if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
     clearAuth();
     isAuthValid = false;
-    window.location.href = "../auth/login.html";
+    window.location.href = "/login";
 } else if (user.role !== "user") {
     isAuthValid = false;
-    window.location.href = "../admin/adminDashboard.html";
+    window.location.href = "/adminDashboard";
 }
 
 let editingPublicationId = null;
@@ -68,7 +68,7 @@ async function request(url, options = {}) {
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
-            window.location.href = "../auth/login.html";
+            window.location.href = "/login";
         }
         throw new Error(data.message || "Request failed");
     }
@@ -87,7 +87,7 @@ if (isAuthValid) {
         if (!res.ok) {
             if (res.status === 401 || res.status === 403) {
                 clearAuth();
-                window.location.href = "../auth/login.html";
+                window.location.href = "/login";
             }
 
             const errorData = await res.json().catch(() => ({}));
@@ -248,6 +248,6 @@ if (isAuthValid) {
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
-        window.location.href = "../public/index.html";
+        window.location.href = "/";
     });
 }

@@ -36,7 +36,7 @@ const role = session ? session.role : null;
 const authActions = document.getElementById("authActions");
 
 if (authActions && token) {
-	const dashboardPath = role === "admin" ? "../admin/adminDashboard.html" : "../member/memberDashboard.html";
+	const dashboardPath = role === "admin" ? "/adminDashboard" : "/memberDashboard";
 
 	authActions.innerHTML = `
 		<a href="${dashboardPath}">Dashboard</a>
@@ -47,6 +47,6 @@ if (authActions && token) {
 	logoutBtn.addEventListener("click", (e) => {
 		e.preventDefault();
 		clearAuth();
-		window.location.href = "index.html";
+		window.location.href = "/";
 	});
 }

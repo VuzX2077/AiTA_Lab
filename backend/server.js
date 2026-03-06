@@ -13,26 +13,46 @@ const frontendRoot = path.join(__dirname, "..", "frontend");
 
 app.use(express.static(frontendRoot));
 
-const pageRoutes = {
+const cleanPageRoutes = {
   "/": "pages/public/index.html",
-  "/index.html": "pages/public/index.html",
-  "/publications.html": "pages/public/publications.html",
-  "/researches.html": "pages/public/researches.html",
-  "/members.html": "pages/public/members.html",
-  "/lectures.html": "pages/public/lectures.html",
-  "/seminars.html": "pages/public/seminars.html",
-  "/archives.html": "pages/public/archives.html",
-  "/contact.html": "pages/public/contact.html",
-  "/login.html": "pages/auth/login.html",
-  "/register.html": "pages/auth/register.html",
-  "/adminDashboard.html": "pages/admin/adminDashboard.html",
-  "/userDashboard.html": "pages/member/memberDashboard.html",
-  "/memberDashboard.html": "pages/member/memberDashboard.html"
+  "/publications": "pages/public/publications.html",
+  "/researches": "pages/public/researches.html",
+  "/members": "pages/public/members.html",
+  "/lectures": "pages/public/lectures.html",
+  "/seminars": "pages/public/seminars.html",
+  "/archives": "pages/public/archives.html",
+  "/contact": "pages/public/contact.html",
+  "/login": "pages/auth/login.html",
+  "/register": "pages/auth/register.html",
+  "/adminDashboard": "pages/admin/adminDashboard.html",
+  "/memberDashboard": "pages/member/memberDashboard.html"
 };
 
-Object.entries(pageRoutes).forEach(([routePath, relativeFilePath]) => {
+Object.entries(cleanPageRoutes).forEach(([routePath, relativeFilePath]) => {
   app.get(routePath, (req, res) => {
     res.sendFile(path.join(frontendRoot, relativeFilePath));
+  });
+});
+
+const legacyRedirectRoutes = {
+  "/index.html": "/",
+  "/publications.html": "/publications",
+  "/researches.html": "/researches",
+  "/members.html": "/members",
+  "/lectures.html": "/lectures",
+  "/seminars.html": "/seminars",
+  "/archives.html": "/archives",
+  "/contact.html": "/contact",
+  "/login.html": "/login",
+  "/register.html": "/register",
+  "/adminDashboard.html": "/adminDashboard",
+  "/userDashboard.html": "/memberDashboard",
+  "/memberDashboard.html": "/memberDashboard"
+};
+
+Object.entries(legacyRedirectRoutes).forEach(([legacyPath, cleanPath]) => {
+  app.get(legacyPath, (req, res) => {
+    res.redirect(301, cleanPath);
   });
 });
 
