@@ -9,7 +9,32 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "..", "frontend")));
+const frontendRoot = path.join(__dirname, "..", "frontend");
+
+app.use(express.static(frontendRoot));
+
+const pageRoutes = {
+  "/": "pages/public/index.html",
+  "/index.html": "pages/public/index.html",
+  "/publications.html": "pages/public/publications.html",
+  "/researches.html": "pages/public/researches.html",
+  "/members.html": "pages/public/members.html",
+  "/lectures.html": "pages/public/lectures.html",
+  "/seminars.html": "pages/public/seminars.html",
+  "/archives.html": "pages/public/archives.html",
+  "/contact.html": "pages/public/contact.html",
+  "/login.html": "pages/auth/login.html",
+  "/register.html": "pages/auth/register.html",
+  "/adminDashboard.html": "pages/admin/adminDashboard.html",
+  "/userDashboard.html": "pages/member/memberDashboard.html",
+  "/memberDashboard.html": "pages/member/memberDashboard.html"
+};
+
+Object.entries(pageRoutes).forEach(([routePath, relativeFilePath]) => {
+  app.get(routePath, (req, res) => {
+    res.sendFile(path.join(frontendRoot, relativeFilePath));
+  });
+});
 
 const authRoutes = require("./routes/authRoutes");
 const publicationRoutes = require("./routes/publicationRoutes");

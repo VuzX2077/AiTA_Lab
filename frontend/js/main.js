@@ -36,7 +36,7 @@ const role = session ? session.role : null;
 const authActions = document.getElementById("authActions");
 
 if (authActions && token) {
-	const dashboardPath = role === "admin" ? "adminDashboard.html" : "userDashboard.html";
+	const dashboardPath = role === "admin" ? "../admin/adminDashboard.html" : "../member/memberDashboard.html";
 
 	authActions.innerHTML = `
 		<a href="${dashboardPath}">Dashboard</a>
