@@ -74,9 +74,17 @@
     padding: 24px 24px 40px;
 }
 
+.members-page .container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 .members-hero {
     padding-top: 36px;
     padding-bottom: 24px;
+    max-width: 100%;
+    min-height: 100px;
 }
 
 .members-hero h1 {
@@ -91,6 +99,42 @@
     font-size: 18px;
 }
 
+.toc {
+    width: 100%;
+    max-width: 760px;
+    min-height: 220px;
+
+}
+
+.toc h2 {
+    margin: 0 0 10px;
+    color: #343b46;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.toc ul {
+    margin: 0;
+    padding-left: 22px;
+}
+
+.toc li {
+    margin-bottom: 4px;
+    color: #2f3640;
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.toc a {
+    color: #e69a1f;
+    text-decoration: none;
+}
+
+.toc a:hover {
+    text-decoration: underline;
+}
+
 .member-group {
     padding-top: 24px;
     padding-bottom: 24px;
@@ -99,9 +143,10 @@
 .member-group h2 {
     font-size: 44px;
     margin: 0 0 24px;
+    padding: 18px 0;
     color: #2f3640;
+    border-top: 1px solid #d9dfe6;
     border-bottom: 1px solid #d9dfe6;
-    padding-bottom: 16px;
 }
 
 .member-card {
@@ -195,6 +240,10 @@
 }
 
 @media (max-width: 900px) {
+    .members-page {
+        padding: 20px 16px 32px;
+    }
+
     .members-hero h1 {
         font-size: 36px;
     }
@@ -205,6 +254,15 @@
 
     .member-group h2 {
         font-size: 34px;
+    }
+
+    .toc h2 {
+        font-size: 20px;
+    }
+
+    .toc li {
+        font-size: 15px;
+        margin-bottom: 4px;
     }
 
     .member-card {
