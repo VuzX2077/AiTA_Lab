@@ -76,15 +76,26 @@
 
 .members-page .container {
     max-width: 100%;
-    margin: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 100px;
     padding: 0;
+}
+
+.members-page .toc {
+    padding: 28px 0;
+    margin: 0 0 28px;
+    border-top: 1px solid #d9dfe6;
+    border-bottom: 1px solid #d9dfe6;
+    min-height: auto;
+    max-width: 100%;
 }
 
 .content-hero {
     padding-top: 36px;
     padding-bottom: 24px;
     max-width: 100%;
-    min-height: 100px;
+    min-height: 200px;
 }
 
 .content-hero h1 {
@@ -97,6 +108,10 @@
     margin: 0;
     color: #5a6270;
     font-size: 18px;
+}
+
+.members-page .content-hero, .researches-page .content-hero {
+    margin-top: 100px;
 }
 
 .toc {
