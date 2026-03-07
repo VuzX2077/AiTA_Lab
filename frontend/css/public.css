@@ -156,7 +156,7 @@
 }
 
 .member-group h2 {
-    font-size: 44px;
+    font-size: 30px;
     margin: 0 0 24px;
     padding: 18px 0;
     color: #2f3640;
@@ -299,7 +299,7 @@
 }
 
 .publication-group h2 {
-    font-size: 44px;
+    font-size: 33px;
     margin: 0 0 24px;
     padding: 18px 0;
     color: #2f3640;
@@ -354,7 +354,7 @@
 .research-item h2 {
     margin: 0 0 12px;
     color: #2f3640;
-    font-size: 40px;
+    font-size: 30px;
     line-height: 1.2;
 }
 
