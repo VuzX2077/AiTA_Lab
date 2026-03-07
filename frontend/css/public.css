@@ -365,6 +365,79 @@
     line-height: 1.55;
 }
 
+.contact-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 24px 40px;
+}
+
+.contact-page .container {
+    max-width: 100%;
+    padding: 0;
+}
+
+.contact-page .content-hero {
+    margin-top: 100px;
+}
+
+.contact-section {
+    padding: 28px 0;
+    border-top: 1px solid #d9dfe6;
+    margin-bottom: 50px;
+    margin-top: 50px;
+}
+.contact-section h3 {
+    margin-top: 50px;
+    margin: 0 0 16px;
+    color: #2f3640;
+    line-height: 1.25;
+}
+
+.contact-section h2 {
+    font-size: 30px;
+}
+
+.contact-section h3 {
+    font-size: 17px;
+}
+
+.contact-section p,
+.contact-section li {
+    margin: 0 0 12px;
+    color: #4d5561;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.55;
+}
+
+.contact-section ul {
+    margin: 0;
+    padding-left: 24px;
+}
+
+.contact-link {
+    color: #e69a1f;
+    text-decoration: none;
+}
+
+.contact-link:hover {
+    text-decoration: underline;
+}
+
+.contact-map {
+    width: 100%;
+    height: 380px;
+    border: 0;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.contact-highlight {
+    margin-top: 16px;
+    font-weight: 700;
+    color: #2f3640;
+}
+
 @media (max-width: 900px) {
     .members-page {
         padding: 20px 16px 32px;
@@ -375,6 +448,10 @@
     }
 
     .publications-page {
+        padding: 20px 16px 32px;
+    }
+
+    .contact-page {
         padding: 20px 16px 32px;
     }
 
@@ -403,6 +480,11 @@
         font-size: 28px;
     }
 
+    .contact-section h2,
+    .contact-section h3 {
+        font-size: 34px;
+    }
+
     .publication-group h2 {
         font-size: 34px;
     }
@@ -418,6 +500,15 @@
 
     .research-item p {
         font-size: 17px;
+    }
+
+    .contact-section p,
+    .contact-section li {
+        font-size: 17px;
+    }
+
+    .contact-map {
+        height: 300px;
     }
 
     .member-card {
