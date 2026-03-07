@@ -110,7 +110,7 @@
     font-size: 18px;
 }
 
-.members-page .content-hero, .researches-page .content-hero {
+.members-page .content-hero, .researches-page .content-hero, .publications-page .content-hero {
     margin-top: 100px;
 }
 
@@ -260,9 +260,75 @@
     padding: 24px 24px 40px;
 }
 
+.publications-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 24px 40px;
+}
+
 .researches-page .container {
     max-width: 100%;
     padding: 0;
+}
+
+.publications-page .container {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 100px;
+    padding: 0;
+}
+
+.publications-page .publication-list {
+    padding: 8px 0 0;
+}
+
+.publications-page .toc {
+    padding: 28px 0;
+    margin: 0 0 28px;
+    border-top: 1px solid #d9dfe6;
+    border-bottom: 1px solid #d9dfe6;
+    min-height: auto;
+    max-width: 100%;
+}
+
+.publication-group {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    scroll-margin-top: 120px;
+}
+
+.publication-group h2 {
+    font-size: 44px;
+    margin: 0 0 24px;
+    padding: 18px 0;
+    color: #2f3640;
+    border-top: 1px solid #d9dfe6;
+    border-bottom: 1px solid #d9dfe6;
+}
+
+.publication-group p {
+    margin: 0;
+    color: #4d5561;
+    font-size: 20px;
+    line-height: 1.55;
+}
+
+.publication-bullet-list {
+    margin: 0;
+    padding-left: 26px;
+}
+
+.publication-bullet-list li {
+    margin-bottom: 18px;
+    color: #4d5561;
+    font-size: 20px;
+    line-height: 1.5;
+}
+
+.publication-title {
+    color: #e69a1f;
+    font-weight: 600;
 }
 
 .researches-page .toc {
@@ -308,6 +374,10 @@
         padding: 20px 16px 32px;
     }
 
+    .publications-page {
+        padding: 20px 16px 32px;
+    }
+
     .members-hero h1 {
         font-size: 36px;
     }
@@ -331,6 +401,19 @@
 
     .research-item h2 {
         font-size: 28px;
+    }
+
+    .publication-group h2 {
+        font-size: 34px;
+    }
+
+    .publication-group p {
+        font-size: 17px;
+    }
+
+    .publication-bullet-list li {
+        font-size: 17px;
+        margin-bottom: 14px;
     }
 
     .research-item p {

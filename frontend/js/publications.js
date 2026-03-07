@@ -18,20 +18,25 @@ async function loadApprovedPublications() {
             return;
         }
 
-        list.innerHTML = data.map(pub => `
-            <div>
-                <div>
-                    <p><strong>${pub.title}</strong></p>
-                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
-                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
-                    <p><small>Year: ${pub.year || "N/A"}</small></p>
-                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
-                    <p>${pub.description}</p>
-                    <p><small>Status: ${pub.status}</small></p>
-                    <p><small>Author: ${pub.owner_email || "N/A"}</small></p>
-                </div>
-            </div>
-        `).join("");
+        const escapeHtml = (value) => String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        const items = data.map((pub) => {
+            const authors = escapeHtml(pub.authors || "Unknown authors");
+            const title = escapeHtml(pub.title || "Untitled publication");
+            const journal = escapeHtml(pub.journal || "Unknown journal");
+            const year = escapeHtml(pub.year || "N/A");
+            const doi = pub.doi ? `, DOI: ${escapeHtml(pub.doi)}` : "";
+            const note = pub.description ? ` (${escapeHtml(pub.description)})` : "";
+
+            return `<li>${authors}, <span class="publication-title">\"${title}\"</span>, ${journal}, ${year}${doi}${note}</li>`;
+        }).join("");
+
+        list.innerHTML = `<ul class="publication-bullet-list">${items}</ul>`;
     } catch (error) {
         list.innerHTML = `<p>${error.message}</p>`;
     }
