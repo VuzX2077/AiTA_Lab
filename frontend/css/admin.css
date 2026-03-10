@@ -34,6 +34,78 @@
     color: #666;
 }
 
+.admin-overview-top {
+    margin-top: 16px;
+}
+
+.admin-profile-card {
+    padding: 16px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.admin-overview-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-overview-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.admin-publication-health {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.admin-publication-health h3 {
+    margin: 0 0 12px;
+    font-size: 17px;
+}
+
+.admin-health-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 48px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-health-row:last-child {
+    margin-bottom: 0;
+}
+
+.admin-health-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #edf0f3;
+    overflow: hidden;
+}
+
+.admin-health-fill {
+    height: 100%;
+    width: 0;
+    transition: width 0.25s ease;
+}
+
+.admin-health-fill.approved {
+    background: #16a34a;
+}
+
+.admin-health-fill.pending {
+    background: #f59e0b;
+}
+
+.admin-health-fill.rejected {
+    background: #dc2626;
+}
+
 .admin-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -45,6 +117,8 @@
     border-radius: 10px;
     padding: 16px;
     background: #fafafa;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-stat-card p {
@@ -54,12 +128,15 @@
 .admin-stat-card p:first-child {
     color: #666;
     margin-bottom: 8px;
+    line-height: 1.25;
+    min-height: 50px;
 }
 
 .admin-stat-card p:last-child {
     font-size: 26px;
     font-weight: 700;
     color: #1f1f1f;
+    margin-top: auto;
 }
 
 #rolesMemberList div,
@@ -109,7 +186,16 @@
 }
 
 @media (max-width: 768px) {
+    .admin-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
     .admin-stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .admin-health-row {
+        grid-template-columns: 78px 1fr 42px;
+        gap: 8px;
     }
 }

@@ -25,6 +25,47 @@ const currentAdminId = user ? Number(user.id) : null;
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const adminPanels = document.querySelectorAll(".admin-panel");
 const activityLogs = [];
+const statsState = {
+    totalPublications: 0,
+    pendingPublications: 0,
+    approvedPublications: 0,
+    rejectedPublications: 0,
+    totalMembers: 0,
+    activeResearchers: 0
+};
+
+function setText(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = String(value);
+    }
+}
+
+function setBar(id, labelId, value, total) {
+    const element = document.getElementById(id);
+    const labelElement = document.getElementById(labelId);
+    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+
+    if (element) {
+        element.style.width = `${percent}%`;
+    }
+
+    if (labelElement) {
+        labelElement.textContent = `${percent}%`;
+    }
+}
+
+function syncOverviewStats() {
+    setText("overviewTotalPublications", statsState.totalPublications);
+    setText("overviewPendingPublications", statsState.pendingPublications);
+    setText("overviewApprovedPublications", statsState.approvedPublications);
+    setText("overviewTotalMembers", statsState.totalMembers);
+    setText("overviewActiveResearchers", statsState.activeResearchers);
+
+    setBar("approvedBar", "approvedBarLabel", statsState.approvedPublications, statsState.totalPublications);
+    setBar("pendingBar", "pendingBarLabel", statsState.pendingPublications, statsState.totalPublications);
+    setBar("rejectedBar", "rejectedBarLabel", statsState.rejectedPublications, statsState.totalPublications);
+}
 
 function showSection(sectionId) {
     adminPanels.forEach((panel) => {
@@ -69,14 +110,20 @@ if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
 }
 
 async function request(url, options = {}) {
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-            ...(options.headers || {})
-        }
-    });
+    let response;
+
+    try {
+        response = await fetch(url, {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+                ...(options.headers || {})
+            }
+        });
+    } catch (error) {
+        throw new Error("Cannot connect to server. Make sure backend is running at http://localhost:3000.");
+    }
 
     const rawText = await response.text();
     let data = {};
@@ -112,6 +159,8 @@ async function loadPendingPublications() {
 
         if (data.length === 0) {
             list.innerHTML = "<p>No pending publications.</p>";
+            statsState.pendingPublications = 0;
+            syncOverviewStats();
             return;
         }
 
@@ -134,7 +183,8 @@ async function loadPendingPublications() {
             </div>
         `).join("");
 
-        document.getElementById("statPendingPublications").textContent = data.length;
+        statsState.pendingPublications = data.length;
+        syncOverviewStats();
     } catch (error) {
         alert(error.message);
     }
@@ -154,9 +204,10 @@ async function loadAllPublications() {
             list.innerHTML = "<p>No publications.</p>";
             approvedList.innerHTML = "<p>No approved publications.</p>";
             rejectedList.innerHTML = "<p>No rejected publications.</p>";
-            document.getElementById("statTotalPublications").textContent = "0";
-            document.getElementById("statApprovedPublications").textContent = "0";
-            document.getElementById("statRejectedPublications").textContent = "0";
+            statsState.totalPublications = 0;
+            statsState.approvedPublications = 0;
+            statsState.rejectedPublications = 0;
+            syncOverviewStats();
             return;
         }
 
@@ -178,9 +229,10 @@ async function loadAllPublications() {
         approvedList.innerHTML = approved.length ? approved.map(publicationTemplate).join("") : "<p>No approved publications.</p>";
         rejectedList.innerHTML = rejected.length ? rejected.map(publicationTemplate).join("") : "<p>No rejected publications.</p>";
 
-        document.getElementById("statTotalPublications").textContent = data.length;
-        document.getElementById("statApprovedPublications").textContent = approved.length;
-        document.getElementById("statRejectedPublications").textContent = rejected.length;
+        statsState.totalPublications = data.length;
+        statsState.approvedPublications = approved.length;
+        statsState.rejectedPublications = rejected.length;
+        syncOverviewStats();
     } catch (error) {
         alert(error.message);
     }
@@ -195,7 +247,9 @@ async function loadMembers() {
         if (data.length === 0) {
             list.innerHTML = "<p>No members.</p>";
             rolesList.innerHTML = "<p>No members found.</p>";
-            document.getElementById("statTotalMembers").textContent = "0";
+            statsState.totalMembers = 0;
+            statsState.activeResearchers = 0;
+            syncOverviewStats();
             return;
         }
 
@@ -250,7 +304,9 @@ async function loadMembers() {
             });
         });
 
-        document.getElementById("statTotalMembers").textContent = data.length;
+        statsState.totalMembers = data.length;
+        statsState.activeResearchers = data.filter((member) => member.role === "user").length;
+        syncOverviewStats();
     } catch (error) {
         alert(error.message);
     }
@@ -260,7 +316,10 @@ async function loadAdminProfile() {
     try {
         const data = await request("/api/profile", { method: "GET" });
         const profile = document.getElementById("adminProfileInfo");
+        const displayName = data.member && data.member.name ? data.member.name : data.user.email;
+
         profile.innerHTML = `
+            <p><strong>${displayName}</strong></p>
             <p><strong>User ID:</strong> ${data.user.id}</p>
             <p><strong>Role:</strong> ${data.user.role}</p>
             <p><strong>Access:</strong> Publication review and member management</p>
@@ -312,12 +371,11 @@ if (isAuthValid) {
         const role = document.getElementById("memberRole").value;
         const name = document.getElementById("memberName").value.trim();
         const position = document.getElementById("memberPosition").value.trim();
-        const bio = document.getElementById("memberBio").value.trim();
 
         try {
             await request("/api/members", {
                 method: "POST",
-                body: JSON.stringify({ email, password, role, name, position, bio })
+                body: JSON.stringify({ email, password, role, name, position })
             });
 
             document.getElementById("createMemberForm").reset();
