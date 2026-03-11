@@ -68,10 +68,13 @@
     color: #2a5298;
 }
 
-.members-page {
-    max-width: 800px;
-    margin: 0 auto;
+.members-page, .publications-page, .researches-page, .lectures-page, .seminars-page, .archives-page, .contact-page {
+    max-width: 900px;
+    margin: 25px 300px 25px;
     padding: 24px 24px 40px;
+    background-color: white;
+    border-radius: 20px;
+    border: 1px solid #eeeeee;
 }
 
 .members-page .container {
@@ -169,7 +172,7 @@
     grid-template-columns: 96px 1fr;
     gap: 20px;
     align-items: start;
-    background: #ffffff;
+    background: #f8fafc;
     border: 1px solid #e7ebf0;
     border-radius: 12px;
     padding: 20px;
@@ -252,18 +255,6 @@
     line-height: 1.55;
     color: #3f4753;
     margin-bottom: 8px;
-}
-
-.researches-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 24px 24px 40px;
-}
-
-.publications-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 24px 24px 40px;
 }
 
 .researches-page .container {
@@ -365,11 +356,6 @@
     line-height: 1.55;
 }
 
-.contact-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 24px 24px 40px;
-}
 
 .contact-page .container {
     max-width: 100%;
