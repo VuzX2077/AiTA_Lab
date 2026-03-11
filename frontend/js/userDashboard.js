@@ -97,10 +97,13 @@ if (isAuthValid) {
         return res.json();
     })
     .then(data => {
+        const memberName = data.member?.name || data.user?.name || "N/A";
+
         document.getElementById("profileInfo").innerHTML = `
+            <p><strong>Name:</strong> ${memberName}</p>
             <p><strong>User ID:</strong> ${data.user.id}</p>
             <p><strong>Role:</strong> ${data.user.role}</p>
-            <p><strong>Permissions:</strong> Create / Edit / Delete your own publications</p>
+            <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
         `;
     })
     .catch((error) => {
@@ -243,7 +246,7 @@ window.startEditPublication = startEditPublication;
 
 if (isAuthValid) {
     loadMyPublications();
-    showSection("profileSection");
+    showSection("overviewSection");
 
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", () => {

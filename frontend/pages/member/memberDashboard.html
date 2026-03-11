@@ -32,8 +32,7 @@
 <main class="dashboard-shell">
     <aside class="dashboard-sidebar">
         <ul class="sidebar-menu">
-            <li><button class="sidebar-link active" data-target="profileSection">Profile</button></li>
-            <li><button class="sidebar-link" data-target="overviewSection">Overview</button></li>
+            <li><button class="sidebar-link active" data-target="overviewSection">Dashboard</button></li>
             <li><button class="sidebar-link" data-target="publicationsSection">My Publications</button></li>
             <li><button class="sidebar-link" data-target="submitSection">Submit Publication</button></li>
             <li><button class="sidebar-link" data-target="settingsSection">Settings</button></li>
@@ -42,20 +41,27 @@
     </aside>
 
     <section class="dashboard-content">
-        <div class="dashboard-section dashboard-panel" id="overviewSection">
-            <h2>Overview</h2>
+        <div class="dashboard-section dashboard-panel active" id="overviewSection">
+            <h2>Dashboard Overview</h2>
+            
+            <!-- Profile Information -->
+            <div class="profile-section">
+                <div id="profileInfo"></div>
+            </div>
+
+            <!-- Statistics -->
             <div class="overview-grid">
                 <div class="overview-card">
-                    <p class="overview-label">Total Publications</p>
+                    <p class="overview-label">My Publications</p>
                     <p class="overview-value" id="statTotal">0</p>
+                </div>
+                <div class="overview-card">
+                    <p class="overview-label">Pending Review</p>
+                    <p class="overview-value" id="statPending">0</p>
                 </div>
                 <div class="overview-card">
                     <p class="overview-label">Approved</p>
                     <p class="overview-value" id="statApproved">0</p>
-                </div>
-                <div class="overview-card">
-                    <p class="overview-label">Pending</p>
-                    <p class="overview-value" id="statPending">0</p>
                 </div>
                 <div class="overview-card">
                     <p class="overview-label">Rejected</p>
@@ -76,15 +82,10 @@
                 <input type="text" id="authors" placeholder="Authors" required>
                 <input type="text" id="journal" placeholder="Journal" required>
                 <input type="number" id="year" placeholder="Year" required>
-                <textarea id="description" placeholder="Description" required></textarea>
+                <textarea id="description" placeholder="Description (optional)"></textarea>
                 <input type="text" id="doi" placeholder="DOI (optional)">
                 <button type="submit">Create</button>
             </form>
-        </div>
-
-        <div class="dashboard-section dashboard-panel active" id="profileSection">
-            <h2>Profile</h2>
-            <div id="profileInfo"></div>
         </div>
 
         <div class="dashboard-section dashboard-panel" id="settingsSection">
