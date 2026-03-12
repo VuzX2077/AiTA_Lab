@@ -1,0 +1,201 @@
+#createMemberForm {
+    margin-bottom: 0;
+}
+
+.admin-panel {
+    display: none;
+}
+
+.admin-panel.active {
+    display: block;
+}
+
+.admin-sidebar-menu {
+    gap: 6px;
+}
+
+.sidebar-group-title {
+    margin-top: 10px;
+    padding: 10px 8px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #7a7a7a;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.sidebar-sublink {
+    padding-left: 24px;
+    font-size: 15px;
+}
+
+.admin-note {
+    margin: 0;
+    color: #666;
+}
+
+.admin-overview-top {
+    margin-top: 16px;
+}
+
+.admin-profile-card {
+    padding: 16px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.admin-overview-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-overview-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.admin-publication-health {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.admin-publication-health h3 {
+    margin: 0 0 12px;
+    font-size: 17px;
+}
+
+.admin-health-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 48px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-health-row:last-child {
+    margin-bottom: 0;
+}
+
+.admin-health-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #edf0f3;
+    overflow: hidden;
+}
+
+.admin-health-fill {
+    height: 100%;
+    width: 0;
+    transition: width 0.25s ease;
+}
+
+.admin-health-fill.approved {
+    background: #16a34a;
+}
+
+.admin-health-fill.pending {
+    background: #f59e0b;
+}
+
+.admin-health-fill.rejected {
+    background: #dc2626;
+}
+
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-stat-card {
+    border: 1px solid #e9e9e9;
+    border-radius: 10px;
+    padding: 16px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-stat-card p {
+    margin: 0;
+}
+
+.admin-stat-card p:first-child {
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.25;
+    min-height: 50px;
+}
+
+.admin-stat-card p:last-child {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1f1f1f;
+    margin-top: auto;
+}
+
+#rolesMemberList div,
+#activityLogList p {
+    padding: 12px;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+#rolesMemberList p,
+#adminProfileInfo p {
+    margin: 0 0 6px;
+}
+
+.roles-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.roles-actions select {
+    width: 140px;
+    margin: 0;
+    padding: 8px 10px;
+}
+
+.save-role-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.save-role-btn:hover {
+    background-color: #333;
+}
+
+.roles-actions select:disabled,
+.save-role-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .admin-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-health-row {
+        grid-template-columns: 78px 1fr 42px;
+        gap: 8px;
+    }
+}

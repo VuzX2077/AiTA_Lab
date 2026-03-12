@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>User Dashboard - AiTA Lab</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/member.css">
+</head>
+
+<body>
+
+<header>
+    <nav class="nav-container">
+        <div class="logo">
+                <a href="./index.html">AiTA Lab</a>
+            </div>
+
+            <ul class="menu">
+                <li><a href="./members.html" data-text="Member">Member</a></li>
+                <li><a href="./publications.html" data-text="Publication">Publication</a></li>
+                <li><a href="./researches.html" data-text="Research">Research</a></li>
+                <li><a href="./lectures.html" data-text="Lecture">Lecture</a></li>
+                <li><a href="./seminars.html" data-text="Seminar">Seminar</a></li>
+                <li><a href="./archives.html" data-text="Archive">Archive</a></li>
+                <li><a href="./contact.html" data-text="Contact">Contact</a></li>
+            </ul>
+
+            <div class="auth">  
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+    </nav>
+</header>
+
+<main class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <ul class="sidebar-menu">
+            <li><button class="sidebar-link active" data-target="overviewSection">Dashboard</button></li>
+            <li><button class="sidebar-link" data-target="publicationsSection">My Publications</button></li>
+            <li><button class="sidebar-link" data-target="submitSection">Submit Publication</button></li>
+            <li><button class="sidebar-link" data-target="settingsSection">Settings</button></li>
+            <li><button class="sidebar-link sidebar-logout" id="logoutBtn">Logout</button></li>
+        </ul>
+    </aside>
+
+    <section class="dashboard-content">
+        <div class="dashboard-section dashboard-panel active" id="overviewSection">
+            <h2>Dashboard Overview</h2>
+            <div class="profile-section">
+                <div id="profileInfo"></div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <p class="overview-label">My Publications</p>
+                    <p class="overview-value" id="statTotal">0</p>
+                </div>
+                <div class="overview-card">
+                    <p class="overview-label">Pending Review</p>
+                    <p class="overview-value" id="statPending">0</p>
+                </div>
+                <div class="overview-card">
+                    <p class="overview-label">Approved</p>
+                    <p class="overview-value" id="statApproved">0</p>
+                </div>
+                <div class="overview-card">
+                    <p class="overview-label">Rejected</p>
+                    <p class="overview-value" id="statRejected">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section dashboard-panel" id="publicationsSection">
+            <h2>My Publications</h2>
+            <div id="publicationList"></div>
+        </div>
+
+        <div class="dashboard-section dashboard-panel" id="submitSection">
+            <h2>Create New Publication</h2>
+            <form id="createPubForm">
+                <input type="text" id="title" placeholder="Title" required>
+                <input type="text" id="authors" placeholder="Authors" required>
+                <input type="text" id="journal" placeholder="Journal" required>
+                <input type="number" id="year" placeholder="Year" required>
+                <textarea id="description" placeholder="Description (optional)"></textarea>
+                <input type="text" id="doi" placeholder="DOI (optional)">
+                <button type="submit">Create</button>
+            </form>
+        </div>
+
+        <div class="dashboard-section dashboard-panel" id="settingsSection">
+            <h2>Settings</h2>
+            <p class="settings-note">No settings available yet.</p>
+        </div>
+    </section>
+</main>
+
+<script src="js/config.js"></script>
+    <script src="js/userDashboard.js"></script>
+</body>
+</html>
