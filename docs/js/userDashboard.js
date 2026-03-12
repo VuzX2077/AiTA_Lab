@@ -8,7 +8,7 @@ let isAuthValid = true;
 
 if (!token) {
     isAuthValid = false;
-    window.location.href = getPageUrl("login.html");
+    window.location.href = "/login";
 }
 
 // Decode JWT
@@ -25,10 +25,10 @@ const user = parseJwt(token);
 if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
     clearAuth();
     isAuthValid = false;
-    window.location.href = getPageUrl("login.html");
+    window.location.href = "/login";
 } else if (user.role !== "user") {
     isAuthValid = false;
-    window.location.href = getPageUrl("adminDashboard.html");
+    window.location.href = "/adminDashboard";
 }
 
 let editingPublicationId = null;
@@ -54,7 +54,7 @@ sidebarLinks.forEach((link) => {
 });
 
 async function request(url, options = {}) {
-    const response = await fetch(getApiUrl(url), {
+    const response = await fetch(url, {
         ...options,
         headers: {
             "Content-Type": "application/json",
@@ -68,7 +68,7 @@ async function request(url, options = {}) {
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
-            window.location.href = getPageUrl("login.html");
+            window.location.href = "/login";
         }
         throw new Error(data.message || "Request failed");
     }
@@ -78,7 +78,7 @@ async function request(url, options = {}) {
 
 // Load profile
 if (isAuthValid) {
-    fetch(getApiUrl("/api/profile"), {
+    fetch("/api/profile", {
         headers: {
             "Authorization": "Bearer " + token
         }
@@ -87,7 +87,7 @@ if (isAuthValid) {
         if (!res.ok) {
             if (res.status === 401 || res.status === 403) {
                 clearAuth();
-                window.location.href = getPageUrl("login.html");
+                window.location.href = "/login";
             }
 
             const errorData = await res.json().catch(() => ({}));
@@ -251,6 +251,6 @@ if (isAuthValid) {
     // Logout
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
-        window.location.href = getPageUrl("index.html");
+        window.location.href = "/";
     });
 }

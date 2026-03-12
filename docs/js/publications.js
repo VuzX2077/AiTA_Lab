@@ -6,7 +6,7 @@ async function loadApprovedPublications() {
     }
 
     try {
-        const response = await fetch(getApiUrl("/api/publications/public"));
+        const response = await fetch("/api/publications/public");
         const data = await response.json();
 
         if (!response.ok) {

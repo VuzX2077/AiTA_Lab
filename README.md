@@ -187,6 +187,32 @@ npm start
 
 Open: `http://localhost:3000`
 
+## Frontend to Docs Sync Workflow
+
+Use `frontend/` as the source of truth for UI changes.
+
+- Edit HTML/CSS/JS in `frontend/`
+- Run the sync command to regenerate `docs/` for GitHub Pages
+
+```bash
+npm run sync:docs
+```
+
+What the sync script does:
+- Copies `frontend/css` into `docs/css`
+- Copies `frontend/js` into `docs/js`
+- Keeps `docs/js/config.js` for GitHub Pages API configuration
+- Generates root pages like `docs/index.html`, `docs/publications.html`, `docs/login.html`
+- Regenerates `docs/pages/*` as redirects to the root `docs/*.html` pages
+
+Recommended workflow:
+1. Update the UI in `frontend/`
+2. Run `npm run sync:docs`
+3. Review the generated `docs/` changes
+4. Commit and push
+
+For GitHub Pages, set the source to the `/docs` folder and update `docs/js/config.js` with your deployed backend URL if needed.
+
 ## Security Notes
 
 - Protected endpoints require `Authorization: Bearer <token>`.
