@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Admin Dashboard - AiTA Lab</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+
+<header>
+    <nav class="nav-container">
+        <div class="logo">
+                <a href="./index.html">AiTA Lab</a>
+            </div>
+
+            <ul class="menu">
+                <li><a href="./members.html" data-text="Member">Member</a></li>
+                <li><a href="./publications.html" data-text="Publication">Publication</a></li>
+                <li><a href="./researches.html" data-text="Research">Research</a></li>
+                <li><a href="./lectures.html" data-text="Lecture">Lecture</a></li>
+                <li><a href="./seminars.html" data-text="Seminar">Seminar</a></li>
+                <li><a href="./archives.html" data-text="Archive">Archive</a></li>
+                <li><a href="./contact.html" data-text="Contact">Contact</a></li>
+            </ul>
+
+            <div class="auth">  
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+    </nav>
+</header>
+
+<main class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <ul class="sidebar-menu admin-sidebar-menu">
+            <li><button class="sidebar-link active" data-target="profileSection">Dashboard</button></li>
+
+            <li class="sidebar-group-title">Publications</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="pendingPublicationsSection">Pending Approval</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="approvedPublicationsSection">Approved</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="rejectedPublicationsSection">Rejected</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="allPublicationsSection">All Publications</button></li>
+
+            <li class="sidebar-group-title">Members</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="allMembersSection">All Members</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="addMemberSection">Add Member</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="rolesManagementSection">Roles Management</button></li>
+
+            <li class="sidebar-group-title">Reports</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="activityLogSection">Activity Log</button></li>
+
+            <li><button class="sidebar-link" data-target="settingsSection">Settings</button></li>
+        </ul>
+    </aside>
+
+    <section class="dashboard-content">
+        <div class="dashboard-section admin-panel active" id="profileSection">
+            <h2>Dashboard Overview</h2>
+
+            <div class="admin-overview-top">
+                <div class="admin-profile-card" id="adminProfileInfo"></div>
+            </div>
+
+            <div class="admin-overview-grid">
+                <div class="admin-stat-card admin-overview-card">
+                    <p>Total Publications</p>
+                    <p id="overviewTotalPublications">0</p>
+                </div>
+                <div class="admin-stat-card admin-overview-card">
+                    <p>Pending Publications</p>
+                    <p id="overviewPendingPublications">0</p>
+                </div>
+                <div class="admin-stat-card admin-overview-card">
+                    <p>Approved Publications</p>
+                    <p id="overviewApprovedPublications">0</p>
+                </div>
+                <div class="admin-stat-card admin-overview-card">
+                    <p>Total Members</p>
+                    <p id="overviewTotalMembers">0</p>
+                </div>
+                <div class="admin-stat-card admin-overview-card">
+                    <p>Active Researchers</p>
+                    <p id="overviewActiveResearchers">0</p>
+                </div>
+            </div>
+
+            <div class="admin-publication-health">
+                <h3>Publication Status</h3>
+                <div class="admin-health-row">
+                    <span>Approved</span>
+                    <div class="admin-health-bar"><div id="approvedBar" class="admin-health-fill approved"></div></div>
+                    <span id="approvedBarLabel">0%</span>
+                </div>
+                <div class="admin-health-row">
+                    <span>Pending</span>
+                    <div class="admin-health-bar"><div id="pendingBar" class="admin-health-fill pending"></div></div>
+                    <span id="pendingBarLabel">0%</span>
+                </div>
+                <div class="admin-health-row">
+                    <span>Rejected</span>
+                    <div class="admin-health-bar"><div id="rejectedBar" class="admin-health-fill rejected"></div></div>
+                    <span id="rejectedBarLabel">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="pendingPublicationsSection">
+            <h2>Pending Approval</h2>
+            <div id="pendingPublicationList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="approvedPublicationsSection">
+            <h2>Approved Publications</h2>
+            <div id="approvedPublicationList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="rejectedPublicationsSection">
+            <h2>Rejected Publications</h2>
+            <div id="rejectedPublicationList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="allPublicationsSection">
+            <h2>All Publications</h2>
+            <div id="publicationList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="allMembersSection">
+            <h2>All Members</h2>
+            <div id="memberList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="addMemberSection">
+            <h2>Add Member</h2>
+            <form id="createMemberForm">
+                <input type="text" id="memberName" placeholder="Full Name" required>
+                <input type="email" id="memberEmail" placeholder="Member Email" required>
+                <input type="password" id="memberPassword" placeholder="Temporary Password" required>
+                <input type="text" id="memberPosition" placeholder="Position">
+                <select id="memberRole">
+                    <option value="user" selected>User</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button type="submit">Add Member</button>
+            </form>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="rolesManagementSection">
+            <h2>Roles Management</h2>
+            <div id="rolesMemberList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="activityLogSection">
+            <h2>Activity Log</h2>
+            <div id="activityLogList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="settingsSection">
+            <h2>Settings</h2>
+            <p class="admin-note">No settings available yet.</p>
+        </div>
+    </section>
+</main>
+
+
+<script src="js/config.js"></script>
+<script src="js/adminDashboard.js"></script>
+</body>
+</html>

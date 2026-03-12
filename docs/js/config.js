@@ -17,4 +17,10 @@
             ? `${window.APP_CONFIG.API_BASE_URL}${normalizedPath}`
             : normalizedPath;
     };
+
+    window.getPageUrl = function (page) {
+        const normalizedPage = page.replace(/^\.\//, "");
+        const isNestedPage = window.location.pathname.includes("/pages/");
+        return isNestedPage ? `../../${normalizedPage}` : `./${normalizedPage}`;
+    };
 })();

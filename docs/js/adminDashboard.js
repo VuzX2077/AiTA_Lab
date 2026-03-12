@@ -8,7 +8,7 @@ let isAuthValid = true;
 
 if (!token) {
     isAuthValid = false;
-    window.location.href = "./login.html";
+    window.location.href = getPageUrl("login.html");
 }
 
 function parseJwt(token) {
@@ -103,10 +103,10 @@ function addActivityLog(message) {
 if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
     clearAuth();
     isAuthValid = false;
-    window.location.href = "./login.html";
+    window.location.href = getPageUrl("login.html");
 } else if (user.role !== "admin") {
     isAuthValid = false;
-    window.location.href = "./memberDashboard.html";
+    window.location.href = getPageUrl("memberDashboard.html");
 }
 
 async function request(url, options = {}) {
@@ -139,7 +139,7 @@ async function request(url, options = {}) {
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
-            window.location.href = "./login.html";
+            window.location.href = getPageUrl("login.html");
         }
 
         if (response.status === 404 && url.includes("/members/") && url.includes("/role")) {
@@ -412,7 +412,7 @@ if (isAuthValid) {
 
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
-        window.location.href = "./index.html";
+        window.location.href = getPageUrl("index.html");
     });
 }
 
