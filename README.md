@@ -1,71 +1,73 @@
-# AiTA Lab Project
+# AiTA Lab
 
-## 1. Project Overview
+AiTA Lab is a web application for managing lab members and research publications with JWT authentication and role-based access control.
 
-AiTA Lab is a web application for managing research publications and members with role-based access control.
+## Overview
 
 - Public users can view approved publications.
-- Authenticated members can create/update/delete their own publications.
-- Admin can approve/reject publications and manage members.
+- Members (`role: user`) can manage their own publications.
+- Admins (`role: admin`) can review publications and manage users/members.
 
----
-
-## 2. System Architecture
+## Architecture
 
 ```text
-Browser (Frontend: HTML/CSS/JS)
-        ↓ HTTP (REST API)
-Node.js + Express (Backend)
-        ↓
+Browser (HTML/CSS/JS)
+        |
+        | HTTP (REST)
+        v
+Node.js + Express
+        |
+        v
 PostgreSQL
 ```
 
-The backend also serves static frontend files from `frontend/`.
+The backend serves both:
+- API endpoints under `/api`
+- Static frontend files from `frontend/`
 
----
+This project follows a layered structure:
+- Routes -> Controllers -> Services -> Database
+- Middleware handles authentication and authorization
 
-## 3. Technology Stack
+## Tech Stack
 
-### Frontend
-- HTML5
-- CSS3
-- Vanilla JavaScript (Fetch API)
+- Frontend: HTML5, CSS3, Vanilla JavaScript (Fetch API)
+- Backend: Node.js, Express
+- Database: PostgreSQL (`pg`)
+- Security: JWT (`jsonwebtoken`), Password hashing (`bcrypt`)
 
-### Backend
-- Node.js
-- Express
-
-### Database
-- PostgreSQL (`pg`)
-
-### Security
-- JWT (`jsonwebtoken`)
-- Password hashing (`bcrypt`)
-
----
-
-## 4. Main Features
+## Key Features
 
 ### Public
-- View homepage
+- View home and public pages
 - View approved publications
 
-### Member (`role: user`)
+### Member (`user`)
 - Login / Logout
 - View profile
 - View own publications
 - Create publication
 - Edit/Delete own publication only
 
-### Admin (`role: admin`)
-- Review pending publications
-- Approve/Reject publications
-- Delete publications
-- Add/Delete members
+### Admin (`admin`)
+- View pending publications
+- Approve / Reject / Delete publications
+- View members
+- Create/Delete members
+- Update member role (`user` <-> `admin`)
 
----
+## Clean Page Routes
 
-## 5. API Endpoints (Current)
+The app uses clean routes and maps them to files in `frontend/pages`:
+
+- `/` -> public index
+- `/publications`, `/researches`, `/members`, `/lectures`, `/seminars`, `/archives`, `/contact`
+- `/login`, `/register`
+- `/adminDashboard`, `/memberDashboard`
+
+Legacy `.html` paths are redirected to these clean routes.
+
+## API Endpoints
 
 Base prefix: `/api`
 
@@ -73,16 +75,16 @@ Base prefix: `/api`
 - `POST /api/login`
 - `POST /api/register`
 
-### Member / Profile
+### Profile
 - `GET /api/profile` (user/admin)
 
 ### Publications
-- `GET /api/publications/public` (public approved list)
+- `GET /api/publications/public` (public, approved only)
 - `GET /api/publications` (user/admin)
 - `GET /api/my-publications` (user/admin)
-- `POST /api/publications` (user/admin)
-- `PUT /api/publications/:id` (user/admin, ownership checked)
-- `DELETE /api/publications/:id` (user/admin, ownership checked)
+- `POST /api/publications` (user only)
+- `PUT /api/publications/:id` (user only, own publication)
+- `DELETE /api/publications/:id` (user only, own publication)
 
 ### Admin
 - `GET /api/publications/pending` (admin)
@@ -92,108 +94,116 @@ Base prefix: `/api`
 - `GET /api/members` (admin)
 - `POST /api/members` (admin)
 - `DELETE /api/members/:id` (admin)
+- `PATCH /api/members/:id/role` (admin)
 
----
+## Project Structure
 
-## 6. Setup & Run (Local)
+```text
+AiTA_Lab/
+|-- package.json
+|-- README.md
+|-- backend/
+|   |-- db.js
+|   |-- server.js
+|   |-- controllers/
+|   |   |-- adminController.js
+|   |   |-- authController.js
+|   |   |-- memberController.js
+|   |   |-- publicationController.js
+|   |-- middleware/
+|   |   |-- authMiddleware.js
+|   |-- routes/
+|   |   |-- adminRoutes.js
+|   |   |-- authRoutes.js
+|   |   |-- memberRoutes.js
+|   |   |-- publicationRoutes.js
+|   |-- services/
+|       |-- adminService.js
+|       |-- authService.js
+|       |-- memberService.js
+|       |-- publicationService.js
+|
+|-- frontend/
+|   |-- script.js
+|   |-- css/
+|   |   |-- admin.css
+|   |   |-- base.css
+|   |   |-- components.css
+|   |   |-- layout.css
+|   |   |-- member.css
+|   |   |-- public.css
+|   |-- js/
+|   |   |-- adminDashboard.js
+|   |   |-- login.js
+|   |   |-- main.js
+|   |   |-- publications.js
+|   |   |-- userDashboard.js
+|   |-- pages/
+|       |-- admin/
+|       |   |-- adminDashboard.html
+|       |-- auth/
+|       |   |-- login.html
+|       |   |-- register.html
+|       |-- member/
+|       |   |-- memberDashboard.html
+|       |-- public/
+|           |-- index.html
+|           |-- publications.html
+|           |-- researches.html
+|           |-- members.html
+|           |-- lectures.html
+|           |-- seminars.html
+|           |-- archives.html
+|           |-- contact.html
+```
+
+## Local Setup
 
 ### 1) Install dependencies
-Run at project root:
 
 ```bash
 npm install
 ```
 
-### 2) Create environment file
+### 2) Configure environment
+
 Create `backend/.env`:
 
 ```env
 PORT=3000
-DATABASE_URL=your_postgresql_connection_string
-JWT_SECRET=your_secret_key
+DATABASE_URL=postgresql://username:password@host:5432/database_name
+JWT_SECRET=your_strong_secret_key
 ```
 
-### 3) Start server
-Run at project root:
+Notes:
+- `PORT` defaults to `3000` if omitted.
+- `DATABASE_URL` is preferred; fallback vars (`DB_USER`, `DB_HOST`, `DB_NAME`, `DB_PASSWORD`, `DB_PORT`) are also supported.
+
+### 3) Run the app
 
 ```bash
 npm start
 ```
 
-Server runs at:
+Open: `http://localhost:3000`
 
-```text
-http://localhost:3000
-```
+## Security Notes
 
----
+- Protected endpoints require `Authorization: Bearer <token>`.
+- JWT payload contains `id` and `role`, expires in 1 hour.
+- Passwords are hashed with bcrypt.
+- Legacy plain-text passwords are migrated to bcrypt on successful login.
 
-## 7. Frontend CSS Architecture
+## Deployment (GitHub + Render/Railway)
 
-`frontend/css/` has been split into focused files:
+1. Push source code to GitHub.
+2. Create a Node web service from the repository.
+3. Set build/start commands:
+   - Build: `npm install`
+   - Start: `npm start`
+4. Provision PostgreSQL and set environment variables:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `PORT` (if required by platform)
 
-- `base.css`: global foundation (body, container)
-- `layout.css`: header, nav, footer, dashboard layout, sidebar layout
-- `components.css`: buttons, forms, cards/lists, reusable UI blocks
-- `admin.css`: admin-only overrides/styles
-- `member.css`: member dashboard/overview/profile/settings styles
-- `public.css`: public pages (index, login, general public sections)
-
----
-
-## 8. Current Project Structure
-
-```text
-AiTA_Lab/
-├── package.json
-├── README.md
-├── backend/
-│   ├── db.js
-│   ├── server.js
-│   ├── controllers/
-│   │   ├── adminController.js
-│   │   ├── authController.js
-│   │   ├── memberController.js
-│   │   └── publicationController.js
-│   ├── middleware/
-│   │   └── authMiddleware.js
-│   ├── routes/
-│   │   ├── adminRoutes.js
-│   │   ├── authRoutes.js
-│   │   ├── memberRoutes.js
-│   │   └── publicationRoutes.js
-│   └── services/
-│       ├── adminService.js
-│       ├── authService.js
-│       ├── memberService.js
-│       └── publicationService.js
-└── frontend/
-    ├── adminDashboard.html
-    ├── index.html
-    ├── login.html
-    ├── publications.html
-    ├── register.html
-    ├── script.js
-    ├── userDashboard.html
-    ├── css/
-    │   ├── admin.css
-    │   ├── base.css
-    │   ├── components.css
-    │   ├── layout.css
-    │   ├── member.css
-    │   └── public.css
-    └── js/
-        ├── adminDashboard.js
-        ├── login.js
-        ├── main.js
-        ├── publications.js
-        └── userDashboard.js
-```
-
----
-
-## 9. Notes
-
-- Authentication is JWT-based; protected routes require `Authorization: Bearer <token>`.
-- `register.html` currently exists in structure but is empty.
-- If deploying frontend separately (e.g., GitHub Pages), update API base URL in frontend JS as needed.
+Because Express serves frontend static files, one backend service is enough for the full app.
