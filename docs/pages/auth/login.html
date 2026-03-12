@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="refresh" content="0; url=../../login.html">
-    <title>Redirecting...</title>
+    <title>Login - AiTA Lab</title>
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/public.css">
 </head>
-<body>
-    <p>Redirecting to <a href="../../login.html">../../login.html</a>.</p>
+
+<body class="login-page">
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2>Login</h2>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required>
+                </div>
+
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+
+            <p class="back-home">
+                <a href="/">← Back to Home</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="../../js/login.js"></script>
 </body>
+
 </html>
