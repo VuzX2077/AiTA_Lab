@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+const { runMigrations } = require("./migrations");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +67,17 @@ app.use("/api", publicationRoutes);
 app.use("/api", memberRoutes);
 app.use("/api", adminRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    await runMigrations();
+
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server", error);
+    process.exit(1);
+  }
+}
+
+startServer();

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../db");
+const userRepository = require("../repositories/userRepository");
 
 // Verify token
 async function verifyToken(req, res, next) {
@@ -32,16 +32,12 @@ async function verifyToken(req, res, next) {
     }
 
     try {
-        const userResult = await pool.query(
-            "SELECT id, role FROM users WHERE id = $1",
-            [decoded.id]
-        );
+        const currentUser = await userRepository.findById(decoded.id);
 
-        if (userResult.rows.length === 0) {
+        if (!currentUser) {
             return res.status(401).json({ message: "User no longer exists" });
         }
 
-        const currentUser = userResult.rows[0];
         req.user = { id: currentUser.id, role: currentUser.role };
         next();
     } catch (err) {

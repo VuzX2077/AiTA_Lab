@@ -1,60 +1,21 @@
-const pool = require("../db.js");
-const { ensurePublicationSchema } = require("./publicationService");
+const publicationRepository = require("../repositories/publicationRepository");
+const userRepository = require("../repositories/userRepository");
 const memberService = require("./memberService");
 
 async function getPendingPublications() {
-    await ensurePublicationSchema();
-    const result = await pool.query(
-        `
-        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
-        FROM publications p
-        LEFT JOIN users u ON u.id = p.author_id
-        WHERE p.status = 'pending'
-        ORDER BY p.created_at DESC
-        `
-    );
-
-    return result.rows;
+    return publicationRepository.findPendingPublications();
 }
 
 async function approvePublication(publicationId) {
-    await ensurePublicationSchema();
-    const result = await pool.query(
-        `
-        UPDATE publications
-        SET status = 'approved'
-        WHERE id = $1
-        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
-        `,
-        [publicationId]
-    );
-
-    return result.rows[0] || null;
+    return publicationRepository.updateStatus(publicationId, "approved");
 }
 
 async function rejectPublication(publicationId) {
-    await ensurePublicationSchema();
-    const result = await pool.query(
-        `
-        UPDATE publications
-        SET status = 'rejected'
-        WHERE id = $1
-        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
-        `,
-        [publicationId]
-    );
-
-    return result.rows[0] || null;
+    return publicationRepository.updateStatus(publicationId, "rejected");
 }
 
 async function deletePublication(publicationId) {
-    await ensurePublicationSchema();
-    const result = await pool.query(
-        "DELETE FROM publications WHERE id = $1 RETURNING id",
-        [publicationId]
-    );
-
-    return result.rows.length > 0;
+    return publicationRepository.deleteById(publicationId);
 }
 
 async function getMembers() {
@@ -70,17 +31,7 @@ async function deleteMember(userId) {
 }
 
 async function updateMemberRole(userId, role) {
-    const result = await pool.query(
-        `
-        UPDATE users
-        SET role = $1
-        WHERE id = $2
-        RETURNING id, email, role
-        `,
-        [role, userId]
-    );
-
-    return result.rows[0] || null;
+    return userRepository.updateRole(userId, role);
 }
 
 module.exports = {

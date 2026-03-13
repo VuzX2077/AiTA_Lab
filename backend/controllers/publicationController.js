@@ -1,5 +1,4 @@
 const publicationService = require("../services/publicationService");
-const memberService = require("../services/memberService");
 
 function parsePublicationPayload(req, res) {
     const { title, link, authors, journal, year, description, doi } = req.body;
@@ -63,7 +62,7 @@ async function getPublications(req, res) {
 
 async function getMyPublications(req, res) {
     try {
-        const rows = await memberService.getMyPublications(req.user.id);
+        const rows = await publicationService.getMyPublications(req.user.id);
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -82,7 +81,7 @@ async function createPublication(req, res) {
     }
 
     try {
-        const created = await memberService.createPublication({
+        const created = await publicationService.createPublication({
             ...payload,
             authorId: req.user.id
         });
@@ -109,7 +108,7 @@ async function updatePublication(req, res) {
     }
 
     try {
-        const updated = await memberService.updateOwnPublication({
+        const updated = await publicationService.updateOwnPublication({
             publicationId,
             userId: req.user.id,
             ...payload
@@ -137,7 +136,7 @@ async function deletePublication(req, res) {
     }
 
     try {
-        const deleted = await memberService.deleteOwnPublication(publicationId, req.user.id);
+        const deleted = await publicationService.deleteOwnPublication(publicationId, req.user.id);
         if (!deleted) {
             return res.status(403).json({ message: "You can only delete your own publication" });
         }

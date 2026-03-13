@@ -1,22 +1,18 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const pool = require("../db.js");
+const userRepository = require("../repositories/userRepository");
 
 function isBcryptHash(passwordValue) {
     return typeof passwordValue === "string" && /^\$2[aby]\$\d{2}\$/.test(passwordValue);
 }
 
 async function login({ email, password }) {
-    const result = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
-        [email]
-    );
+    const user = await userRepository.findByEmail(email);
 
-    if (result.rows.length === 0) {
+    if (!user) {
         return { success: false, reason: "invalid_credentials" };
     }
 
-    const user = result.rows[0];
     let validPassword = false;
 
     if (isBcryptHash(user.password)) {
@@ -26,10 +22,7 @@ async function login({ email, password }) {
 
         if (validPassword) {
             const hashedPassword = await bcrypt.hash(password, 10);
-            await pool.query(
-                "UPDATE users SET password = $1 WHERE id = $2",
-                [hashedPassword, user.id]
-            );
+            await userRepository.updatePasswordById(user.id, hashedPassword);
         }
     }
 
@@ -51,20 +44,17 @@ async function login({ email, password }) {
 }
 
 async function register({ email, password, role }) {
-    const exists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-    if (exists.rows.length > 0) {
+    const exists = await userRepository.existsByEmail(email);
+    if (exists) {
         return { success: false, reason: "email_exists" };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-        "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role",
-        [email, hashedPassword, role]
-    );
+    const user = await userRepository.createUser({ email, password: hashedPassword, role });
 
     return {
         success: true,
-        user: result.rows[0]
+        user
     };
 }
 
