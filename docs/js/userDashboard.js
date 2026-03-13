@@ -37,6 +37,29 @@ let myPublications = [];
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const dashboardPanels = document.querySelectorAll(".dashboard-panel");
 
+function showToast(message, type = "success") {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add("show"));
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+        toast.addEventListener("transitionend", () => toast.remove());
+    }, 3500);
+}
+
 function showSection(sectionId) {
     dashboardPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.id === sectionId);
@@ -108,7 +131,7 @@ if (isAuthValid) {
     })
     .catch((error) => {
         if (error.message) {
-            alert(error.message);
+            showToast(error.message, "error");
         }
     });
 }
@@ -162,7 +185,7 @@ async function loadMyPublications() {
             });
         });
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -190,26 +213,29 @@ if (isAuthValid) {
         const doiInput = document.getElementById("doi").value.trim();
         const doi = doiInput || null;
         const submitButton = e.target.querySelector("button[type='submit']");
+        const isEditing = Boolean(editingPublicationId);
 
         try {
-            if (editingPublicationId) {
+            if (isEditing) {
                 await request(`/api/publications/${editingPublicationId}`, {
                     method: "PUT",
                     body: JSON.stringify({ title, authors, journal, year, description, doi })
                 });
                 editingPublicationId = null;
                 submitButton.textContent = "Create";
+                showToast("Publication updated successfully", "success");
             } else {
                 await request("/api/publications", {
                     method: "POST",
                     body: JSON.stringify({ title, authors, journal, year, description, doi })
                 });
+                showToast("Publication created successfully", "success");
             }
 
             document.getElementById("createPubForm").reset();
             await loadMyPublications();
         } catch (error) {
-            alert(error.message);
+            showToast(isEditing ? `Could not update publication: ${error.message}` : `Could not create publication: ${error.message}`, "error");
         }
     });
 }
@@ -238,7 +264,7 @@ async function deletePublication(id) {
 
         await loadMyPublications();
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 

@@ -34,6 +34,29 @@ const statsState = {
     activeResearchers: 0
 };
 
+function showToast(message, type = "success") {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add("show"));
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+        toast.addEventListener("transitionend", () => toast.remove());
+    }, 3500);
+}
+
 function setText(id, value) {
     const element = document.getElementById(id);
     if (element) {
@@ -186,7 +209,7 @@ async function loadPendingPublications() {
         statsState.pendingPublications = data.length;
         syncOverviewStats();
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -234,7 +257,7 @@ async function loadAllPublications() {
         statsState.rejectedPublications = rejected.length;
         syncOverviewStats();
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -325,7 +348,7 @@ async function loadAdminProfile() {
             <p><strong>Access:</strong> Publication review and member management</p>
         `;
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -335,8 +358,9 @@ async function approvePublication(id) {
         await loadPendingPublications();
         await loadAllPublications();
         addActivityLog(`Approved publication #${id}`);
+        showToast("Publication approved successfully", "success");
     } catch (error) {
-        alert(error.message);
+        showToast(`Could not approve publication: ${error.message}`, "error");
     }
 }
 
@@ -346,8 +370,9 @@ async function rejectPublication(id) {
         await loadPendingPublications();
         await loadAllPublications();
         addActivityLog(`Rejected publication #${id}`);
+        showToast("Publication rejected successfully", "success");
     } catch (error) {
-        alert(error.message);
+        showToast(`Could not reject publication: ${error.message}`, "error");
     }
 }
 
@@ -358,7 +383,7 @@ async function deletePublication(id) {
         await loadAllPublications();
         addActivityLog(`Deleted publication #${id}`);
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -381,8 +406,9 @@ if (isAuthValid) {
             document.getElementById("createMemberForm").reset();
             await loadMembers();
             addActivityLog(`Added member ${email} (${role})`);
+            showToast("Member added successfully", "success");
         } catch (error) {
-            alert(error.message);
+            showToast(`Could not add member: ${error.message}`, "error");
         }
     });
 }
@@ -393,7 +419,7 @@ async function deleteMember(id) {
         await loadMembers();
         addActivityLog(`Deleted member #${id}`);
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
 
@@ -426,6 +452,6 @@ async function updateMemberRole(userId, role, memberEmail) {
         await loadMembers();
         addActivityLog(`Updated role for ${memberEmail} to ${role}`);
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 }
