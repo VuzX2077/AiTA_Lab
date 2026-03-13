@@ -323,6 +323,14 @@
     font-weight: 600;
 }
 
+a.publication-title {
+    text-decoration: none;
+}
+
+a.publication-title:hover {
+    text-decoration: underline;
+}
+
 .researches-page .toc {
     padding: 28px 0;
     margin: 0 0 28px;

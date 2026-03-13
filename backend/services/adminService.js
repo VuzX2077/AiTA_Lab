@@ -6,7 +6,7 @@ async function getPendingPublications() {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        SELECT p.id, p.title, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE p.status = 'pending'
@@ -24,7 +24,7 @@ async function approvePublication(publicationId) {
         UPDATE publications
         SET status = 'approved'
         WHERE id = $1
-        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
+        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
         `,
         [publicationId]
     );
@@ -39,7 +39,7 @@ async function rejectPublication(publicationId) {
         UPDATE publications
         SET status = 'rejected'
         WHERE id = $1
-        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
+        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
         `,
         [publicationId]
     );

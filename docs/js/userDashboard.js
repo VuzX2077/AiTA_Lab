@@ -37,6 +37,27 @@ let myPublications = [];
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const dashboardPanels = document.querySelectorAll(".dashboard-panel");
 
+function normalizeOptionalHttpUrl(value) {
+    if (!value) {
+        return null;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return null;
+    }
+
+    try {
+        const parsed = new URL(trimmed);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            return null;
+        }
+        return parsed.toString();
+    } catch (error) {
+        return null;
+    }
+}
+
 function showToast(message, type = "success") {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -123,7 +144,7 @@ if (isAuthValid) {
         const memberName = data.member?.name || data.user?.name || "N/A";
 
         document.getElementById("profileInfo").innerHTML = `
-            <p><strong>Name:</strong> ${memberName}</p>
+            <p><strong>${memberName}</strong> </p>
             <p><strong>User ID:</strong> ${data.user.id}</p>
             <p><strong>Role:</strong> ${data.user.role}</p>
             <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
@@ -152,6 +173,7 @@ async function loadMyPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
+                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
                     <p><small>Authors: ${pub.authors || "N/A"}</small></p>
                     <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>
@@ -206,20 +228,27 @@ if (isAuthValid) {
         e.preventDefault();
 
         const title = document.getElementById("title").value.trim();
+        const linkInput = document.getElementById("link").value;
         const authors = document.getElementById("authors").value.trim();
         const journal = document.getElementById("journal").value.trim();
         const year = document.getElementById("year").value;
         const description = document.getElementById("description").value.trim();
         const doiInput = document.getElementById("doi").value.trim();
         const doi = doiInput || null;
+        const link = normalizeOptionalHttpUrl(linkInput);
         const submitButton = e.target.querySelector("button[type='submit']");
         const isEditing = Boolean(editingPublicationId);
+
+        if (linkInput.trim() && !link) {
+            showToast("Link must be a valid URL starting with http:// or https://", "error");
+            return;
+        }
 
         try {
             if (isEditing) {
                 await request(`/api/publications/${editingPublicationId}`, {
                     method: "PUT",
-                    body: JSON.stringify({ title, authors, journal, year, description, doi })
+                    body: JSON.stringify({ title, link, authors, journal, year, description, doi })
                 });
                 editingPublicationId = null;
                 submitButton.textContent = "Create";
@@ -227,7 +256,7 @@ if (isAuthValid) {
             } else {
                 await request("/api/publications", {
                     method: "POST",
-                    body: JSON.stringify({ title, authors, journal, year, description, doi })
+                    body: JSON.stringify({ title, link, authors, journal, year, description, doi })
                 });
                 showToast("Publication created successfully", "success");
             }
@@ -244,6 +273,7 @@ function startEditPublication(publication) {
     editingPublicationId = publication.id;
     showSection("submitSection");
     document.getElementById("title").value = publication.title;
+    document.getElementById("link").value = publication.link || "";
     document.getElementById("authors").value = publication.authors || "";
     document.getElementById("journal").value = publication.journal || "";
     document.getElementById("year").value = publication.year || "";

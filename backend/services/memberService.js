@@ -131,7 +131,7 @@ async function getMyPublications(userId) {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        SELECT id, title, authors, journal, doi, year, description, status, author_id, created_at
+        SELECT id, title, link, authors, journal, doi, year, description, status, author_id, created_at
         FROM publications
         WHERE author_id = $1
         ORDER BY created_at DESC
@@ -142,21 +142,21 @@ async function getMyPublications(userId) {
     return result.rows;
 }
 
-async function createPublication({ title, authors, journal, doi, year, description, authorId }) {
+async function createPublication({ title, link, authors, journal, doi, year, description, authorId }) {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        INSERT INTO publications (title, authors, journal, doi, author_id, year, description, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
-        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
+        INSERT INTO publications (title, link, authors, journal, doi, author_id, year, description, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, authors, journal, doi, authorId, year, description]
+        [title, link || null, authors, journal, doi, authorId, year, description]
     );
 
     return result.rows[0];
 }
 
-async function updateOwnPublication({ publicationId, userId, title, authors, journal, doi, year, description }) {
+async function updateOwnPublication({ publicationId, userId, title, link, authors, journal, doi, year, description }) {
     await ensurePublicationSchema();
     const ownPublication = await pool.query(
         "SELECT id FROM publications WHERE id = $1 AND author_id = $2",
@@ -171,16 +171,17 @@ async function updateOwnPublication({ publicationId, userId, title, authors, jou
         `
         UPDATE publications
         SET title = $1,
-            authors = $2,
-            journal = $3,
-            doi = $4,
-            year = $5,
-            description = $6,
+            link = $2,
+            authors = $3,
+            journal = $4,
+            doi = $5,
+            year = $6,
+            description = $7,
             status = 'pending'
-        WHERE id = $7
-        RETURNING id, title, authors, journal, doi, year, description, status, author_id, created_at
+        WHERE id = $8
+        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, authors, journal, doi, year, description, publicationId]
+        [title, link || null, authors, journal, doi, year, description, publicationId]
     );
 
     return updated.rows[0];

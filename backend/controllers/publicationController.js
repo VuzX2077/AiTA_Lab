@@ -2,7 +2,7 @@ const publicationService = require("../services/publicationService");
 const memberService = require("../services/memberService");
 
 function parsePublicationPayload(req, res) {
-    const { title, authors, journal, year, description, doi } = req.body;
+    const { title, link, authors, journal, year, description, doi } = req.body;
 
     if (!title || !authors || !journal || !year) {
         res.status(400).json({ message: "Title, authors, journal and year are required" });
@@ -15,8 +15,24 @@ function parsePublicationPayload(req, res) {
         return null;
     }
 
+    let normalizedLink = null;
+    if (typeof link === "string" && link.trim()) {
+        try {
+            const parsedLink = new URL(link.trim());
+            if (parsedLink.protocol !== "http:" && parsedLink.protocol !== "https:") {
+                res.status(400).json({ message: "Link must start with http:// or https://" });
+                return null;
+            }
+            normalizedLink = parsedLink.toString();
+        } catch (error) {
+            res.status(400).json({ message: "Link must be a valid URL" });
+            return null;
+        }
+    }
+
     return {
         title: title.trim(),
+        link: normalizedLink,
         authors: authors.trim(),
         journal: journal.trim(),
         doi: doi ? doi.trim() : null,

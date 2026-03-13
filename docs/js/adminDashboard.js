@@ -191,6 +191,7 @@ async function loadPendingPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong></p>
+                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
                     <p><small>Authors: ${pub.authors || "N/A"}</small></p>
                     <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>
@@ -238,6 +239,7 @@ async function loadAllPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
+                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
                     <p><small>Authors: ${pub.authors || "N/A"}</small></p>
                     <p><small>Journal: ${pub.journal || "N/A"}</small></p>
                     <p><small>Year: ${pub.year || "N/A"}</small></p>

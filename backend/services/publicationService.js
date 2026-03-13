@@ -11,6 +11,7 @@ async function ensurePublicationSchema() {
         CREATE TABLE IF NOT EXISTS publications (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
+            link TEXT,
             authors TEXT NOT NULL DEFAULT '',
             journal TEXT NOT NULL DEFAULT '',
             doi TEXT,
@@ -22,6 +23,10 @@ async function ensurePublicationSchema() {
         )
     `);
 
+    await pool.query(`
+        ALTER TABLE publications
+        ADD COLUMN IF NOT EXISTS link TEXT
+    `);
     await pool.query(`
         ALTER TABLE publications
         ADD COLUMN IF NOT EXISTS authors TEXT NOT NULL DEFAULT ''
@@ -62,7 +67,7 @@ async function getPublicationsPublic() {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        SELECT p.id, p.title, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE p.status = 'approved'
@@ -76,7 +81,7 @@ async function getPublications(role, userId) {
     await ensurePublicationSchema();
     const result = await pool.query(
         `
-        SELECT p.id, p.title, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE ($1 = 'admin') OR p.status = 'approved' OR p.author_id = $2
