@@ -123,7 +123,7 @@ if (isAuthValid) {
         const memberName = data.member?.name || data.user?.name || "N/A";
 
         document.getElementById("profileInfo").innerHTML = `
-            <p><strong>Name:</strong> ${memberName}</p>
+            <p><strong>${memberName}</strong> </p>
             <p><strong>User ID:</strong> ${data.user.id}</p>
             <p><strong>Role:</strong> ${data.user.role}</p>
             <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
