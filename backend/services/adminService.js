@@ -26,6 +26,10 @@ async function createMember(payload) {
     return memberService.createMemberWithUser(payload);
 }
 
+async function updateMember(userId, fields) {
+    return memberService.updateMemberProfile(userId, fields);
+}
+
 async function deleteMember(userId) {
     return memberService.deleteMemberByUserId(userId);
 }
@@ -41,6 +45,7 @@ module.exports = {
     deletePublication,
     getMembers,
     createMember,
+    updateMember,
     deleteMember,
     updateMemberRole
 };

@@ -1,5 +1,15 @@
 const memberService = require("../services/memberService");
 
+async function getPublicMembers(req, res) {
+    try {
+        const members = await memberService.getPublicMembers();
+        res.json(members);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to load members" });
+    }
+}
+
 async function getProfile(req, res) {
     try {
         const profile = await memberService.getProfileByUserId(req.user.id);
@@ -16,5 +26,6 @@ async function getProfile(req, res) {
 }
 
 module.exports = {
+    getPublicMembers,
     getProfile
 };

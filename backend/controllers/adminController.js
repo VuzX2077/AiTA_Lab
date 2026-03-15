@@ -78,11 +78,24 @@ async function getMembers(req, res) {
 }
 
 async function createMember(req, res) {
-    const { email, password, role, name, position, bio } = req.body;
+    const { email, password, role, name, position, bio, section, photo_url, career, links } = req.body;
     const memberRole = role === "admin" ? "admin" : "user";
+    const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
 
     if (!email || !password || !name) {
         return res.status(400).json({ message: "Email, password and name are required" });
+    }
+
+    if (section && !validSections.includes(section)) {
+        return res.status(400).json({ message: "Invalid section" });
+    }
+
+    if (career !== undefined && !Array.isArray(career)) {
+        return res.status(400).json({ message: "career must be an array" });
+    }
+
+    if (links !== undefined && !Array.isArray(links)) {
+        return res.status(400).json({ message: "links must be an array" });
     }
 
     try {
@@ -92,7 +105,11 @@ async function createMember(req, res) {
             role: memberRole,
             name: name.trim(),
             position: position ? position.trim() : "",
-            bio: bio ? bio.trim() : ""
+            bio: bio ? bio.trim() : "",
+            section: section || "researchers",
+            photo_url: photo_url ? photo_url.trim() : "",
+            career: career || [],
+            links: links || []
         });
 
         if (created.conflict) {
@@ -106,6 +123,53 @@ async function createMember(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Failed to add member" });
+    }
+}
+
+async function updateMember(req, res) {
+    const userId = Number(req.params.id);
+    if (!Number.isInteger(userId)) {
+        return res.status(400).json({ message: "Invalid member id" });
+    }
+
+    const { name, position, bio, section, photo_url, career, links } = req.body;
+    const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
+
+    if (!name || !String(name).trim()) {
+        return res.status(400).json({ message: "Name is required" });
+    }
+
+    if (section && !validSections.includes(section)) {
+        return res.status(400).json({ message: "Invalid section" });
+    }
+
+    if (career !== undefined && !Array.isArray(career)) {
+        return res.status(400).json({ message: "career must be an array" });
+    }
+
+    if (links !== undefined && !Array.isArray(links)) {
+        return res.status(400).json({ message: "links must be an array" });
+    }
+
+    try {
+        const updated = await adminService.updateMember(userId, {
+            name: String(name).trim(),
+            position: position ? String(position).trim() : "",
+            bio: bio ? String(bio).trim() : "",
+            section: section || "researchers",
+            photo_url: photo_url ? String(photo_url).trim() : "",
+            career: career || [],
+            links: links || []
+        });
+
+        if (!updated) {
+            return res.status(404).json({ message: "Member not found" });
+        }
+
+        res.json({ member: updated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to update member" });
     }
 }
 
@@ -170,6 +234,7 @@ module.exports = {
     deletePublication,
     getMembers,
     createMember,
+    updateMember,
     deleteMember,
     updateMemberRole
 };

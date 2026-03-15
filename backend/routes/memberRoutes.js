@@ -4,6 +4,7 @@ const memberController = require("../controllers/memberController");
 
 const router = express.Router();
 
+router.get("/members/public", memberController.getPublicMembers);
 router.get("/profile", verifyToken, authorizeRole(["user", "admin"]), memberController.getProfile);
 
 module.exports = router;

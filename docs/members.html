@@ -51,57 +51,18 @@
 
 	<section id="director" class="member-group container">
 		<h2>Director</h2>
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
 	</section>
 
 	<section id="researchers" class="member-group container">
 		<h2>Researchers</h2>
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
-
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
 	</section>
 
 	<section id="undergraduate" class="member-group container">
 		<h2>Undergraduate Research Assistants</h2>
-
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
-
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
-
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
 	</section>
 
 	<section id="alumni" class="member-group container">
 		<h2>Alumni</h2>
-		<article class="member-card">
-			<div class="member-avatar"></div>
-			<div class="member-info">
-			</div>
-		</article>
 	</section>
 
     <section id="collaborators" class="member-group container">
@@ -119,6 +80,76 @@
 
 <script src="js/config.js"></script>
 <script src="js/main.js"></script>
+<script src="js/members.js"></script>
+
+<!-- Admin edit/add modal -->
+<div id="memberModal" class="mmodal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="mmodalTitle">
+	<div class="mmodal">
+		<div class="mmodal-header">
+			<h3 id="mmodalTitle">Edit Member</h3>
+			<button class="mmodal-close" id="mmodalClose" aria-label="Close">&times;</button>
+		</div>
+		<div class="mmodal-body">
+			<form id="memberForm" novalidate autocomplete="off">
+				<input type="hidden" id="mfUserId">
+				<input type="hidden" id="mfMode" value="edit">
+
+				<!-- only shown when adding -->
+				<div id="mfEmailRow" class="mf-row" style="display:none">
+					<label>Email <span class="mf-req">*</span></label>
+					<input type="email" id="mfEmail" placeholder="member@example.com">
+				</div>
+				<div id="mfPasswordRow" class="mf-row" style="display:none">
+					<label>Password <span class="mf-req">*</span></label>
+					<input type="password" id="mfPassword" placeholder="Minimum 6 characters">
+				</div>
+
+				<div class="mf-row">
+					<label>Full name &amp; title <span class="mf-req">*</span></label>
+					<input type="text" id="mfName" placeholder="e.g. Nguyen Van A, Ph.D.">
+				</div>
+				<div class="mf-row">
+					<label>Position / role</label>
+					<input type="text" id="mfPosition" placeholder="e.g. Associate Professor, Researcher">
+				</div>
+				<div class="mf-row">
+					<label>Section <span class="mf-req">*</span></label>
+					<select id="mfSection">
+						<option value="director">Director</option>
+						<option value="researchers" selected>Researchers</option>
+						<option value="undergraduate">Undergraduate Research Assistants</option>
+						<option value="alumni">Alumni</option>
+						<option value="collaborators">Collaborators</option>
+					</select>
+				</div>
+				<div class="mf-row">
+					<label>Photo URL</label>
+					<input type="url" id="mfPhoto" placeholder="https://...">
+				</div>
+				<div class="mf-row">
+					<label>Bio / description</label>
+					<textarea id="mfBio" rows="4" placeholder="Short biography paragraphs…"></textarea>
+				</div>
+				<div class="mf-row">
+					<label>Career history <span class="mf-hint">(one entry per line)</span></label>
+					<textarea id="mfCareer" rows="5" placeholder="2025 – Present: Associate Professor, FPT University&#10;2022 – Present: Lecturer - Researcher, FPT University"></textarea>
+				</div>
+
+				<!-- Links section -->
+				<div class="mf-row">
+					<label>Social / profile links</label>
+					<div id="mfLinksContainer"></div>
+					<button type="button" id="addLinkBtn" class="mf-add-link-btn">+ Add link</button>
+				</div>
+
+				<div class="mmodal-actions">
+					<button type="button" id="mmodalCancel" class="mmodal-btn-cancel">Cancel</button>
+					<button type="submit" id="mmodalSubmit" class="mmodal-btn-save">Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 
 </body>
 
