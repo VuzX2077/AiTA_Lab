@@ -2,13 +2,11 @@ const pool = require("../db");
 const createUsersTable = require("./001-create-users-table");
 const createMembersTable = require("./002-create-members-table");
 const createPublicationsTable = require("./003-create-publications-table");
-const extendMembersTable = require("./004-extend-members-table");
 
 const migrations = [
     createUsersTable,
     createMembersTable,
-    createPublicationsTable,
-    extendMembersTable
+    createPublicationsTable
 ];
 
 let didRunMigrations = false;
