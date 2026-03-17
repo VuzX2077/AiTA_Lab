@@ -1,10 +1,30 @@
 const publicationService = require("../services/publicationService");
 
 function parsePublicationPayload(req, res) {
-    const { title, link, authors, journal, year, description, doi } = req.body;
+    const { title, link, authors, publicationType, authorIds, journal, year, description, doi } = req.body;
+    const allowedTypes = ["journal", "conference", "manuscript"];
 
-    if (!title || !authors || !journal || !year) {
-        res.status(400).json({ message: "Title, authors, journal and year are required" });
+    if (!title || !authors || !publicationType || !journal || !year) {
+        res.status(400).json({ message: "Title, authors, publication type, journal and year are required" });
+        return null;
+    }
+
+    if (!allowedTypes.includes(publicationType)) {
+        res.status(400).json({ message: "Invalid publication type" });
+        return null;
+    }
+
+    if (!Array.isArray(authorIds) || authorIds.length === 0) {
+        res.status(400).json({ message: "Please select at least one author" });
+        return null;
+    }
+
+    const normalizedAuthorIds = authorIds
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value));
+
+    if (normalizedAuthorIds.length === 0) {
+        res.status(400).json({ message: "Author list is invalid" });
         return null;
     }
 
@@ -33,6 +53,8 @@ function parsePublicationPayload(req, res) {
         title: title.trim(),
         link: normalizedLink,
         authors: authors.trim(),
+        publicationType,
+        authorIds: normalizedAuthorIds,
         journal: journal.trim(),
         doi: doi ? doi.trim() : null,
         year: parsedYear,

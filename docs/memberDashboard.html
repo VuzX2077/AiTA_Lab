@@ -82,7 +82,14 @@
             <form id="createPubForm">
                 <input type="text" id="title" placeholder="Title" required>
                 <input type="url" id="link" placeholder="Link (optional)">
-                <input type="text" id="authors" placeholder="Authors" required>
+                <select id="publicationType" required>
+                    <option value="journal">Journal Publications</option>
+                    <option value="conference">Conference Proceedings</option>
+                    <option value="manuscript">Unpublished Manuscripts</option>
+                </select>
+                <input type="text" id="authorSearch" placeholder="Type to search authors from database..." autocomplete="off">
+                <div id="authorSuggestions"></div>
+                <div id="selectedAuthors"></div>
                 <input type="text" id="journal" placeholder="Journal" required>
                 <input type="number" id="year" placeholder="Year" required>
                 <textarea id="description" placeholder="Description (optional)"></textarea>

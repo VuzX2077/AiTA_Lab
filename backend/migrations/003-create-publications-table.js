@@ -7,6 +7,8 @@ module.exports = {
                 title TEXT NOT NULL,
                 link TEXT,
                 authors TEXT NOT NULL DEFAULT '',
+                publication_type TEXT NOT NULL DEFAULT 'journal',
+                author_ids JSONB NOT NULL DEFAULT '[]',
                 journal TEXT NOT NULL DEFAULT '',
                 doi TEXT,
                 author_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -24,6 +26,14 @@ module.exports = {
         await pool.query(`
             ALTER TABLE publications
             ADD COLUMN IF NOT EXISTS authors TEXT NOT NULL DEFAULT ''
+        `);
+        await pool.query(`
+            ALTER TABLE publications
+            ADD COLUMN IF NOT EXISTS publication_type TEXT NOT NULL DEFAULT 'journal'
+        `);
+        await pool.query(`
+            ALTER TABLE publications
+            ADD COLUMN IF NOT EXISTS author_ids JSONB NOT NULL DEFAULT '[]'
         `);
         await pool.query(`
             ALTER TABLE publications

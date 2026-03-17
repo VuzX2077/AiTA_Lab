@@ -7,13 +7,8 @@ async function getMembers() {
     return memberRepository.findAll();
 }
 
-async function getMember(userId) {
-    const members = await memberRepository.findAll();
-    return members.find((member) => Number(member.user_id) === Number(userId)) || null;
-}
-
-async function getPublicMembers() {
-    return memberRepository.findPublicMembers();
+async function getPublicMembers({ query, section } = {}) {
+    return memberRepository.findPublicMembers({ query, section });
 }
 
 async function createMemberWithUser({ email, password, role, name, position, bio, section, photo_url, career, links }) {
@@ -52,7 +47,6 @@ async function getProfileByUserId(userId) {
 
 module.exports = {
     getMembers,
-    getMember,
     getPublicMembers,
     createMemberWithUser,
     updateMemberProfile,

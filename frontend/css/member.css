@@ -72,6 +72,89 @@
     color: #666;
 }
 
+#authorSuggestions {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: -6px 0 12px;
+    background: #fff;
+}
+
+#authorSuggestions p {
+    margin: 0;
+    padding: 10px 12px;
+    color: #666;
+    font-size: 14px;
+}
+
+.author-suggestion-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+    color: #1f2937;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 500;
+}
+
+.author-suggestion-btn:hover {
+    background: #f7f9fc;
+}
+
+.author-suggestion-btn small {
+    color: #666;
+    margin-left: auto;
+}
+
+.author-suggestion-btn strong {
+    color: #111827;
+}
+
+.author-suggestion-btn span {
+    color: #2e7d32;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#selectedAuthors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+#selectedAuthors p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.selected-author-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #d8e6ff;
+    background: #eef4ff;
+    color: #19479a;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.selected-author-chip:hover {
+    background: #dbe8ff;
+    color: #163f8a;
+}
+
 @media (max-width: 768px) {
     .overview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

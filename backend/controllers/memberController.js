@@ -2,7 +2,9 @@ const memberService = require("../services/memberService");
 
 async function getPublicMembers(req, res) {
     try {
-        const members = await memberService.getPublicMembers();
+        const query = typeof req.query.q === "string" ? req.query.q : "";
+        const section = typeof req.query.section === "string" ? req.query.section : "";
+        const members = await memberService.getPublicMembers({ query, section });
         res.json(members);
     } catch (err) {
         console.error(err);

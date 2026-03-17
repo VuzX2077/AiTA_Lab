@@ -3,7 +3,7 @@ const pool = require("../db");
 async function findApprovedPublications(db = pool) {
     const result = await db.query(
         `
-        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.publication_type, p.author_ids, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE p.status = 'approved'
@@ -17,7 +17,7 @@ async function findApprovedPublications(db = pool) {
 async function findVisiblePublications(role, userId, db = pool) {
     const result = await db.query(
         `
-        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.publication_type, p.author_ids, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE ($1 = 'admin') OR p.status = 'approved' OR p.author_id = $2
@@ -32,7 +32,7 @@ async function findVisiblePublications(role, userId, db = pool) {
 async function findPendingPublications(db = pool) {
     const result = await db.query(
         `
-        SELECT p.id, p.title, p.link, p.authors, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
+        SELECT p.id, p.title, p.link, p.authors, p.publication_type, p.author_ids, p.journal, p.doi, p.year, p.description, p.status, p.author_id, p.created_at, u.email AS owner_email
         FROM publications p
         LEFT JOIN users u ON u.id = p.author_id
         WHERE p.status = 'pending'
@@ -46,7 +46,7 @@ async function findPendingPublications(db = pool) {
 async function findByAuthorId(userId, db = pool) {
     const result = await db.query(
         `
-        SELECT id, title, link, authors, journal, doi, year, description, status, author_id, created_at
+        SELECT id, title, link, authors, publication_type, author_ids, journal, doi, year, description, status, author_id, created_at
         FROM publications
         WHERE author_id = $1
         ORDER BY created_at DESC
@@ -57,14 +57,14 @@ async function findByAuthorId(userId, db = pool) {
     return result.rows;
 }
 
-async function createPublication({ title, link, authors, journal, doi, year, description, authorId }, db = pool) {
+async function createPublication({ title, link, authors, publicationType, authorIds, journal, doi, year, description, authorId }, db = pool) {
     const result = await db.query(
         `
-        INSERT INTO publications (title, link, authors, journal, doi, author_id, year, description, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
-        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
+        INSERT INTO publications (title, link, authors, publication_type, author_ids, journal, doi, author_id, year, description, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
+        RETURNING id, title, link, authors, publication_type, author_ids, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, link || null, authors, journal, doi, authorId, year, description]
+        [title, link || null, authors, publicationType, JSON.stringify(authorIds || []), journal, doi, authorId, year, description]
     );
 
     return result.rows[0];
@@ -79,22 +79,24 @@ async function findOwnedPublication(publicationId, userId, db = pool) {
     return result.rows[0] || null;
 }
 
-async function updateOwnedPublication({ publicationId, title, link, authors, journal, doi, year, description }, db = pool) {
+async function updateOwnedPublication({ publicationId, title, link, authors, publicationType, authorIds, journal, doi, year, description }, db = pool) {
     const result = await db.query(
         `
         UPDATE publications
         SET title = $1,
             link = $2,
             authors = $3,
-            journal = $4,
-            doi = $5,
-            year = $6,
-            description = $7,
+            publication_type = $4,
+            author_ids = $5,
+            journal = $6,
+            doi = $7,
+            year = $8,
+            description = $9,
             status = 'pending'
-        WHERE id = $8
-        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
+        WHERE id = $10
+        RETURNING id, title, link, authors, publication_type, author_ids, journal, doi, year, description, status, author_id, created_at
         `,
-        [title, link || null, authors, journal, doi, year, description, publicationId]
+        [title, link || null, authors, publicationType, JSON.stringify(authorIds || []), journal, doi, year, description, publicationId]
     );
 
     return result.rows[0] || null;
@@ -115,7 +117,7 @@ async function updateStatus(publicationId, status, db = pool) {
         UPDATE publications
         SET status = $1
         WHERE id = $2
-        RETURNING id, title, link, authors, journal, doi, year, description, status, author_id, created_at
+        RETURNING id, title, link, authors, publication_type, author_ids, journal, doi, year, description, status, author_id, created_at
         `,
         [status, publicationId]
     );

@@ -33,6 +33,14 @@ if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
 
 let editingPublicationId = null;
 let myPublications = [];
+let selectedAuthors = [];
+let authorSearchTimeout = null;
+
+const PUBLICATION_TYPE_LABELS = {
+    journal: "Journal Publications",
+    conference: "Conference Proceedings",
+    manuscript: "Unpublished Manuscripts"
+};
 
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const dashboardPanels = document.querySelectorAll(".dashboard-panel");
@@ -120,6 +128,92 @@ async function request(url, options = {}) {
     return data;
 }
 
+function renderSelectedAuthors() {
+    const wrap = document.getElementById("selectedAuthors");
+    if (!wrap) {
+        return;
+    }
+
+    if (selectedAuthors.length === 0) {
+        wrap.innerHTML = "<p>No author selected.</p>";
+        return;
+    }
+
+    wrap.innerHTML = selectedAuthors
+        .map((author) => `
+            <button type="button" class="selected-author-chip" data-id="${author.user_id}">
+                ${author.name}
+                <span aria-hidden="true">×</span>
+            </button>
+        `)
+        .join("");
+
+    wrap.querySelectorAll(".selected-author-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+            const id = Number(chip.dataset.id);
+            selectedAuthors = selectedAuthors.filter((author) => Number(author.user_id) !== id);
+            renderSelectedAuthors();
+        });
+    });
+}
+
+function renderAuthorSuggestions(members) {
+    const box = document.getElementById("authorSuggestions");
+    if (!box) {
+        return;
+    }
+
+    if (!members || members.length === 0) {
+        box.innerHTML = "<p>No matching authors.</p>";
+        return;
+    }
+
+    box.innerHTML = members
+        .map((member) => {
+            const alreadySelected = selectedAuthors.some((author) => Number(author.user_id) === Number(member.user_id));
+            return `
+                <button type="button" class="author-suggestion-btn" data-id="${member.user_id}" data-name="${(member.name || "").replace(/\"/g, "&quot;")}">
+                    <strong>${member.name || `User #${member.user_id}`}</strong>
+                    <small>${member.position || member.section || ""}</small>
+                    ${alreadySelected ? "<span>Selected</span>" : ""}
+                </button>
+            `;
+        })
+        .join("");
+
+    box.querySelectorAll(".author-suggestion-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const userId = Number(button.dataset.id);
+            const name = button.dataset.name || `User #${userId}`;
+
+            if (!selectedAuthors.some((author) => Number(author.user_id) === userId)) {
+                selectedAuthors.push({ user_id: userId, name });
+                renderSelectedAuthors();
+            }
+        });
+    });
+}
+
+async function searchAuthors(keyword) {
+    const box = document.getElementById("authorSuggestions");
+    if (!box) {
+        return;
+    }
+
+    const trimmed = (keyword || "").trim();
+    if (!trimmed) {
+        box.innerHTML = "";
+        return;
+    }
+
+    try {
+        const members = await request(`/api/members/public?q=${encodeURIComponent(trimmed)}`, { method: "GET" });
+        renderAuthorSuggestions(members);
+    } catch (error) {
+        box.innerHTML = `<p>${error.message}</p>`;
+    }
+}
+
 // Load profile
 if (isAuthValid) {
     fetch("/api/profile", {
@@ -173,6 +267,7 @@ async function loadMyPublications() {
             <div>
                 <div>
                     <p><strong>${pub.title}</strong> (${pub.status})</p>
+                    <p><small>Type: ${PUBLICATION_TYPE_LABELS[pub.publication_type] || "Journal Publications"}</small></p>
                     <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
                     <p><small>Authors: ${pub.authors || "N/A"}</small></p>
                     <p><small>Journal: ${pub.journal || "N/A"}</small></p>
@@ -229,7 +324,9 @@ if (isAuthValid) {
 
         const title = document.getElementById("title").value.trim();
         const linkInput = document.getElementById("link").value;
-        const authors = document.getElementById("authors").value.trim();
+        const publicationType = document.getElementById("publicationType").value;
+        const authorIds = selectedAuthors.map((author) => Number(author.user_id)).filter((value) => Number.isInteger(value));
+        const authors = selectedAuthors.map((author) => author.name).join(", ");
         const journal = document.getElementById("journal").value.trim();
         const year = document.getElementById("year").value;
         const description = document.getElementById("description").value.trim();
@@ -244,11 +341,16 @@ if (isAuthValid) {
             return;
         }
 
+        if (authorIds.length === 0) {
+            showToast("Please select at least one author from database", "error");
+            return;
+        }
+
         try {
             if (isEditing) {
                 await request(`/api/publications/${editingPublicationId}`, {
                     method: "PUT",
-                    body: JSON.stringify({ title, link, authors, journal, year, description, doi })
+                    body: JSON.stringify({ title, link, authors, publicationType, authorIds, journal, year, description, doi })
                 });
                 editingPublicationId = null;
                 submitButton.textContent = "Create";
@@ -256,12 +358,15 @@ if (isAuthValid) {
             } else {
                 await request("/api/publications", {
                     method: "POST",
-                    body: JSON.stringify({ title, link, authors, journal, year, description, doi })
+                    body: JSON.stringify({ title, link, authors, publicationType, authorIds, journal, year, description, doi })
                 });
                 showToast("Publication created successfully", "success");
             }
 
             document.getElementById("createPubForm").reset();
+            selectedAuthors = [];
+            renderSelectedAuthors();
+            document.getElementById("authorSuggestions").innerHTML = "";
             await loadMyPublications();
         } catch (error) {
             showToast(isEditing ? `Could not update publication: ${error.message}` : `Could not create publication: ${error.message}`, "error");
@@ -274,11 +379,20 @@ function startEditPublication(publication) {
     showSection("submitSection");
     document.getElementById("title").value = publication.title;
     document.getElementById("link").value = publication.link || "";
-    document.getElementById("authors").value = publication.authors || "";
+    document.getElementById("publicationType").value = publication.publication_type || "journal";
     document.getElementById("journal").value = publication.journal || "";
     document.getElementById("year").value = publication.year || "";
     document.getElementById("description").value = publication.description;
     document.getElementById("doi").value = publication.doi || "";
+    selectedAuthors = [];
+    if (Array.isArray(publication.author_ids) && publication.author_ids.length > 0 && publication.authors) {
+        const names = String(publication.authors).split(",").map((name) => name.trim());
+        selectedAuthors = publication.author_ids.map((id, index) => ({
+            user_id: Number(id),
+            name: names[index] || `User #${id}`
+        }));
+    }
+    renderSelectedAuthors();
     document.querySelector("#createPubForm button[type='submit']").textContent = "Update";
 }
 
@@ -289,6 +403,8 @@ async function deletePublication(id) {
         if (editingPublicationId === id) {
             editingPublicationId = null;
             document.getElementById("createPubForm").reset();
+            selectedAuthors = [];
+            renderSelectedAuthors();
             document.querySelector("#createPubForm button[type='submit']").textContent = "Create";
         }
 
@@ -301,7 +417,19 @@ async function deletePublication(id) {
 window.startEditPublication = startEditPublication;
 
 if (isAuthValid) {
+    const authorSearchInput = document.getElementById("authorSearch");
+    if (authorSearchInput) {
+        authorSearchInput.addEventListener("input", () => {
+            clearTimeout(authorSearchTimeout);
+            const keyword = authorSearchInput.value;
+            authorSearchTimeout = setTimeout(() => {
+                searchAuthors(keyword);
+            }, 250);
+        });
+    }
+
     loadMyPublications();
+    renderSelectedAuthors();
     showSection("overviewSection");
 
     // Logout
