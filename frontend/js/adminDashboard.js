@@ -200,9 +200,9 @@ async function loadPendingPublications() {
                     <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
                 </div>
                 <div>
-                    <button onclick="approvePublication(${pub.id})">Approve</button>
-                    <button onclick="rejectPublication(${pub.id})">Reject</button>
-                    <button onclick="deletePublication(${pub.id})">Delete</button>
+                    <button class="pub-action-btn approve-btn" onclick="approvePublication(${pub.id})">Approve</button>
+                    <button class="pub-action-btn reject-btn" onclick="rejectPublication(${pub.id})">Reject</button>
+                    <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
                 </div>
             </div>
         `).join("");
@@ -246,7 +246,7 @@ async function loadAllPublications() {
                     <p><small>DOI: ${pub.doi || "N/A"}</small></p>
                     <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
                 </div>
-                <button onclick="deletePublication(${pub.id})">Delete</button>
+                <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
             </div>
         `;
 
