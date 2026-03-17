@@ -312,8 +312,6 @@ function populateForm(m) {
 function openEditModal(m) {
     document.getElementById("mmodalTitle").textContent = "Edit Member";
     document.getElementById("mfMode").value = "edit";
-    document.getElementById("mfEmailRow").style.display = "none";
-    document.getElementById("mfPasswordRow").style.display = "none";
     populateForm(m);
     openModal();
 }
@@ -321,10 +319,6 @@ function openEditModal(m) {
 function openAddModal(sectionId) {
     document.getElementById("mmodalTitle").textContent = "Add Member";
     document.getElementById("mfMode").value = "add";
-    document.getElementById("mfEmailRow").style.display = "block";
-    document.getElementById("mfPasswordRow").style.display = "block";
-    document.getElementById("mfEmail").value = "";
-    document.getElementById("mfPassword").value = "";
     populateForm({ section: sectionId });
     openModal();
 }
@@ -360,15 +354,6 @@ async function handleSubmit(e) {
 
     try {
         if (mode === "add") {
-            const email = document.getElementById("mfEmail").value.trim();
-            const password = document.getElementById("mfPassword").value;
-            if (!email || !password) {
-                showToast("Email and password are required", "error");
-                return;
-            }
-
-            Object.assign(payload, { email, password, role: "user" });
-
             const res = await fetch("/api/members", {
                 method: "POST",
                 headers: {
