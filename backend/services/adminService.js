@@ -22,6 +22,10 @@ async function getMembers() {
     return memberService.getMembers();
 }
 
+async function getMember(userId) {
+    return memberService.getMember(userId);
+}
+
 async function createMember(payload) {
     return memberService.createMemberWithUser(payload);
 }
@@ -44,6 +48,7 @@ module.exports = {
     rejectPublication,
     deletePublication,
     getMembers,
+    getMember,
     createMember,
     updateMember,
     deleteMember,

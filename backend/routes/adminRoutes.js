@@ -10,6 +10,7 @@ router.patch("/publications/:id/reject", verifyToken, authorizeRole("admin"), ad
 router.delete("/admin/publications/:id", verifyToken, authorizeRole("admin"), adminController.deletePublication);
 
 router.get("/members", verifyToken, authorizeRole("admin"), adminController.getMembers);
+router.get("/members/:id", verifyToken, authorizeRole("admin"), adminController.getMemberById);
 router.post("/members", verifyToken, authorizeRole("admin"), adminController.createMember);
 router.patch("/members/:id", verifyToken, authorizeRole("admin"), adminController.updateMember);
 router.delete("/members/:id", verifyToken, authorizeRole("admin"), adminController.deleteMember);

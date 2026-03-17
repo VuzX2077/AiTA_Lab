@@ -77,6 +77,24 @@ async function getMembers(req, res) {
     }
 }
 
+async function getMemberById(req, res) {
+    const userId = Number(req.params.id);
+    if (!Number.isInteger(userId)) {
+        return res.status(400).json({ message: "Invalid member id" });
+    }
+
+    try {
+        const member = await adminService.getMember(userId);
+        if (!member) {
+            return res.status(404).json({ message: "Member not found" });
+        }
+        res.json(member);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to load member" });
+    }
+}
+
 async function createMember(req, res) {
     const { email, password, role, name, position, bio, section, photo_url, career, links } = req.body;
     const memberRole = role === "admin" ? "admin" : "user";
@@ -233,6 +251,7 @@ module.exports = {
     rejectPublication,
     deletePublication,
     getMembers,
+    getMemberById,
     createMember,
     updateMember,
     deleteMember,

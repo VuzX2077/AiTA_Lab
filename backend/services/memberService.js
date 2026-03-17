@@ -7,6 +7,11 @@ async function getMembers() {
     return memberRepository.findAll();
 }
 
+async function getMember(userId) {
+    const members = await memberRepository.findAll();
+    return members.find((member) => Number(member.user_id) === Number(userId)) || null;
+}
+
 async function getPublicMembers() {
     return memberRepository.findPublicMembers();
 }
@@ -47,6 +52,7 @@ async function getProfileByUserId(userId) {
 
 module.exports = {
     getMembers,
+    getMember,
     getPublicMembers,
     createMemberWithUser,
     updateMemberProfile,

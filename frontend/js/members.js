@@ -28,6 +28,7 @@ function getAdminToken() {
 }
 
 const adminToken = getAdminToken();
+let memberNamePool = [];
 
 // ─── toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = "success") {
@@ -57,6 +58,39 @@ function safeArr(v) {
     if (Array.isArray(v)) return v;
     if (typeof v === "string") { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
     return [];
+}
+
+async function ensureMemberNamePool() {
+    if (!adminToken || memberNamePool.length) return;
+    try {
+        const res = await fetch("/api/members", {
+            headers: { "Authorization": `Bearer ${adminToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !Array.isArray(data)) return;
+
+        memberNamePool = [...new Set(
+            data
+                .map((member) => String(member?.name || "").trim())
+                .filter(Boolean)
+        )];
+    } catch {
+        memberNamePool = [];
+    }
+}
+
+function updateNameSuggestions(keyword = "") {
+    const datalist = document.getElementById("memberNameSuggestList");
+    if (!datalist) return;
+
+    const q = String(keyword || "").trim().toLowerCase();
+    const choices = memberNamePool
+        .filter((name) => !q || name.toLowerCase().includes(q))
+        .slice(0, 10);
+
+    datalist.innerHTML = choices
+        .map((name) => `<option value="${name.replace(/"/g, "&quot;")}"></option>`)
+        .join("");
 }
 
 function renderMemberCard(m) {
@@ -309,11 +343,28 @@ function populateForm(m) {
     links.forEach(lk => buildLinkRow(lk));
 }
 
-function openEditModal(m) {
+async function openEditModal(m) {
     document.getElementById("mmodalTitle").textContent = "Edit Member";
     document.getElementById("mfMode").value = "edit";
-    populateForm(m);
-    openModal();
+
+    const userId = m.user_id;
+    if (!userId) {
+        showToast("Missing member id", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/members/${userId}`, {
+            headers: { "Authorization": `Bearer ${adminToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to load member");
+
+        populateForm(data);
+        openModal();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
 }
 
 function openAddModal(sectionId) {
@@ -420,4 +471,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("addLinkBtn")?.addEventListener("click", () => buildLinkRow());
     document.getElementById("memberForm")?.addEventListener("submit", handleSubmit);
+
+    const nameInput = document.getElementById("mfName");
+    if (nameInput) {
+        ensureMemberNamePool().then(() => updateNameSuggestions());
+        nameInput.addEventListener("focus", async () => {
+            await ensureMemberNamePool();
+            updateNameSuggestions(nameInput.value);
+        });
+        nameInput.addEventListener("input", () => {
+            updateNameSuggestions(nameInput.value);
+        });
+    }
 });
