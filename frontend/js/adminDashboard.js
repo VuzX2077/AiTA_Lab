@@ -397,12 +397,11 @@ if (isAuthValid) {
         const password = document.getElementById("memberPassword").value;
         const role = document.getElementById("memberRole").value;
         const name = document.getElementById("memberName").value.trim();
-        const position = document.getElementById("memberPosition").value.trim();
 
         try {
             await request("/api/members", {
                 method: "POST",
-                body: JSON.stringify({ email, password, role, name, position })
+                body: JSON.stringify({ email, password, role, name })
             });
 
             document.getElementById("createMemberForm").reset();
