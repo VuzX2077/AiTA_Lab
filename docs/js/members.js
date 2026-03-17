@@ -74,7 +74,7 @@ function renderMemberCard(m) {
     h3.className = "member-name";
     const memberName = (m.name || "").trim();
     const memberPosition = (m.position || "").trim();
-    h3.textContent = memberPosition ? `${memberName}, ${memberPosition}` : memberName;
+    h3.textContent = memberPosition ? `${memberName}, ${memberPosition}.` : memberName;
     nameRow.appendChild(h3);
 
     if (adminToken) {

@@ -103,7 +103,7 @@
 }
 
 .content-hero h1 {
-    font-size: 48px;
+    font-size: 50px;
     margin: 0 0 10px;
     color: #2f3640;
 }
@@ -760,6 +760,7 @@ a.publication-title {
 .mmodal .mf-row input[type="email"],
 .mmodal .mf-row input[type="password"],
 .mmodal .mf-row input[type="url"],
+.mmodal .mf-row input[type="color"],
 .mmodal .mf-row select,
 .mmodal .mf-row textarea {
     width: 100%;
@@ -796,9 +797,12 @@ a.publication-title {
     width: 32px !important;
     height: 32px !important;
     padding: 2px !important;
+    margin: 0 !important;
     border-radius: 5px !important;
     cursor: pointer;
     border: 1px solid #d1d5db !important;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .mf-link-remove {
