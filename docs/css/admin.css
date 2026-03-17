@@ -185,6 +185,40 @@
     cursor: not-allowed;
 }
 
+#pendingPublicationList .pub-action-btn {
+border: none;
+color: #fff;
+padding: 6px 12px;
+border-radius: 6px;
+cursor: pointer;
+transition: background-color 0.2s ease;
+margin-right: 6px;
+}
+
+#pendingPublicationList .approve-btn {
+    background-color: #16a34a;
+}
+
+#pendingPublicationList .approve-btn:hover {
+    background-color: #15803d;
+}
+
+#pendingPublicationList .reject-btn {
+    background-color: #f59e0b;
+}
+
+#pendingPublicationList .reject-btn:hover {
+    background-color: #d97706;
+}
+
+#pendingPublicationList .delete-btn {
+    background-color: #dc2626;
+}
+
+#pendingPublicationList .delete-btn:hover {
+    background-color: #b91c1c;
+}
+
 @media (max-width: 768px) {
     .admin-overview-grid {
         grid-template-columns: 1fr;

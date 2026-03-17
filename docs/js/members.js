@@ -8,12 +8,12 @@ const SECTIONS = [
 ];
 
 const LINK_PRESETS = [
-    { label: "Personal Page",   color: "#1565c0" },
-    { label: "ORCID",           color: "#a6ce39" },
-    { label: "Google Scholar",  color: "#4285f4" },
-    { label: "Scopus Author ID",color: "#e07b34" },
-    { label: "Web of Science",  color: "#193e7c" },
-    { label: "ResearchGate",    color: "#00b5a0" },
+    { label: "Personal Page", color: "#1565c0" },
+    { label: "ORCID", color: "#a6ce39" },
+    { label: "Google Scholar", color: "#4285f4" },
+    { label: "Scopus Author ID", color: "#e07b34" },
+    { label: "Web of Science", color: "#193e7c" },
+    { label: "ResearchGate", color: "#00b5a0" },
 ];
 
 // ─── auth helpers ─────────────────────────────────────────────────────────────
@@ -72,7 +72,9 @@ function renderMemberCard(m) {
 
     const h3 = document.createElement("h3");
     h3.className = "member-name";
-    h3.textContent = m.name || "";
+    const memberName = (m.name || "").trim();
+    const memberPosition = (m.position || "").trim();
+    h3.textContent = memberPosition ? `${memberName}, ${memberPosition}` : memberName;
     nameRow.appendChild(h3);
 
     if (adminToken) {
@@ -80,13 +82,15 @@ function renderMemberCard(m) {
         acts.className = "member-admin-btns";
 
         const editBtn = document.createElement("button");
+        editBtn.type = "button";
         editBtn.className = "mbtn mbtn-edit";
-        editBtn.textContent = "✏ Edit";
+        editBtn.textContent = "Edit";
         editBtn.addEventListener("click", () => openEditModal(m));
 
         const delBtn = document.createElement("button");
+        delBtn.type = "button";
         delBtn.className = "mbtn mbtn-delete";
-        delBtn.textContent = "✕ Delete";
+        delBtn.textContent = "Delete";
         delBtn.addEventListener("click", () => confirmDelete(m));
 
         acts.appendChild(editBtn);
@@ -118,24 +122,25 @@ function renderMemberCard(m) {
     const info = document.createElement("div");
     info.className = "member-info";
 
-    if (m.position) {
-        const pos = document.createElement("p");
-        pos.className = "member-position";
-        pos.textContent = m.position;
-        info.appendChild(pos);
-    }
+    const bioParagraphs = m.bio ? m.bio.split("\n").filter(Boolean) : [];
 
-    if (m.bio) {
-        m.bio.split("\n").filter(Boolean).forEach(para => {
-            const p = document.createElement("p");
-            p.className = "member-bio";
-            p.textContent = para;
-            info.appendChild(p);
-        });
+    if (bioParagraphs.length > 0) {
+        const p = document.createElement("p");
+        p.className = "member-bio";
+        p.textContent = bioParagraphs[0];
+        info.appendChild(p);
     }
 
     bodyRow.appendChild(info);
     article.appendChild(bodyRow);
+
+    // extra bio paragraphs: full-width below the photo row
+    bioParagraphs.slice(1).forEach(para => {
+        const p = document.createElement("p");
+        p.className = "member-bio member-bio-full";
+        p.textContent = para;
+        article.appendChild(p);
+    });
 
     // ── career list ───────────────────────────────────────────────────────────
     if (career.length) {
@@ -194,6 +199,7 @@ async function loadMembers() {
 
             if (adminToken) {
                 const addBtn = document.createElement("button");
+                addBtn.type = "button";
                 addBtn.className = "mbtn mbtn-add";
                 addBtn.textContent = "+ Add Member";
                 addBtn.addEventListener("click", () => openAddModal(id));
@@ -217,16 +223,23 @@ async function loadMembers() {
     }
 }
 
-// ─── modal helpers ────────────────────────────────────────────────────────────
-function openModal() { document.getElementById("memberModal").style.display = "flex"; }
-function closeModal() { document.getElementById("memberModal").style.display = "none"; }
+function openModal() {
+    const modal = document.getElementById("memberModal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeModal() {
+    const modal = document.getElementById("memberModal");
+    if (modal) modal.style.display = "none";
+}
 
 function buildLinkRow(lk = {}) {
     const container = document.getElementById("mfLinksContainer");
+    if (!container) return;
+
     const row = document.createElement("div");
     row.className = "mf-link-row";
 
-    // label (datalist for quick preset selection)
     const labelInput = document.createElement("input");
     labelInput.type = "text";
     labelInput.className = "mf-link-label";
@@ -234,26 +247,24 @@ function buildLinkRow(lk = {}) {
     labelInput.value = lk.label || "";
     labelInput.setAttribute("list", "linkPresetList");
 
-    // url
     const urlInput = document.createElement("input");
     urlInput.type = "url";
     urlInput.className = "mf-link-url";
     urlInput.placeholder = "https://...";
     urlInput.value = lk.url || "";
 
-    // color swatch
     const colorInput = document.createElement("input");
     colorInput.type = "color";
     colorInput.className = "mf-link-color";
     colorInput.value = lk.color || "#1565c0";
 
-    // auto-fill color from preset label
     labelInput.addEventListener("change", () => {
-        const preset = LINK_PRESETS.find(p => p.label.toLowerCase() === labelInput.value.toLowerCase());
+        const preset = LINK_PRESETS.find(
+            p => p.label.toLowerCase() === labelInput.value.toLowerCase()
+        );
         if (preset) colorInput.value = preset.color;
     });
 
-    // remove
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "mf-link-remove";
@@ -270,27 +281,32 @@ function buildLinkRow(lk = {}) {
 function readLinksFromForm() {
     const rows = document.querySelectorAll(".mf-link-row");
     const result = [];
+
     rows.forEach(row => {
         const label = row.querySelector(".mf-link-label").value.trim();
-        const url   = row.querySelector(".mf-link-url").value.trim();
+        const url = row.querySelector(".mf-link-url").value.trim();
         const color = row.querySelector(".mf-link-color").value;
         if (label && url) result.push({ label, url, color });
     });
+
     return result;
 }
 
 function populateForm(m) {
-    document.getElementById("mfUserId").value   = m.user_id || "";
-    document.getElementById("mfName").value     = m.name || "";
+    document.getElementById("mfUserId").value = m.user_id || "";
+    document.getElementById("mfName").value = m.name || "";
     document.getElementById("mfPosition").value = m.position || "";
-    document.getElementById("mfSection").value  = m.section || "researchers";
-    document.getElementById("mfPhoto").value    = m.photo_url || "";
-    document.getElementById("mfBio").value      = m.bio || "";
-    document.getElementById("mfCareer").value   = safeArr(m.career).join("\n");
+    document.getElementById("mfSection").value = m.section || "researchers";
+    document.getElementById("mfPhoto").value = m.photo_url || "";
+    document.getElementById("mfBio").value = m.bio || "";
+    document.getElementById("mfCareer").value = safeArr(m.career).join("\n");
 
-    const cont = document.getElementById("mfLinksContainer");
-    cont.innerHTML = "";
-    safeArr(m.links).forEach(lk => buildLinkRow(lk));
+    const container = document.getElementById("mfLinksContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const links = safeArr(m.links);
+    links.forEach(lk => buildLinkRow(lk));
 }
 
 function openEditModal(m) {
@@ -313,24 +329,30 @@ function openAddModal(sectionId) {
     openModal();
 }
 
-// ─── form submit ──────────────────────────────────────────────────────────────
 async function handleSubmit(e) {
     e.preventDefault();
-    const mode   = document.getElementById("mfMode").value;
-    const userId = document.getElementById("mfUserId").value;
-    const name   = document.getElementById("mfName").value.trim();
 
-    if (!name) { showToast("Name is required", "error"); return; }
+    const mode = document.getElementById("mfMode").value;
+    const userId = document.getElementById("mfUserId").value;
+    const name = document.getElementById("mfName").value.trim();
+
+    if (!name) {
+        showToast("Name is required", "error");
+        return;
+    }
 
     const payload = {
         name,
-        position:  document.getElementById("mfPosition").value.trim(),
-        section:   document.getElementById("mfSection").value,
+        position: document.getElementById("mfPosition").value.trim(),
+        section: document.getElementById("mfSection").value,
         photo_url: document.getElementById("mfPhoto").value.trim(),
-        bio:       document.getElementById("mfBio").value.trim(),
-        career:    document.getElementById("mfCareer").value
-                       .split("\n").map(s => s.trim()).filter(Boolean),
-        links:     readLinksFromForm(),
+        bio: document.getElementById("mfBio").value.trim(),
+        career: document
+            .getElementById("mfCareer")
+            .value.split("\n")
+            .map(s => s.trim())
+            .filter(Boolean),
+        links: readLinksFromForm(),
     };
 
     const submitBtn = document.getElementById("mmodalSubmit");
@@ -338,12 +360,13 @@ async function handleSubmit(e) {
 
     try {
         if (mode === "add") {
-            const email    = document.getElementById("mfEmail").value.trim();
+            const email = document.getElementById("mfEmail").value.trim();
             const password = document.getElementById("mfPassword").value;
             if (!email || !password) {
                 showToast("Email and password are required", "error");
                 return;
             }
+
             Object.assign(payload, { email, password, role: "user" });
 
             const res = await fetch("/api/members", {
@@ -354,6 +377,7 @@ async function handleSubmit(e) {
                 },
                 body: JSON.stringify(payload),
             });
+
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to add member");
             showToast("Member added");
@@ -366,6 +390,7 @@ async function handleSubmit(e) {
                 },
                 body: JSON.stringify(payload),
             });
+
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to update member");
             showToast("Member updated");
@@ -380,14 +405,15 @@ async function handleSubmit(e) {
     }
 }
 
-// ─── delete ───────────────────────────────────────────────────────────────────
 async function confirmDelete(m) {
     if (!confirm(`Delete "${m.name}"? This cannot be undone.`)) return;
+
     try {
         const res = await fetch(`/api/members/${m.user_id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to delete member");
         showToast("Member deleted");
@@ -401,12 +427,12 @@ async function confirmDelete(m) {
 document.addEventListener("DOMContentLoaded", () => {
     loadMembers();
 
-    document.getElementById("mmodalClose").addEventListener("click", closeModal);
-    document.getElementById("mmodalCancel").addEventListener("click", closeModal);
-    document.getElementById("memberModal").addEventListener("click", e => {
+    if (!adminToken) return;
+    document.getElementById("mmodalClose")?.addEventListener("click", closeModal);
+    document.getElementById("mmodalCancel")?.addEventListener("click", closeModal);
+    document.getElementById("memberModal")?.addEventListener("click", e => {
         if (e.target === document.getElementById("memberModal")) closeModal();
     });
-
-    document.getElementById("addLinkBtn").addEventListener("click", () => buildLinkRow());
-    document.getElementById("memberForm").addEventListener("submit", handleSubmit);
+    document.getElementById("addLinkBtn")?.addEventListener("click", () => buildLinkRow());
+    document.getElementById("memberForm")?.addEventListener("submit", handleSubmit);
 });

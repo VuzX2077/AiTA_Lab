@@ -103,7 +103,7 @@
 }
 
 .content-hero h1 {
-    font-size: 48px;
+    font-size: 50px;
     margin: 0 0 10px;
     color: #2f3640;
 }
@@ -558,7 +558,7 @@ a.publication-title {
 .member-name {
     font-size: 22px;
     font-weight: 700;
-    color: #c97d10;
+    color: #F49D10;
     margin: 0;
     line-height: 1.3;
 }
@@ -573,8 +573,9 @@ a.publication-title {
 }
 
 .member-avatar {
-    width: 130px;
-    height: 130px;
+    margin: 10px 0 0 10px;
+    width: 150px;
+    height: 150px;
     border-radius: 8px;
     overflow: hidden;
     background: linear-gradient(135deg, #1e3c72, #2a5298);
@@ -595,33 +596,30 @@ a.publication-title {
 }
 
 .member-info {
-    padding-top: 2px;
+    margin-left: 22px;
 }
 
-.member-position {
-    font-size: 15px;
-    font-weight: 600;
-    color: #444;
-    margin: 0 0 8px;
-}
-
-.member-bio {
-    font-size: 15px;
-    color: #4d5561;
+.member-bio,
+.member-info .member-bio {
+    font-size: 17px;
+    color: #393E46;
     line-height: 1.55;
     margin: 0 0 8px;
 }
 
+.member-bio-full {
+    margin-top: 10px;
+}
+
 /* career list */
 .member-career {
-    margin: 0 0 14px;
+    margin: 20px 0 14px;
     padding-left: 22px;
-    list-style: disc;
 }
 
 .member-career li {
-    font-size: 15px;
-    color: #3f4753;
+    font-size: 17px;
+    color: #393E46;
     line-height: 1.55;
     margin-bottom: 5px;
 }

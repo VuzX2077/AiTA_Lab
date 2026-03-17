@@ -7,6 +7,15 @@ const SECTIONS = [
     { id: "collaborators",label: "Collaborators" },
 ];
 
+const LINK_PRESETS = [
+    { label: "Personal Page", color: "#1565c0" },
+    { label: "ORCID", color: "#a6ce39" },
+    { label: "Google Scholar", color: "#4285f4" },
+    { label: "Scopus Author ID", color: "#e07b34" },
+    { label: "Web of Science", color: "#193e7c" },
+    { label: "ResearchGate", color: "#00b5a0" },
+];
+
 // ─── auth helpers ─────────────────────────────────────────────────────────────
 function getAdminToken() {
     const token = localStorage.getItem("token");
@@ -63,7 +72,9 @@ function renderMemberCard(m) {
 
     const h3 = document.createElement("h3");
     h3.className = "member-name";
-    h3.textContent = m.name || "";
+    const memberName = (m.name || "").trim();
+    const memberPosition = (m.position || "").trim();
+    h3.textContent = memberPosition ? `${memberName}, ${memberPosition}.` : memberName;
     nameRow.appendChild(h3);
 
     if (adminToken) {
@@ -71,18 +82,16 @@ function renderMemberCard(m) {
         acts.className = "member-admin-btns";
 
         const editBtn = document.createElement("button");
+        editBtn.type = "button";
         editBtn.className = "mbtn mbtn-edit";
         editBtn.textContent = "Edit";
-        editBtn.addEventListener("click", () => {
-            if (window.MemberAdmin?.openEditModal) window.MemberAdmin.openEditModal(m);
-        });
+        editBtn.addEventListener("click", () => openEditModal(m));
 
         const delBtn = document.createElement("button");
+        delBtn.type = "button";
         delBtn.className = "mbtn mbtn-delete";
         delBtn.textContent = "Delete";
-        delBtn.addEventListener("click", () => {
-            if (window.MemberAdmin?.confirmDelete) window.MemberAdmin.confirmDelete(m);
-        });
+        delBtn.addEventListener("click", () => confirmDelete(m));
 
         acts.appendChild(editBtn);
         acts.appendChild(delBtn);
@@ -113,24 +122,25 @@ function renderMemberCard(m) {
     const info = document.createElement("div");
     info.className = "member-info";
 
-    if (m.position) {
-        const pos = document.createElement("p");
-        pos.className = "member-position";
-        pos.textContent = m.position;
-        info.appendChild(pos);
-    }
+    const bioParagraphs = m.bio ? m.bio.split("\n").filter(Boolean) : [];
 
-    if (m.bio) {
-        m.bio.split("\n").filter(Boolean).forEach(para => {
-            const p = document.createElement("p");
-            p.className = "member-bio";
-            p.textContent = para;
-            info.appendChild(p);
-        });
+    if (bioParagraphs.length > 0) {
+        const p = document.createElement("p");
+        p.className = "member-bio";
+        p.textContent = bioParagraphs[0];
+        info.appendChild(p);
     }
 
     bodyRow.appendChild(info);
     article.appendChild(bodyRow);
+
+    // extra bio paragraphs: full-width below the photo row
+    bioParagraphs.slice(1).forEach(para => {
+        const p = document.createElement("p");
+        p.className = "member-bio member-bio-full";
+        p.textContent = para;
+        article.appendChild(p);
+    });
 
     // ── career list ───────────────────────────────────────────────────────────
     if (career.length) {
@@ -189,11 +199,10 @@ async function loadMembers() {
 
             if (adminToken) {
                 const addBtn = document.createElement("button");
+                addBtn.type = "button";
                 addBtn.className = "mbtn mbtn-add";
                 addBtn.textContent = "+ Add Member";
-                addBtn.addEventListener("click", () => {
-                    if (window.MemberAdmin?.openAddModal) window.MemberAdmin.openAddModal(id);
-                });
+                addBtn.addEventListener("click", () => openAddModal(id));
                 sec.appendChild(addBtn);
             }
 
@@ -214,14 +223,216 @@ async function loadMembers() {
     }
 }
 
+function openModal() {
+    const modal = document.getElementById("memberModal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeModal() {
+    const modal = document.getElementById("memberModal");
+    if (modal) modal.style.display = "none";
+}
+
+function buildLinkRow(lk = {}) {
+    const container = document.getElementById("mfLinksContainer");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = "mf-link-row";
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.className = "mf-link-label";
+    labelInput.placeholder = "Label";
+    labelInput.value = lk.label || "";
+    labelInput.setAttribute("list", "linkPresetList");
+
+    const urlInput = document.createElement("input");
+    urlInput.type = "url";
+    urlInput.className = "mf-link-url";
+    urlInput.placeholder = "https://...";
+    urlInput.value = lk.url || "";
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.className = "mf-link-color";
+    colorInput.value = lk.color || "#1565c0";
+
+    labelInput.addEventListener("change", () => {
+        const preset = LINK_PRESETS.find(
+            p => p.label.toLowerCase() === labelInput.value.toLowerCase()
+        );
+        if (preset) colorInput.value = preset.color;
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "mf-link-remove";
+    removeBtn.textContent = "✕";
+    removeBtn.addEventListener("click", () => row.remove());
+
+    row.appendChild(labelInput);
+    row.appendChild(urlInput);
+    row.appendChild(colorInput);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+}
+
+function readLinksFromForm() {
+    const rows = document.querySelectorAll(".mf-link-row");
+    const result = [];
+
+    rows.forEach(row => {
+        const label = row.querySelector(".mf-link-label").value.trim();
+        const url = row.querySelector(".mf-link-url").value.trim();
+        const color = row.querySelector(".mf-link-color").value;
+        if (label && url) result.push({ label, url, color });
+    });
+
+    return result;
+}
+
+function populateForm(m) {
+    document.getElementById("mfUserId").value = m.user_id || "";
+    document.getElementById("mfName").value = m.name || "";
+    document.getElementById("mfPosition").value = m.position || "";
+    document.getElementById("mfSection").value = m.section || "researchers";
+    document.getElementById("mfPhoto").value = m.photo_url || "";
+    document.getElementById("mfBio").value = m.bio || "";
+    document.getElementById("mfCareer").value = safeArr(m.career).join("\n");
+
+    const container = document.getElementById("mfLinksContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const links = safeArr(m.links);
+    links.forEach(lk => buildLinkRow(lk));
+}
+
+function openEditModal(m) {
+    document.getElementById("mmodalTitle").textContent = "Edit Member";
+    document.getElementById("mfMode").value = "edit";
+    document.getElementById("mfEmailRow").style.display = "none";
+    document.getElementById("mfPasswordRow").style.display = "none";
+    populateForm(m);
+    openModal();
+}
+
+function openAddModal(sectionId) {
+    document.getElementById("mmodalTitle").textContent = "Add Member";
+    document.getElementById("mfMode").value = "add";
+    document.getElementById("mfEmailRow").style.display = "block";
+    document.getElementById("mfPasswordRow").style.display = "block";
+    document.getElementById("mfEmail").value = "";
+    document.getElementById("mfPassword").value = "";
+    populateForm({ section: sectionId });
+    openModal();
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+
+    const mode = document.getElementById("mfMode").value;
+    const userId = document.getElementById("mfUserId").value;
+    const name = document.getElementById("mfName").value.trim();
+
+    if (!name) {
+        showToast("Name is required", "error");
+        return;
+    }
+
+    const payload = {
+        name,
+        position: document.getElementById("mfPosition").value.trim(),
+        section: document.getElementById("mfSection").value,
+        photo_url: document.getElementById("mfPhoto").value.trim(),
+        bio: document.getElementById("mfBio").value.trim(),
+        career: document
+            .getElementById("mfCareer")
+            .value.split("\n")
+            .map(s => s.trim())
+            .filter(Boolean),
+        links: readLinksFromForm(),
+    };
+
+    const submitBtn = document.getElementById("mmodalSubmit");
+    submitBtn.disabled = true;
+
+    try {
+        if (mode === "add") {
+            const email = document.getElementById("mfEmail").value.trim();
+            const password = document.getElementById("mfPassword").value;
+            if (!email || !password) {
+                showToast("Email and password are required", "error");
+                return;
+            }
+
+            Object.assign(payload, { email, password, role: "user" });
+
+            const res = await fetch("/api/members", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${adminToken}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to add member");
+            showToast("Member added");
+        } else {
+            const res = await fetch(`/api/members/${userId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${adminToken}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to update member");
+            showToast("Member updated");
+        }
+
+        closeModal();
+        loadMembers();
+    } catch (err) {
+        showToast(err.message, "error");
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+async function confirmDelete(m) {
+    if (!confirm(`Delete "${m.name}"? This cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`/api/members/${m.user_id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${adminToken}` },
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to delete member");
+        showToast("Member deleted");
+        loadMembers();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
 // ─── init ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     loadMembers();
-});
 
-window.MemberPage = {
-    showToast,
-    safeArr,
-    loadMembers,
-    adminToken,
-};
+    if (!adminToken) return;
+    document.getElementById("mmodalClose")?.addEventListener("click", closeModal);
+    document.getElementById("mmodalCancel")?.addEventListener("click", closeModal);
+    document.getElementById("memberModal")?.addEventListener("click", e => {
+        if (e.target === document.getElementById("memberModal")) closeModal();
+    });
+    document.getElementById("addLinkBtn")?.addEventListener("click", () => buildLinkRow());
+    document.getElementById("memberForm")?.addEventListener("submit", handleSubmit);
+});
