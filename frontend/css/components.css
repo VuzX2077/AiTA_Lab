@@ -150,6 +150,8 @@ form button:hover {
 
 #publicationList > div,
 #pendingPublicationList > div,
+#approvedPublicationList > div,
+#rejectedPublicationList > div,
 #memberList > div {
     padding: 15px;
     border: 1px solid #eeeeee;
@@ -163,18 +165,24 @@ form button:hover {
 
 #publicationList p,
 #pendingPublicationList p,
+#approvedPublicationList p,
+#rejectedPublicationList p,
 #memberList p {
     margin: 0;
 }
 
 #publicationList > div > div,
 #pendingPublicationList > div > div,
+#approvedPublicationList > div > div,
+#rejectedPublicationList > div > div,
 #memberList > div > div {
     flex: 1;
 }
 
 #publicationList > div > div p,
 #pendingPublicationList > div > div p,
+#approvedPublicationList > div > div p,
+#rejectedPublicationList > div > div p,
 #memberList > div > div p {
     margin-bottom: 6px;
     line-height: 1.4;
@@ -182,12 +190,23 @@ form button:hover {
 
 #publicationList > div > div p:last-child,
 #pendingPublicationList > div > div p:last-child,
+#approvedPublicationList > div > div p:last-child,
+#rejectedPublicationList > div > div p:last-child,
 #memberList > div > div p:last-child {
     margin-bottom: 0;
 }
 
+.pub-btn-group {
+    display: flex;
+    gap: 8px;
+    flex: none !important;
+    align-self: flex-start;
+}
+
 #publicationList button,
 #pendingPublicationList button,
+#approvedPublicationList button,
+#rejectedPublicationList button,
 #memberList button {
     background-color: #d9534f;
     border: none;
@@ -200,6 +219,8 @@ form button:hover {
 
 #publicationList button:hover,
 #pendingPublicationList button:hover,
+#approvedPublicationList button:hover,
+#rejectedPublicationList button:hover,
 #memberList button:hover {
     background-color: #c9302c;
 }
@@ -207,6 +228,8 @@ form button:hover {
 @media (max-width: 768px) {
     #publicationList > div,
     #pendingPublicationList > div,
+    #approvedPublicationList > div,
+    #rejectedPublicationList > div,
     #memberList > div {
         flex-direction: column;
         align-items: flex-start;

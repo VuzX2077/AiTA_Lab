@@ -626,7 +626,7 @@ a.publication-title {
 
 /* social link badges */
 .member-links {
-    margin-top: 4px;
+    margin-top: 20px;
     display: flex;
     gap: 8px;
     flex-wrap: wrap;

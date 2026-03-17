@@ -199,7 +199,7 @@ async function loadPendingPublications() {
                     <p>${pub.description}</p>
                     <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
                 </div>
-                <div>
+                <div class="pub-btn-group">
                     <button class="pub-action-btn approve-btn" onclick="approvePublication(${pub.id})">Approve</button>
                     <button class="pub-action-btn reject-btn" onclick="rejectPublication(${pub.id})">Reject</button>
                     <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
