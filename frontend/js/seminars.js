@@ -194,7 +194,7 @@ function renderSeminars(rows) {
 			const originalIndex = rows.indexOf(seminar);
 			return `
 				<article class="seminar-card-item">
-					<p class="seminar-card-meta">- ${formatSeminarTime(seminar.start_time, seminar.end_time)} | ${escapeHtml(seminar.member_name || "N/A")}</p>
+					<p class="seminar-card-meta"> ${formatSeminarTime(seminar.start_time, seminar.end_time)} | ${escapeHtml(seminar.member_name || "N/A")}</p>
 					<h3 class="seminar-card-title">${escapeHtml(seminar.title || "Untitled")}</h3>
 					<button type="button" class="seminar-detail-btn" data-index="${originalIndex}">View Details</button>
 				</article>
