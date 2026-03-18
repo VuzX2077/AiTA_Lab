@@ -97,9 +97,11 @@
     border: none;
     border-bottom: 1px solid #f0f0f0;
     background: #fff;
+    color: #1f2937;
     padding: 10px 12px;
     cursor: pointer;
     text-align: left;
+    font-weight: 500;
 }
 
 .author-suggestion-btn:hover {
@@ -109,6 +111,10 @@
 .author-suggestion-btn small {
     color: #666;
     margin-left: auto;
+}
+
+.author-suggestion-btn strong {
+    color: #111827;
 }
 
 .author-suggestion-btn span {
@@ -141,6 +147,12 @@
     padding: 6px 10px;
     font-size: 13px;
     cursor: pointer;
+    font-weight: 600;
+}
+
+.selected-author-chip:hover {
+    background: #dbe8ff;
+    color: #163f8a;
 }
 
 @media (max-width: 768px) {

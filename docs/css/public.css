@@ -327,6 +327,58 @@ a.publication-title {
     text-decoration: none;
 }
 
+.seminars-page .container {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 100px;
+    padding: 0;
+}
+
+.seminar-group {
+    padding-top: 24px;
+    padding-bottom: 24px;
+}
+
+.seminar-table-shell {
+    width: 100%;
+    overflow-x: auto;
+    border-top: 1px solid #d9dfe6;
+    border-bottom: 1px solid #d9dfe6;
+    padding: 18px 0;
+}
+
+.seminar-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 780px;
+    background: #f8f8ef;
+}
+
+.seminar-table th,
+.seminar-table td {
+    border: 1px solid #9ea3a8;
+    padding: 10px 8px;
+    font-size: 29px;
+    color: #111;
+    text-align: left;
+    vertical-align: top;
+}
+
+.seminar-table th {
+    background: #ffffff;
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.seminar-table .seminar-row-highlight td {
+    background: #20d9df;
+}
+
+.seminar-table .seminar-row-base td {
+    background: #ece4c4;
+}
+
 .researches-page .toc {
     padding: 28px 0;
     margin: 0 0 28px;
@@ -441,6 +493,10 @@ a.publication-title {
         padding: 20px 16px 32px;
     }
 
+    .seminars-page {
+        padding: 20px 16px 32px;
+    }
+
     .contact-page {
         padding: 20px 16px 32px;
     }
@@ -499,6 +555,11 @@ a.publication-title {
 
     .contact-map {
         height: 300px;
+    }
+
+    .seminar-table th,
+    .seminar-table td {
+        font-size: 17px;
     }
 
     .member-card {

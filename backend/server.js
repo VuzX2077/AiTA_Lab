@@ -61,11 +61,13 @@ const authRoutes = require("./routes/authRoutes");
 const publicationRoutes = require("./routes/publicationRoutes");
 const memberRoutes = require("./routes/memberRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const seminarRoutes = require("./routes/seminarRoutes");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
 app.use("/api", memberRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", seminarRoutes);
 
 async function startServer() {
   try {

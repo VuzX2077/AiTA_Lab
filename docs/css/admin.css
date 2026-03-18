@@ -219,6 +219,96 @@ margin-right: 6px;
     background-color: #b91c1c;
 }
 
+.seminar-form-grid {
+    margin-top: 16px;
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.seminar-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 600;
+    color: #2f3640;
+}
+
+.seminar-form-grid input {
+    margin: 0;
+}
+
+.seminar-span-2 {
+    grid-column: span 2;
+}
+
+.seminar-form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.seminar-cancel-btn {
+    background: #ececec;
+    color: #1f2937;
+}
+
+.seminar-admin-list {
+    display: grid;
+    gap: 12px;
+}
+
+.seminar-admin-item {
+    border: 1px solid #ededed;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.seminar-admin-item p {
+    margin: 0 0 6px;
+}
+
+.seminar-admin-item p:last-child {
+    margin-bottom: 0;
+}
+
+.seminar-admin-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.seminar-edit-btn,
+.seminar-delete-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.seminar-edit-btn {
+    background: #2563eb;
+}
+
+.seminar-edit-btn:hover {
+    background: #1d4ed8;
+}
+
+.seminar-delete-btn {
+    background: #dc2626;
+}
+
+.seminar-delete-btn:hover {
+    background: #b91c1c;
+}
+
 @media (max-width: 768px) {
     .admin-overview-grid {
         grid-template-columns: 1fr;
@@ -231,5 +321,17 @@ margin-right: 6px;
     .admin-health-row {
         grid-template-columns: 78px 1fr 42px;
         gap: 8px;
+    }
+
+    .seminar-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seminar-span-2 {
+        grid-column: span 1;
+    }
+
+    .seminar-admin-item {
+        flex-direction: column;
     }
 }

@@ -44,6 +44,9 @@
             <li><button class="sidebar-link sidebar-sublink" data-target="rejectedPublicationsSection">Rejected</button></li>
             <li><button class="sidebar-link sidebar-sublink" data-target="allPublicationsSection">All Publications</button></li>
 
+            <li class="sidebar-group-title">Seminars</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="seminarManagementSection">Seminar Management</button></li>
+
             <li class="sidebar-group-title">Members</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="allMembersSection">All Members</button></li>
             <li><button class="sidebar-link sidebar-sublink" data-target="addMemberSection">Add Member</button></li>
@@ -125,6 +128,41 @@
         <div class="dashboard-section admin-panel" id="allPublicationsSection">
             <h2>All Publications</h2>
             <div id="publicationList"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="seminarManagementSection">
+            <h2>Seminar Management</h2>
+            <p class="admin-note">Add, edit or remove entries shown on the public seminar page.</p>
+
+            <form id="seminarForm" class="seminar-form-grid">
+                <input type="hidden" id="seminarEditId">
+                <label>
+                    Date
+                    <input type="date" id="seminarDate" required>
+                </label>
+                <label>
+                    Start Time
+                    <input type="text" id="seminarStartTime" placeholder="15h00" required>
+                </label>
+                <label>
+                    End Time
+                    <input type="text" id="seminarEndTime" placeholder="16h30" required>
+                </label>
+                <label class="seminar-span-2">
+                    Member
+                    <input type="text" id="seminarMemberName" placeholder="Nguyen Van A" required>
+                </label>
+                <label class="seminar-span-2">
+                    Title
+                    <input type="text" id="seminarTitle" placeholder="Seminar title" required>
+                </label>
+                <div class="seminar-form-actions seminar-span-2">
+                    <button type="submit" id="seminarSaveBtn">Save Seminar</button>
+                    <button type="button" id="seminarCancelEditBtn" class="seminar-cancel-btn" hidden>Cancel Edit</button>
+                </div>
+            </form>
+
+            <div id="seminarList" class="seminar-admin-list"></div>
         </div>
 
         <div class="dashboard-section admin-panel" id="allMembersSection">

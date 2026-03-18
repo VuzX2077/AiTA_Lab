@@ -25,6 +25,7 @@ const currentAdminId = user ? Number(user.id) : null;
 const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const adminPanels = document.querySelectorAll(".admin-panel");
 const activityLogs = [];
+let seminarItemsCache = [];
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -62,6 +63,15 @@ function setText(id, value) {
     if (element) {
         element.textContent = String(value);
     }
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
 function setBar(id, labelId, value, total) {
@@ -263,6 +273,199 @@ async function loadAllPublications() {
     }
 }
 
+function formatDateForInput(value) {
+    if (!value) {
+        return "";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return "";
+    }
+
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatDateForDisplay(value) {
+    if (!value) {
+        return "N/A";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function resetSeminarForm() {
+    const form = document.getElementById("seminarForm");
+    const editId = document.getElementById("seminarEditId");
+    const saveBtn = document.getElementById("seminarSaveBtn");
+    const cancelBtn = document.getElementById("seminarCancelEditBtn");
+
+    if (form) {
+        form.reset();
+    }
+
+    if (editId) {
+        editId.value = "";
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = "Save Seminar";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = true;
+    }
+}
+
+function startEditSeminar(item) {
+    const editId = document.getElementById("seminarEditId");
+    const seminarDate = document.getElementById("seminarDate");
+    const seminarStartTime = document.getElementById("seminarStartTime");
+    const seminarEndTime = document.getElementById("seminarEndTime");
+    const seminarMemberName = document.getElementById("seminarMemberName");
+    const seminarTitle = document.getElementById("seminarTitle");
+    const saveBtn = document.getElementById("seminarSaveBtn");
+    const cancelBtn = document.getElementById("seminarCancelEditBtn");
+
+    if (!editId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle) {
+        return;
+    }
+
+    editId.value = String(item.id);
+    seminarDate.value = formatDateForInput(item.seminar_date);
+    seminarStartTime.value = item.start_time || "";
+    seminarEndTime.value = item.end_time || "";
+    seminarMemberName.value = item.member_name || "";
+    seminarTitle.value = item.title || "";
+
+    if (saveBtn) {
+        saveBtn.textContent = "Update Seminar";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = false;
+    }
+
+    showSection("seminarManagementSection");
+}
+
+async function loadSeminarsAdmin() {
+    const list = document.getElementById("seminarList");
+    if (!list) {
+        return;
+    }
+
+    try {
+        const data = await request("/api/seminars", { method: "GET" });
+        seminarItemsCache = data;
+
+        if (!data.length) {
+            list.innerHTML = "<p class=\"admin-note\">No seminars yet.</p>";
+            return;
+        }
+
+        list.innerHTML = data.map((item) => `
+            <div class="seminar-admin-item">
+                <div>
+                    <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
+                    <p><small>${escapeHtml(formatDateForDisplay(item.seminar_date))} | ${escapeHtml(item.start_time || "N/A")} - ${escapeHtml(item.end_time || "N/A")}</small></p>
+                    <p><small>Member: ${escapeHtml(item.member_name || "N/A")}</small></p>
+                </div>
+                <div class="seminar-admin-actions">
+                    <button class="seminar-edit-btn" data-id="${item.id}">Edit</button>
+                    <button class="seminar-delete-btn" data-id="${item.id}">Delete</button>
+                </div>
+            </div>
+        `).join("");
+
+        list.querySelectorAll(".seminar-edit-btn").forEach((button) => {
+            button.addEventListener("click", () => {
+                const id = Number(button.dataset.id);
+                const selected = seminarItemsCache.find((row) => Number(row.id) === id);
+                if (selected) {
+                    startEditSeminar(selected);
+                }
+            });
+        });
+
+        list.querySelectorAll(".seminar-delete-btn").forEach((button) => {
+            button.addEventListener("click", () => {
+                const id = Number(button.dataset.id);
+                if (Number.isInteger(id)) {
+                    deleteSeminarEntry(id);
+                }
+            });
+        });
+    } catch (error) {
+        showToast(error.message, "error");
+        list.innerHTML = `<p class="admin-note">${escapeHtml(error.message)}</p>`;
+    }
+}
+
+async function saveSeminar(event) {
+    event.preventDefault();
+
+    const seminarEditId = document.getElementById("seminarEditId");
+    const seminarDate = document.getElementById("seminarDate");
+    const seminarStartTime = document.getElementById("seminarStartTime");
+    const seminarEndTime = document.getElementById("seminarEndTime");
+    const seminarMemberName = document.getElementById("seminarMemberName");
+    const seminarTitle = document.getElementById("seminarTitle");
+
+    if (!seminarEditId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle) {
+        return;
+    }
+
+    const payload = {
+        seminarDate: seminarDate.value.trim(),
+        startTime: seminarStartTime.value.trim(),
+        endTime: seminarEndTime.value.trim(),
+        memberName: seminarMemberName.value.trim(),
+        title: seminarTitle.value.trim()
+    };
+
+    const isEdit = Boolean(seminarEditId.value);
+    const method = isEdit ? "PUT" : "POST";
+    const url = isEdit ? `/api/seminars/${seminarEditId.value}` : "/api/seminars";
+
+    try {
+        await request(url, {
+            method,
+            body: JSON.stringify(payload)
+        });
+
+        resetSeminarForm();
+        await loadSeminarsAdmin();
+        addActivityLog(`${isEdit ? "Updated" : "Created"} seminar entry`);
+        showToast(`Seminar ${isEdit ? "updated" : "created"} successfully`, "success");
+    } catch (error) {
+        showToast(`Could not save seminar: ${error.message}`, "error");
+    }
+}
+
+async function deleteSeminarEntry(id) {
+    try {
+        await request(`/api/seminars/${id}`, { method: "DELETE" });
+        await loadSeminarsAdmin();
+        addActivityLog(`Deleted seminar #${id}`);
+        showToast("Seminar deleted successfully", "success");
+    } catch (error) {
+        showToast(`Could not delete seminar: ${error.message}`, "error");
+    }
+}
+
 async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
@@ -428,14 +631,26 @@ window.approvePublication = approvePublication;
 window.rejectPublication = rejectPublication;
 window.deletePublication = deletePublication;
 window.deleteMember = deleteMember;
+window.editSeminar = startEditSeminar;
+window.deleteSeminarEntry = deleteSeminarEntry;
 
 if (isAuthValid) {
     loadAdminProfile();
     loadPendingPublications();
     loadAllPublications();
     loadMembers();
+    loadSeminarsAdmin();
     showSection("profileSection");
     addActivityLog("Admin dashboard opened");
+
+    const seminarForm = document.getElementById("seminarForm");
+    const cancelEditBtn = document.getElementById("seminarCancelEditBtn");
+    if (seminarForm) {
+        seminarForm.addEventListener("submit", saveSeminar);
+    }
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener("click", resetSeminarForm);
+    }
 
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
