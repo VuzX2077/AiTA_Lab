@@ -274,36 +274,39 @@ async function loadAllPublications() {
 }
 
 function formatDateForInput(value) {
-    if (!value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
         return "";
     }
 
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return raw;
+    }
+
+    const isoDatePart = raw.split("T")[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDatePart)) {
         return "";
     }
 
-    const yyyy = parsed.getFullYear();
-    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
-    const dd = String(parsed.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+    return isoDatePart;
 }
 
 function formatDateForDisplay(value) {
-    if (!value) {
+    const inputDate = formatDateForInput(value);
+    if (!inputDate) {
         return "N/A";
     }
 
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-        return value;
+    const [yyyy, mm, dd] = inputDate.split("-");
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthIndex = Number(mm) - 1;
+    const dayNumber = Number(dd);
+
+    if (monthIndex < 0 || monthIndex > 11 || !Number.isInteger(dayNumber)) {
+        return "N/A";
     }
 
-    return parsed.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
+    return `${monthNames[monthIndex]} ${dayNumber}, ${yyyy}`;
 }
 
 function resetSeminarForm() {
@@ -336,10 +339,11 @@ function startEditSeminar(item) {
     const seminarEndTime = document.getElementById("seminarEndTime");
     const seminarMemberName = document.getElementById("seminarMemberName");
     const seminarTitle = document.getElementById("seminarTitle");
+    const seminarPaperLink = document.getElementById("seminarPaperLink");
     const saveBtn = document.getElementById("seminarSaveBtn");
     const cancelBtn = document.getElementById("seminarCancelEditBtn");
 
-    if (!editId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle) {
+    if (!editId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarPaperLink) {
         return;
     }
 
@@ -349,6 +353,7 @@ function startEditSeminar(item) {
     seminarEndTime.value = item.end_time || "";
     seminarMemberName.value = item.member_name || "";
     seminarTitle.value = item.title || "";
+    seminarPaperLink.value = item.paper_link || "";
 
     if (saveBtn) {
         saveBtn.textContent = "Update Seminar";
@@ -382,6 +387,7 @@ async function loadSeminarsAdmin() {
                     <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
                     <p><small>${escapeHtml(formatDateForDisplay(item.seminar_date))} | ${escapeHtml(item.start_time || "N/A")} - ${escapeHtml(item.end_time || "N/A")}</small></p>
                     <p><small>Member: ${escapeHtml(item.member_name || "N/A")}</small></p>
+                    <p><small>Paper Link: ${item.paper_link ? `<a href="${escapeHtml(item.paper_link)}" target="_blank" rel="noopener noreferrer">Open link</a>` : "N/A"}</small></p>
                 </div>
                 <div class="seminar-admin-actions">
                     <button class="seminar-edit-btn" data-id="${item.id}">Edit</button>
@@ -423,8 +429,9 @@ async function saveSeminar(event) {
     const seminarEndTime = document.getElementById("seminarEndTime");
     const seminarMemberName = document.getElementById("seminarMemberName");
     const seminarTitle = document.getElementById("seminarTitle");
+    const seminarPaperLink = document.getElementById("seminarPaperLink");
 
-    if (!seminarEditId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle) {
+    if (!seminarEditId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarPaperLink) {
         return;
     }
 
@@ -433,7 +440,8 @@ async function saveSeminar(event) {
         startTime: seminarStartTime.value.trim(),
         endTime: seminarEndTime.value.trim(),
         memberName: seminarMemberName.value.trim(),
-        title: seminarTitle.value.trim()
+        title: seminarTitle.value.trim(),
+        paperLink: seminarPaperLink.value.trim()
     };
 
     const isEdit = Boolean(seminarEditId.value);

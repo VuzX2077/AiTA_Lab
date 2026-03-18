@@ -132,7 +132,6 @@
 
         <div class="dashboard-section admin-panel" id="seminarManagementSection">
             <h2>Seminar Management</h2>
-            <p class="admin-note">Add, edit or remove entries shown on the public seminar page.</p>
 
             <form id="seminarForm" class="seminar-form-grid">
                 <input type="hidden" id="seminarEditId">
@@ -155,6 +154,10 @@
                 <label class="seminar-span-2">
                     Title
                     <input type="text" id="seminarTitle" placeholder="Seminar title" required>
+                </label>
+                <label class="seminar-span-2">
+                    Paper Link
+                    <input type="url" id="seminarPaperLink" placeholder="https://example.com/paper-link">
                 </label>
                 <div class="seminar-form-actions seminar-span-2">
                     <button type="submit" id="seminarSaveBtn">Save Seminar</button>

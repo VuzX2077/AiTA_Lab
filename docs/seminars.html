@@ -39,25 +39,20 @@
 	</section>
 
 	<section class="seminar-group container" aria-label="Seminar schedule">
-		<div class="seminar-table-shell">
-			<table class="seminar-table" id="seminarTable">
-				<thead>
-					<tr>
-						<th>Date</th>
-						<th>Time</th>
-						<th>Member</th>
-						<th>Title</th>
-					</tr>
-				</thead>
-				<tbody id="seminarTableBody">
-					<tr>
-						<td colspan="4">Loading seminars...</td>
-					</tr>
-				</tbody>
-			</table>
+		<div id="seminarTimeline" class="seminar-timeline" aria-live="polite">
+			<p>Loading seminars...</p>
 		</div>
 	</section>
 </main>
+
+<div id="seminarDetailModal" class="seminar-modal" hidden>
+	<div class="seminar-modal-overlay" data-close="true"></div>
+	<div class="seminar-modal-card" role="dialog" aria-modal="true" aria-labelledby="seminarModalTitle">
+		<button type="button" class="seminar-modal-close" id="seminarModalCloseBtn" aria-label="Close detail modal">×</button>
+		<h2 id="seminarModalTitle">Seminar Details</h2>
+		<div id="seminarModalBody" class="seminar-modal-body"></div>
+	</div>
+</div>
 
 <footer>
 	<div class="container footer-content">
