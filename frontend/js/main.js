@@ -50,3 +50,204 @@ if (authActions && token) {
 		window.location.href = "/";
 	});
 }
+
+function stripHtml(value) {
+	return String(value || "").replace(/<[^>]*>/g, "").trim();
+}
+
+function escapeHtml(value) {
+	return String(value)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
+
+function getSafePublicationLink(pub) {
+	if (!pub || typeof pub.link !== "string" || !pub.link.trim()) {
+		return "";
+	}
+
+	try {
+		const parsed = new URL(pub.link.trim());
+		if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+			return parsed.toString();
+		}
+	} catch (error) {
+		return "";
+	}
+
+	return "";
+}
+
+async function initPublicationSearch() {
+	const header = document.querySelector("header");
+	const nav = document.querySelector(".nav-container");
+	if (!header || !nav) {
+		return;
+	}
+
+	const path = window.location.pathname.toLowerCase();
+	if (path.includes("login") || path.includes("register") || path.includes("dashboard")) {
+		return;
+	}
+
+	let publicationRows = [];
+
+	const shell = document.createElement("div");
+	shell.className = "site-search-shell";
+	shell.innerHTML = `
+		<div class="site-search-inner">
+			<input id="globalPublicationSearch" type="search" placeholder="Search publications..." aria-label="Search publications" autocomplete="off">
+			<button id="globalSearchClear" type="button" aria-label="Clear search" hidden>×</button>
+		</div>
+	`;
+
+	const overlay = document.createElement("div");
+	overlay.className = "site-search-overlay";
+	overlay.hidden = true;
+	overlay.innerHTML = `
+		<div class="site-search-result-wrap">
+			<div id="globalSearchResults" class="site-search-results"></div>
+		</div>
+	`;
+
+	header.insertBefore(shell, nav);
+	document.body.appendChild(overlay);
+
+	const input = document.getElementById("globalPublicationSearch");
+	const clearBtn = document.getElementById("globalSearchClear");
+	const resultBox = document.getElementById("globalSearchResults");
+
+	if (!input || !clearBtn || !resultBox) {
+		return;
+	}
+
+	const renderMessage = (message) => {
+		resultBox.innerHTML = `<p class="site-search-message">${escapeHtml(message)}</p>`;
+	};
+
+	const closeOverlay = () => {
+		overlay.hidden = true;
+		document.body.classList.remove("site-search-active");
+	};
+
+	const openOverlay = () => {
+		overlay.hidden = false;
+		document.body.classList.add("site-search-active");
+	};
+
+	const setShellVisibility = () => {
+		const isAtTop = window.scrollY <= 30;
+		shell.classList.toggle("is-hidden", !isAtTop);
+
+		if (!isAtTop) {
+			closeOverlay();
+		}
+	};
+
+	const renderResults = (query) => {
+		const trimmed = query.trim().toLowerCase();
+		if (!trimmed) {
+			renderMessage("Type to search publications.");
+			clearBtn.hidden = true;
+			return;
+		}
+
+		clearBtn.hidden = false;
+
+		const filtered = publicationRows.filter((pub) => {
+			const text = [
+				stripHtml(pub.title),
+				pub.authors,
+				pub.journal,
+				pub.doi,
+				pub.year,
+				pub.description
+			].join(" ").toLowerCase();
+
+			return text.includes(trimmed);
+		}).slice(0, 8);
+
+		if (!filtered.length) {
+			renderMessage("No publication matches your search.");
+			return;
+		}
+
+		resultBox.innerHTML = filtered.map((pub) => {
+			const title = escapeHtml(stripHtml(pub.title) || "Untitled publication");
+			const meta = escapeHtml([pub.authors || "Unknown authors", pub.journal || "Unknown journal", pub.year || "N/A"].join(" | "));
+			const link = getSafePublicationLink(pub);
+
+			if (link) {
+				return `
+					<a class="site-search-item" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+						<strong>${title}</strong>
+						<span>${meta}</span>
+					</a>
+				`;
+			}
+
+			return `
+				<a class="site-search-item" href="/publications">
+					<strong>${title}</strong>
+					<span>${meta}</span>
+				</a>
+			`;
+		}).join("");
+	};
+
+	try {
+		const response = await fetch("/api/publications/public");
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(data.message || "Failed to load publication search index");
+		}
+
+		publicationRows = Array.isArray(data) ? data : [];
+		renderMessage("Type to search publications.");
+	} catch (error) {
+		renderMessage(error.message || "Search is temporarily unavailable.");
+	}
+
+	input.addEventListener("focus", () => {
+		if (window.scrollY <= 30) {
+			openOverlay();
+			renderResults(input.value);
+		}
+	});
+
+	input.addEventListener("input", () => {
+		if (window.scrollY > 30) {
+			return;
+		}
+
+		openOverlay();
+		renderResults(input.value);
+	});
+
+	clearBtn.addEventListener("click", () => {
+		input.value = "";
+		renderResults("");
+		input.focus();
+	});
+
+	overlay.addEventListener("click", (event) => {
+		if (event.target === overlay) {
+			closeOverlay();
+		}
+	});
+
+	document.addEventListener("keydown", (event) => {
+		if (event.key === "Escape") {
+			closeOverlay();
+		}
+	});
+
+	window.addEventListener("scroll", setShellVisibility, { passive: true });
+	setShellVisibility();
+}
+
+initPublicationSearch();

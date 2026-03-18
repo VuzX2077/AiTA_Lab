@@ -68,6 +68,131 @@
     color: #2a5298;
 }
 
+.site-search-shell {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 12px 40px;
+    background: #f2f2f2;
+    border-bottom: 1px solid #e7e7e7;
+    transition: max-height 0.2s ease, opacity 0.2s ease, padding 0.2s ease;
+    max-height: 50px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.site-search-shell.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.site-search-inner {
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    width: min(390px, 100%);
+}
+
+#globalPublicationSearch {
+    border: none;
+    background: transparent;
+    font-size: 30px;
+    color: #1f2937;
+    padding: 10px 14px;
+    outline: none;
+    margin: 0;
+}
+
+#globalPublicationSearch::placeholder {
+    color: #6b7280;
+}
+
+#globalSearchClear {
+    width: 36px;
+    height: 36px;
+    margin-right: 6px;
+    border: none;
+    border-radius: 999px;
+    background: #eceff3;
+    color: #334155;
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+}
+
+#globalSearchClear:hover {
+    background: #dbe3ec;
+}
+
+.site-search-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.97);
+    z-index: 900;
+    overflow: auto;
+}
+
+.site-search-result-wrap {
+    width: min(720px, calc(100vw - 48px));
+    margin: 148px auto 48px;
+}
+
+.site-search-results {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+    overflow: hidden;
+}
+
+.site-search-item {
+    display: block;
+    text-decoration: none;
+    border-bottom: 1px solid #edf2f7;
+    padding: 14px 16px;
+}
+
+.site-search-item:last-child {
+    border-bottom: none;
+}
+
+.site-search-item strong {
+    display: block;
+    color: #1f2937;
+    font-size: 17px;
+    margin-bottom: 4px;
+    line-height: 1.35;
+}
+
+.site-search-item span {
+    display: block;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.site-search-item:hover {
+    background: #f8fbff;
+}
+
+.site-search-message {
+    margin: 0;
+    padding: 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+body.site-search-active {
+    overflow: hidden;
+}
+
 .members-page, .publications-page, .researches-page, .lectures-page, .seminars-page, .archives-page, .contact-page {
     max-width: 900px;
     margin: 25px 300px 25px;
@@ -586,6 +711,21 @@ body.seminar-modal-open {
 }
 
 @media (max-width: 900px) {
+    .site-search-shell {
+        padding: 10px 12px;
+        max-height: 72px;
+    }
+
+    .site-search-result-wrap {
+        width: calc(100vw - 24px);
+        margin-top: 126px;
+    }
+
+    #globalPublicationSearch {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+
     .members-page {
         padding: 20px 16px 32px;
     }
