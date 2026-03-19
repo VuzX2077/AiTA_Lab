@@ -26,6 +26,11 @@ const sidebarLinks = document.querySelectorAll(".sidebar-link[data-target]");
 const adminPanels = document.querySelectorAll(".admin-panel");
 const activityLogs = [];
 let seminarItemsCache = [];
+let seminarAdminFiltersBound = false;
+let publicationItemsCache = [];
+let publicationSearchEventsBound = false;
+let memberItemsCache = [];
+let memberSearchEventsBound = false;
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -227,50 +232,253 @@ async function loadPendingPublications() {
 async function loadAllPublications() {
     try {
         const data = await request("/api/publications", { method: "GET" });
-        const list = document.getElementById("publicationList");
-        const approvedList = document.getElementById("approvedPublicationList");
-        const rejectedList = document.getElementById("rejectedPublicationList");
+        publicationItemsCache = data;
 
-        const approved = data.filter((pub) => String(pub.status || "").toLowerCase() === "approved");
-        const rejected = data.filter((pub) => String(pub.status || "").toLowerCase() === "rejected");
-
-        if (data.length === 0) {
-            list.innerHTML = "<p>No publications.</p>";
-            approvedList.innerHTML = "<p>No approved publications.</p>";
-            rejectedList.innerHTML = "<p>No rejected publications.</p>";
-            statsState.totalPublications = 0;
-            statsState.approvedPublications = 0;
-            statsState.rejectedPublications = 0;
-            syncOverviewStats();
-            return;
-        }
-
-        const publicationTemplate = (pub) => `
-            <div>
-                <div>
-                    <p><strong>${pub.title}</strong> (${pub.status})</p>
-                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
-                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
-                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
-                    <p><small>Year: ${pub.year || "N/A"}</small></p>
-                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
-                    <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
-                </div>
-                <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
-            </div>
-        `;
-
-        list.innerHTML = data.map(publicationTemplate).join("");
-        approvedList.innerHTML = approved.length ? approved.map(publicationTemplate).join("") : "<p>No approved publications.</p>";
-        rejectedList.innerHTML = rejected.length ? rejected.map(publicationTemplate).join("") : "<p>No rejected publications.</p>";
+        bindPublicationSearchEvents();
+        renderPublicationSections();
 
         statsState.totalPublications = data.length;
-        statsState.approvedPublications = approved.length;
-        statsState.rejectedPublications = rejected.length;
+        statsState.approvedPublications = data.filter((pub) => String(pub.status || "").toLowerCase() === "approved").length;
+        statsState.rejectedPublications = data.filter((pub) => String(pub.status || "").toLowerCase() === "rejected").length;
         syncOverviewStats();
     } catch (error) {
         showToast(error.message, "error");
     }
+}
+
+function getPublicationSearchKeyword(inputId) {
+    const input = document.getElementById(inputId);
+    return String(input ? input.value : "").trim().toLowerCase();
+}
+
+function filterPublicationsByKeyword(rows, keyword) {
+    if (!keyword) {
+        return rows;
+    }
+
+    return rows.filter((pub) => {
+        const haystack = [
+            pub.title,
+            pub.authors,
+            pub.journal,
+            pub.doi,
+            pub.owner_email,
+            pub.year,
+            pub.status
+        ]
+            .map((value) => String(value || "").toLowerCase())
+            .join(" ");
+
+        return haystack.includes(keyword);
+    });
+}
+
+function renderPublicationList(listElementId, rows, emptyMessage) {
+    const list = document.getElementById(listElementId);
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = `<p>${emptyMessage}</p>`;
+        return;
+    }
+
+    const publicationTemplate = (pub) => `
+        <div>
+            <div>
+                <p><strong>${pub.title}</strong> (${pub.status})</p>
+                <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
+                <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                <p><small>Journal: ${pub.journal || "N/A"}</small></p>
+                <p><small>Year: ${pub.year || "N/A"}</small></p>
+                <p><small>DOI: ${pub.doi || "N/A"}</small></p>
+                <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
+            </div>
+            <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
+        </div>
+    `;
+
+    list.innerHTML = rows.map(publicationTemplate).join("");
+}
+
+function renderPublicationSections() {
+    const approvedRows = publicationItemsCache.filter((pub) => String(pub.status || "").toLowerCase() === "approved");
+    const rejectedRows = publicationItemsCache.filter((pub) => String(pub.status || "").toLowerCase() === "rejected");
+
+    const allFiltered = filterPublicationsByKeyword(publicationItemsCache, getPublicationSearchKeyword("allPublicationSearchInput"));
+    const approvedFiltered = filterPublicationsByKeyword(approvedRows, getPublicationSearchKeyword("approvedPublicationSearchInput"));
+    const rejectedFiltered = filterPublicationsByKeyword(rejectedRows, getPublicationSearchKeyword("rejectedPublicationSearchInput"));
+
+    renderPublicationList("publicationList", allFiltered, publicationItemsCache.length ? "No publications match your search." : "No publications.");
+    renderPublicationList("approvedPublicationList", approvedFiltered, approvedRows.length ? "No approved publications match your search." : "No approved publications.");
+    renderPublicationList("rejectedPublicationList", rejectedFiltered, rejectedRows.length ? "No rejected publications match your search." : "No rejected publications.");
+}
+
+function bindPublicationSearchEvents() {
+    if (publicationSearchEventsBound) {
+        return;
+    }
+
+    const ids = [
+        "allPublicationSearchInput",
+        "approvedPublicationSearchInput",
+        "rejectedPublicationSearchInput"
+    ];
+
+    ids.forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener("input", renderPublicationSections);
+        }
+    });
+
+    publicationSearchEventsBound = true;
+}
+
+function getMemberSearchKeyword(inputId) {
+    const input = document.getElementById(inputId);
+    return String(input ? input.value : "").trim().toLowerCase();
+}
+
+function filterMembersByKeyword(rows, keyword) {
+    if (!keyword) {
+        return rows;
+    }
+
+    return rows.filter((member) => {
+        const haystack = [
+            member.email,
+            member.name,
+            member.role,
+            member.position
+        ]
+            .map((value) => String(value || "").toLowerCase())
+            .join(" ");
+
+        return haystack.includes(keyword);
+    });
+}
+
+function bindRoleActions() {
+    const rolesList = document.getElementById("rolesMemberList");
+    if (!rolesList) {
+        return;
+    }
+
+    rolesList.querySelectorAll(".save-role-btn").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const userId = Number(button.dataset.id);
+            const memberEmail = button.dataset.email;
+            const currentRole = button.dataset.currentRole;
+            const roleSelect = document.getElementById(`roleSelect-${userId}`);
+            const nextRole = roleSelect ? roleSelect.value : "user";
+
+            if (userId === currentAdminId) {
+                alert("You cannot change your own role.");
+                return;
+            }
+
+            if (nextRole === currentRole) {
+                alert("Role is unchanged.");
+                return;
+            }
+
+            await updateMemberRole(userId, nextRole, memberEmail);
+        });
+    });
+}
+
+function renderMembersList(rows, totalRows) {
+    const list = document.getElementById("memberList");
+    if (!list) {
+        return;
+    }
+
+    if (!totalRows.length) {
+        list.innerHTML = "<p>No members.</p>";
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = "<p>No members match your search.</p>";
+        return;
+    }
+
+    list.innerHTML = rows.map(member => `
+        <div>
+            <div>
+                <p><strong>${escapeHtml(member.email || "N/A")}</strong></p>
+                <p><small>Name: ${escapeHtml(member.name || "N/A")}</small></p>
+                <p><small>Role: ${escapeHtml(member.role || "N/A")}</small></p>
+                <p><small>Position: ${escapeHtml(member.position || "N/A")}</small></p>
+            </div>
+            <button onclick="deleteMember(${member.user_id})">Delete</button>
+        </div>
+    `).join("");
+}
+
+function renderRolesMembersList(rows, totalRows) {
+    const rolesList = document.getElementById("rolesMemberList");
+    if (!rolesList) {
+        return;
+    }
+
+    if (!totalRows.length) {
+        rolesList.innerHTML = "<p>No members found.</p>";
+        return;
+    }
+
+    if (!rows.length) {
+        rolesList.innerHTML = "<p>No members match your search.</p>";
+        return;
+    }
+
+    rolesList.innerHTML = rows.map(member => `
+        <div>
+            <p><strong>${escapeHtml(member.email || "N/A")}</strong></p>
+            <p><small>Name: ${escapeHtml(member.name || "N/A")}</small></p>
+            <p><small>Current Role: ${escapeHtml(member.role || "N/A")}</small></p>
+            <p><small>Position: ${escapeHtml(member.position || "N/A")}</small></p>
+            <div class="roles-actions">
+                <select id="roleSelect-${member.user_id}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
+                    <option value="user" ${member.role === "user" ? "selected" : ""}>User</option>
+                    <option value="admin" ${member.role === "admin" ? "selected" : ""}>Admin</option>
+                </select>
+                <button class="save-role-btn" data-id="${member.user_id}" data-email="${escapeHtml(member.email || "")}" data-current-role="${escapeHtml(member.role || "user")}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
+                    ${Number(member.user_id) === currentAdminId ? "Protected" : "Save Role"}
+                </button>
+            </div>
+            ${Number(member.user_id) === currentAdminId ? '<p><small>You cannot change your own role.</small></p>' : ""}
+        </div>
+    `).join("");
+
+    bindRoleActions();
+}
+
+function renderMemberSections() {
+    const allMembersFiltered = filterMembersByKeyword(memberItemsCache, getMemberSearchKeyword("allMembersSearchInput"));
+    const rolesMembersFiltered = filterMembersByKeyword(memberItemsCache, getMemberSearchKeyword("rolesMembersSearchInput"));
+
+    renderMembersList(allMembersFiltered, memberItemsCache);
+    renderRolesMembersList(rolesMembersFiltered, memberItemsCache);
+}
+
+function bindMemberSearchEvents() {
+    if (memberSearchEventsBound) {
+        return;
+    }
+
+    const ids = ["allMembersSearchInput", "rolesMembersSearchInput"];
+
+    ids.forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener("input", renderMemberSections);
+        }
+    });
+
+    memberSearchEventsBound = true;
 }
 
 function formatDateForInput(value) {
@@ -366,6 +574,108 @@ function startEditSeminar(item) {
     showSection("seminarManagementSection");
 }
 
+function applyAdminSeminarFilters(rows) {
+    const searchInput = document.getElementById("seminarAdminSearchInput");
+    const dateInput = document.getElementById("seminarAdminDateFilter");
+
+    const keyword = String(searchInput ? searchInput.value : "").trim().toLowerCase();
+    const selectedDate = formatDateForInput(dateInput ? dateInput.value : "");
+
+    return rows.filter((item) => {
+        const memberName = String(item.member_name || "").toLowerCase();
+        const title = String(item.title || "").toLowerCase();
+        const itemDate = formatDateForInput(item.seminar_date);
+
+        const matchesKeyword = !keyword || memberName.includes(keyword) || title.includes(keyword);
+        const matchesDate = !selectedDate || itemDate === selectedDate;
+
+        return matchesKeyword && matchesDate;
+    });
+}
+
+function renderSeminarsAdmin(rows) {
+    const list = document.getElementById("seminarList");
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = "<p class=\"admin-note\">No seminars match current filters.</p>";
+        return;
+    }
+
+    list.innerHTML = rows.map((item) => `
+        <div class="seminar-admin-item">
+            <div>
+                <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
+                <p><small>${escapeHtml(formatDateForDisplay(item.seminar_date))} | ${escapeHtml(item.start_time || "N/A")} - ${escapeHtml(item.end_time || "N/A")}</small></p>
+                <p><small>Member: ${escapeHtml(item.member_name || "N/A")}</small></p>
+                <p><small>Paper Link: ${item.paper_link ? `<a href="${escapeHtml(item.paper_link)}" target="_blank" rel="noopener noreferrer">Open link</a>` : "N/A"}</small></p>
+            </div>
+            <div class="seminar-admin-actions">
+                <button class="seminar-edit-btn" data-id="${item.id}">Edit</button>
+                <button class="seminar-delete-btn" data-id="${item.id}">Delete</button>
+            </div>
+        </div>
+    `).join("");
+
+    list.querySelectorAll(".seminar-edit-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            const selected = seminarItemsCache.find((row) => Number(row.id) === id);
+            if (selected) {
+                startEditSeminar(selected);
+            }
+        });
+    });
+
+    list.querySelectorAll(".seminar-delete-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            if (Number.isInteger(id)) {
+                deleteSeminarEntry(id);
+            }
+        });
+    });
+}
+
+function bindAdminSeminarFilterEvents() {
+    if (seminarAdminFiltersBound) {
+        return;
+    }
+
+    const searchInput = document.getElementById("seminarAdminSearchInput");
+    const dateInput = document.getElementById("seminarAdminDateFilter");
+    const resetBtn = document.getElementById("seminarAdminFilterResetBtn");
+
+    const rerender = () => {
+        const filtered = applyAdminSeminarFilters(seminarItemsCache);
+        renderSeminarsAdmin(filtered);
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener("input", rerender);
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener("change", rerender);
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            if (searchInput) {
+                searchInput.value = "";
+            }
+            if (dateInput) {
+                dateInput.value = "";
+            }
+            rerender();
+        });
+    }
+
+    seminarAdminFiltersBound = true;
+}
+
 async function loadSeminarsAdmin() {
     const list = document.getElementById("seminarList");
     if (!list) {
@@ -375,45 +685,8 @@ async function loadSeminarsAdmin() {
     try {
         const data = await request("/api/seminars", { method: "GET" });
         seminarItemsCache = data;
-
-        if (!data.length) {
-            list.innerHTML = "<p class=\"admin-note\">No seminars yet.</p>";
-            return;
-        }
-
-        list.innerHTML = data.map((item) => `
-            <div class="seminar-admin-item">
-                <div>
-                    <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
-                    <p><small>${escapeHtml(formatDateForDisplay(item.seminar_date))} | ${escapeHtml(item.start_time || "N/A")} - ${escapeHtml(item.end_time || "N/A")}</small></p>
-                    <p><small>Member: ${escapeHtml(item.member_name || "N/A")}</small></p>
-                    <p><small>Paper Link: ${item.paper_link ? `<a href="${escapeHtml(item.paper_link)}" target="_blank" rel="noopener noreferrer">Open link</a>` : "N/A"}</small></p>
-                </div>
-                <div class="seminar-admin-actions">
-                    <button class="seminar-edit-btn" data-id="${item.id}">Edit</button>
-                    <button class="seminar-delete-btn" data-id="${item.id}">Delete</button>
-                </div>
-            </div>
-        `).join("");
-
-        list.querySelectorAll(".seminar-edit-btn").forEach((button) => {
-            button.addEventListener("click", () => {
-                const id = Number(button.dataset.id);
-                const selected = seminarItemsCache.find((row) => Number(row.id) === id);
-                if (selected) {
-                    startEditSeminar(selected);
-                }
-            });
-        });
-
-        list.querySelectorAll(".seminar-delete-btn").forEach((button) => {
-            button.addEventListener("click", () => {
-                const id = Number(button.dataset.id);
-                if (Number.isInteger(id)) {
-                    deleteSeminarEntry(id);
-                }
-            });
-        });
+        bindAdminSeminarFilterEvents();
+        renderSeminarsAdmin(applyAdminSeminarFilters(data));
     } catch (error) {
         showToast(error.message, "error");
         list.innerHTML = `<p class="admin-note">${escapeHtml(error.message)}</p>`;
@@ -477,68 +750,9 @@ async function deleteSeminarEntry(id) {
 async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
-        const list = document.getElementById("memberList");
-        const rolesList = document.getElementById("rolesMemberList");
-
-        if (data.length === 0) {
-            list.innerHTML = "<p>No members.</p>";
-            rolesList.innerHTML = "<p>No members found.</p>";
-            statsState.totalMembers = 0;
-            statsState.activeResearchers = 0;
-            syncOverviewStats();
-            return;
-        }
-
-        list.innerHTML = data.map(member => `
-            <div>
-                <div>
-                    <p><strong>${member.email}</strong></p>
-                    <p><small>Name: ${member.name || "N/A"}</small></p>
-                    <p><small>Role: ${member.role}</small></p>
-                    <p><small>Position: ${member.position || "N/A"}</small></p>
-                </div>
-                <button onclick="deleteMember(${member.user_id})">Delete</button>
-            </div>
-        `).join("");
-
-        rolesList.innerHTML = data.map(member => `
-            <div>
-                <p><strong>${member.email}</strong></p>
-                <p><small>Current Role: ${member.role}</small></p>
-                <div class="roles-actions">
-                    <select id="roleSelect-${member.user_id}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
-                        <option value="user" ${member.role === "user" ? "selected" : ""}>User</option>
-                        <option value="admin" ${member.role === "admin" ? "selected" : ""}>Admin</option>
-                    </select>
-                    <button class="save-role-btn" data-id="${member.user_id}" data-email="${member.email}" data-current-role="${member.role}" ${Number(member.user_id) === currentAdminId ? "disabled" : ""}>
-                        ${Number(member.user_id) === currentAdminId ? "Protected" : "Save Role"}
-                    </button>
-                </div>
-                ${Number(member.user_id) === currentAdminId ? '<p><small>You cannot change your own role.</small></p>' : ""}
-            </div>
-        `).join("");
-
-        rolesList.querySelectorAll(".save-role-btn").forEach((button) => {
-            button.addEventListener("click", async () => {
-                const userId = Number(button.dataset.id);
-                const memberEmail = button.dataset.email;
-                const currentRole = button.dataset.currentRole;
-                const roleSelect = document.getElementById(`roleSelect-${userId}`);
-                const nextRole = roleSelect ? roleSelect.value : "user";
-
-                if (userId === currentAdminId) {
-                    alert("You cannot change your own role.");
-                    return;
-                }
-
-                if (nextRole === currentRole) {
-                    alert("Role is unchanged.");
-                    return;
-                }
-
-                await updateMemberRole(userId, nextRole, memberEmail);
-            });
-        });
+        memberItemsCache = data;
+        bindMemberSearchEvents();
+        renderMemberSections();
 
         statsState.totalMembers = data.length;
         statsState.activeResearchers = data.filter((member) => member.role === "user").length;

@@ -117,16 +117,43 @@
 
         <div class="dashboard-section admin-panel" id="approvedPublicationsSection">
             <h2>Approved Publications</h2>
+            <div class="publication-admin-filters" aria-label="Search approved publications">
+                <input
+                    type="text"
+                    id="approvedPublicationSearchInput"
+                    class="publication-admin-search"
+                    placeholder="Search approved publications by title, author, journal, DOI, year or owner"
+                    aria-label="Search approved publications"
+                >
+            </div>
             <div id="approvedPublicationList"></div>
         </div>
 
         <div class="dashboard-section admin-panel" id="rejectedPublicationsSection">
             <h2>Rejected Publications</h2>
+            <div class="publication-admin-filters" aria-label="Search rejected publications">
+                <input
+                    type="text"
+                    id="rejectedPublicationSearchInput"
+                    class="publication-admin-search"
+                    placeholder="Search rejected publications by title, author, journal, DOI, year or owner"
+                    aria-label="Search rejected publications"
+                >
+            </div>
             <div id="rejectedPublicationList"></div>
         </div>
 
         <div class="dashboard-section admin-panel" id="allPublicationsSection">
             <h2>All Publications</h2>
+            <div class="publication-admin-filters" aria-label="Search all publications">
+                <input
+                    type="text"
+                    id="allPublicationSearchInput"
+                    class="publication-admin-search"
+                    placeholder="Search all publications by title, author, journal, DOI, year or owner"
+                    aria-label="Search all publications"
+                >
+            </div>
             <div id="publicationList"></div>
         </div>
 
@@ -165,11 +192,37 @@
                 </div>
             </form>
 
+            <div class="seminar-admin-filters" aria-label="Filter seminar list">
+                <input
+                    type="text"
+                    id="seminarAdminSearchInput"
+                    class="seminar-admin-search"
+                    placeholder="Search by member name or seminar title"
+                    aria-label="Search seminar list"
+                >
+                <input
+                    type="date"
+                    id="seminarAdminDateFilter"
+                    class="seminar-admin-date"
+                    aria-label="Filter seminar list by date"
+                >
+                <button type="button" id="seminarAdminFilterResetBtn" class="seminar-admin-filter-reset">Reset</button>
+            </div>
+
             <div id="seminarList" class="seminar-admin-list"></div>
         </div>
 
         <div class="dashboard-section admin-panel" id="allMembersSection">
             <h2>All Members</h2>
+            <div class="member-admin-filters" aria-label="Search all members">
+                <input
+                    type="text"
+                    id="allMembersSearchInput"
+                    class="member-admin-search"
+                    placeholder="Search members by email, name, role or position"
+                    aria-label="Search all members"
+                >
+            </div>
             <div id="memberList"></div>
         </div>
 
@@ -189,6 +242,15 @@
 
         <div class="dashboard-section admin-panel" id="rolesManagementSection">
             <h2>Roles Management</h2>
+            <div class="member-admin-filters" aria-label="Search members in roles management">
+                <input
+                    type="text"
+                    id="rolesMembersSearchInput"
+                    class="member-admin-search"
+                    placeholder="Search roles by email, name, current role or position"
+                    aria-label="Search members in roles management"
+                >
+            </div>
             <div id="rolesMemberList"></div>
         </div>
 
