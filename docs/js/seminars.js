@@ -214,6 +214,56 @@ function renderSeminars(rows) {
 	bindSeminarModalEvents(rows);
 }
 
+function applySeminarFilters(rows) {
+	const searchInput = document.getElementById("seminarSearchInput");
+	const dateInput = document.getElementById("seminarDateFilter");
+
+	const keyword = String(searchInput ? searchInput.value : "").trim().toLowerCase();
+	const selectedDate = extractDateOnly(dateInput ? dateInput.value : "");
+
+	return rows.filter((item) => {
+		const member = String(item.member_name || "").toLowerCase();
+		const title = String(item.title || "").toLowerCase();
+		const seminarDate = extractDateOnly(item.seminar_date);
+
+		const matchesKeyword = !keyword || member.includes(keyword) || title.includes(keyword);
+		const matchesDate = !selectedDate || seminarDate === selectedDate;
+
+		return matchesKeyword && matchesDate;
+	});
+}
+
+function bindSeminarFilterEvents(allRows) {
+	const searchInput = document.getElementById("seminarSearchInput");
+	const dateInput = document.getElementById("seminarDateFilter");
+	const resetBtn = document.getElementById("seminarFilterResetBtn");
+
+	const rerender = () => {
+		const filteredRows = applySeminarFilters(allRows);
+		renderSeminars(filteredRows);
+	};
+
+	if (searchInput) {
+		searchInput.addEventListener("input", rerender);
+	}
+
+	if (dateInput) {
+		dateInput.addEventListener("change", rerender);
+	}
+
+	if (resetBtn) {
+		resetBtn.addEventListener("click", () => {
+			if (searchInput) {
+				searchInput.value = "";
+			}
+			if (dateInput) {
+				dateInput.value = "";
+			}
+			rerender();
+		});
+	}
+}
+
 async function loadSeminars() {
 	const timeline = document.getElementById("seminarTimeline");
 
@@ -226,6 +276,7 @@ async function loadSeminars() {
 		}
 
 		renderSeminars(data);
+		bindSeminarFilterEvents(data);
 	} catch (error) {
 		if (timeline) {
 			timeline.innerHTML = `<p>${escapeHtml(error.message)}</p>`;

@@ -39,6 +39,23 @@
 	</section>
 
 	<section class="seminar-group container" aria-label="Seminar schedule">
+		<div class="seminar-filters" aria-label="Seminar filters">
+			<input
+				type="text"
+				id="seminarSearchInput"
+				class="seminar-filter-input"
+				placeholder="Search by member name or seminar title"
+				aria-label="Search seminars by member name or title"
+			>
+			<input
+				type="date"
+				id="seminarDateFilter"
+				class="seminar-filter-date"
+				aria-label="Filter seminars by date"
+			>
+			<button type="button" id="seminarFilterResetBtn" class="seminar-filter-reset">Reset</button>
+		</div>
+
 		<div id="seminarTimeline" class="seminar-timeline" aria-live="polite">
 			<p>Loading seminars...</p>
 		</div>

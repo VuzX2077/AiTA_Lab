@@ -70,7 +70,7 @@
 
 .site-search-shell {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     padding: 12px 40px;
     background: #f2f2f2;
@@ -98,13 +98,14 @@
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    width: min(390px, 100%);
+    width: min(1000px, 100%);
+    max-height: 40px;
 }
 
 #globalPublicationSearch {
     border: none;
     background: transparent;
-    font-size: 30px;
+    font-size: 20px;
     color: #1f2937;
     padding: 10px 14px;
     outline: none;
@@ -468,6 +469,45 @@ a.publication-title {
     padding-bottom: 24px;
 }
 
+.seminar-filters {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 220px auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.seminar-filter-input,
+.seminar-filter-date {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d8e0ea;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.seminar-filter-input:focus,
+.seminar-filter-date:focus {
+    outline: 2px solid #bcd2ea;
+    outline-offset: 1px;
+    border-color: #9fbfdf;
+}
+
+.seminar-filter-reset {
+    border: 1px solid #c8d4e0;
+    background: #f7fafc;
+    color: #1f2937;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.seminar-filter-reset:hover {
+    background: #e8f0f8;
+}
+
 .seminar-timeline {
     border-top: 1px solid #d9dfe6;
     border-bottom: 1px solid #d9dfe6;
@@ -804,6 +844,10 @@ body.seminar-modal-open {
 
     .seminar-date-group h2 {
         font-size: 22px;
+    }
+
+    .seminar-filters {
+        grid-template-columns: 1fr;
     }
 
     .seminar-card-title {
