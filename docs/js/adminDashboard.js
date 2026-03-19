@@ -874,6 +874,45 @@ if (isAuthValid) {
         cancelEditBtn.addEventListener("click", resetSeminarForm);
     }
 
+    // Change password
+    const changePasswordForm = document.getElementById("changePasswordForm");
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById("currentPassword").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast("All fields are required", "error");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast("New passwords do not match", "error");
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast("New password must be at least 6 characters", "error");
+                return;
+            }
+
+            try {
+                await request("/api/change-password", {
+                    method: "POST",
+                    body: JSON.stringify({ oldPassword: currentPassword, newPassword })
+                });
+
+                showToast("Password changed successfully", "success");
+                changePasswordForm.reset();
+            } catch (error) {
+                showToast(error.message, "error");
+            }
+        });
+    }
+
     document.getElementById("logoutBtn").addEventListener("click", () => {
         clearAuth();
         window.location.href = "/";

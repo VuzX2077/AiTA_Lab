@@ -13,8 +13,14 @@ async function login(req, res) {
             password
         });
 
-        if (!result.success && result.reason === "invalid_credentials") {
-            return res.status(401).json({ message: "Invalid credentials" });
+        if (!result.success) {
+            if (result.reason === "email_not_found") {
+                return res.status(401).json({ message: "Email not found" });
+            }
+            if (result.reason === "password_incorrect") {
+                return res.status(401).json({ message: "Password is incorrect" });
+            }
+            return res.status(401).json({ message: "Login failed" });
         }
 
         res.json({ token: result.token, role: result.role });
@@ -50,7 +56,44 @@ async function register(req, res) {
     }
 }
 
+async function changePassword(req, res) {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: "Old password and new password are required" });
+    }
+
+    if (oldPassword === newPassword) {
+        return res.status(400).json({ message: "New password must be different from old password" });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    try {
+        const result = await authService.changePassword(userId, oldPassword, newPassword);
+
+        if (!result.success) {
+            if (result.reason === "old_password_incorrect") {
+                return res.status(400).json({ message: "Old password is incorrect" });
+            }
+            if (result.reason === "user_not_found") {
+                return res.status(404).json({ message: "User not found" });
+            }
+            return res.status(500).json({ message: "Failed to change password" });
+        }
+
+        res.json({ message: "Password changed successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
 module.exports = {
     login,
-    register
+    register,
+    changePassword
 };

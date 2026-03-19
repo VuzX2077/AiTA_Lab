@@ -10,7 +10,7 @@ async function login({ email, password }) {
     const user = await userRepository.findByEmail(email);
 
     if (!user) {
-        return { success: false, reason: "invalid_credentials" };
+        return { success: false, reason: "email_not_found" };
     }
 
     let validPassword = false;
@@ -27,7 +27,7 @@ async function login({ email, password }) {
     }
 
     if (!validPassword) {
-        return { success: false, reason: "invalid_credentials" };
+        return { success: false, reason: "password_incorrect" };
     }
 
     const token = jwt.sign(
@@ -58,7 +58,38 @@ async function register({ email, password, role }) {
     };
 }
 
+async function changePassword(userId, oldPassword, newPassword) {
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+        return { success: false, reason: "user_not_found" };
+    }
+
+    const fullUser = await userRepository.findByIdFull(userId);
+    if (!fullUser) {
+        return { success: false, reason: "user_not_found" };
+    }
+
+    let validPassword = false;
+
+    if (isBcryptHash(fullUser.password)) {
+        validPassword = await bcrypt.compare(oldPassword, fullUser.password);
+    } else {
+        validPassword = oldPassword === fullUser.password;
+    }
+
+    if (!validPassword) {
+        return { success: false, reason: "old_password_incorrect" };
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await userRepository.updatePasswordById(userId, hashedNewPassword);
+
+    return { success: true };
+}
+
 module.exports = {
     login,
-    register
+    register,
+    changePassword
 };

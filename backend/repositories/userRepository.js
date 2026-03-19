@@ -43,6 +43,15 @@ async function findById(userId, db = pool) {
     return result.rows[0] || null;
 }
 
+async function findByIdFull(userId, db = pool) {
+    const result = await db.query(
+        "SELECT id, email, password, role FROM users WHERE id = $1",
+        [userId]
+    );
+
+    return result.rows[0] || null;
+}
+
 async function updateRole(userId, role, db = pool) {
     const result = await db.query(
         `
@@ -72,6 +81,7 @@ module.exports = {
     createUser,
     updatePasswordById,
     findById,
+    findByIdFull,
     updateRole,
     deleteById
 };
