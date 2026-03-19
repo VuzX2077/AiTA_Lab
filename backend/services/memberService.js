@@ -7,6 +7,10 @@ async function getMembers() {
     return memberRepository.findAll();
 }
 
+async function getMember(userId) {
+    return memberRepository.findByUserId(userId);
+}
+
 async function getPublicMembers({ query, section } = {}) {
     return memberRepository.findPublicMembers({ query, section });
 }
@@ -47,6 +51,7 @@ async function getProfileByUserId(userId) {
 
 module.exports = {
     getMembers,
+    getMember,
     getPublicMembers,
     createMemberWithUser,
     updateMemberProfile,

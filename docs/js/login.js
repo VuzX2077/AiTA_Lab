@@ -35,6 +35,14 @@ if (session) {
     window.location.href = session.role === "admin" ? "/adminDashboard" : "/memberDashboard";
 }
 
+function resolveApiUrl(path) {
+    if (typeof window.getApiUrl === "function") {
+        return window.getApiUrl(path);
+    }
+
+    return path;
+}
+
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
@@ -42,7 +50,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     const password = document.getElementById("password").value;
 
     try {
-        const response = await fetch("http://localhost:3000/api/login", {
+        const response = await fetch(resolveApiUrl("/api/login"), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

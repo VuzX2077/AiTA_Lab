@@ -90,12 +90,28 @@ async function findProfileByUserId(userId, db = pool) {
     return result.rows[0] || null;
 }
 
+async function findByUserId(userId, db = pool) {
+    const result = await db.query(
+        `
+        SELECT ${MEMBER_COLS}
+        FROM users u
+        LEFT JOIN members m ON m.user_id = u.id
+        WHERE u.id = $1
+        LIMIT 1
+        `,
+        [userId]
+    );
+
+    return result.rows[0] || null;
+}
+
 module.exports = {
     findAll,
     findPublicMembers,
     createMemberProfile,
     updateMemberProfile,
     deleteByUserId,
-    findProfileByUserId
+    findProfileByUserId,
+    findByUserId
 };
 
