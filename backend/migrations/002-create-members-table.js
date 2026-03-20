@@ -8,7 +8,7 @@ module.exports = {
                 position TEXT,
                 bio TEXT,
                 section TEXT DEFAULT 'researchers',
-                photo_url TEXT DEFAULT '',
+                photo_asset_id INTEGER REFERENCES image_assets(id) ON DELETE SET NULL,
                 career JSONB DEFAULT '[]',
                 links JSONB DEFAULT '[]',
                 user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
@@ -18,7 +18,7 @@ module.exports = {
         await pool.query(`
             ALTER TABLE members
                 ADD COLUMN IF NOT EXISTS section TEXT DEFAULT 'researchers',
-                ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '',
+                ADD COLUMN IF NOT EXISTS photo_asset_id INTEGER REFERENCES image_assets(id) ON DELETE SET NULL,
                 ADD COLUMN IF NOT EXISTS career JSONB DEFAULT '[]',
                 ADD COLUMN IF NOT EXISTS links JSONB DEFAULT '[]'
         `);

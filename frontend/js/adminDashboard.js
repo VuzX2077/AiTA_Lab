@@ -769,19 +769,27 @@ async function loadAdminProfile() {
         currentProfile = data;
         const profile = document.getElementById("adminProfileInfo");
         const displayName = data.member && data.member.name ? data.member.name : data.user.email;
+        const photoUrl = data.member && data.member.photo_url ? data.member.photo_url : "";
+        const avatarInitial = (displayName || "A").trim().charAt(0).toUpperCase() || "A";
 
         profile.innerHTML = `
-            <p><strong>${displayName}</strong></p>
-            <p><strong>User ID:</strong> ${data.user.id}</p>
-            <p><strong>Role:</strong> ${data.user.role}</p>
-            <p><strong>Access:</strong> Publication review and member management</p>
+            <div class="dashboard-profile-overview">
+                ${photoUrl
+                    ? `<img src="${photoUrl}" alt="${displayName} avatar" class="dashboard-profile-avatar">`
+                    : `<div class="dashboard-profile-avatar-fallback" aria-hidden="true">${avatarInitial}</div>`}
+                <div class="dashboard-profile-meta">
+                    <p><strong>${displayName}</strong></p>
+                    <p><strong>User ID:</strong> ${data.user.id}</p>
+                    <p><strong>Role:</strong> ${data.user.role}</p>
+                    <p><strong>Access:</strong> Publication review and member management</p>
+                </div>
+            </div>
         `;
 
         const profileNameInput = document.getElementById("profileName");
         const profileBioInput = document.getElementById("profileBio");
         const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
         const profilePhotoPreview = document.getElementById("profilePhotoPreview");
-        const photoUrl = data.member && data.member.photo_url ? data.member.photo_url : "";
 
         if (profileNameInput) {
             profileNameInput.value = data.member && data.member.name ? data.member.name : "";

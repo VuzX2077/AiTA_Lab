@@ -217,11 +217,21 @@ async function searchAuthors(keyword) {
 
 function renderProfileInfo(data) {
     const memberName = data.member?.name || data.user?.email || "N/A";
+    const profilePhotoUrl = data.member?.photo_url || "";
+    const avatarInitial = (memberName || "U").trim().charAt(0).toUpperCase() || "U";
+
     document.getElementById("profileInfo").innerHTML = `
-        <p><strong>${memberName}</strong> </p>
-        <p><strong>User ID:</strong> ${data.user.id}</p>
-        <p><strong>Role:</strong> ${data.user.role}</p>
-        <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
+        <div class="dashboard-profile-overview">
+            ${profilePhotoUrl
+                ? `<img src="${profilePhotoUrl}" alt="${memberName} avatar" class="dashboard-profile-avatar">`
+                : `<div class="dashboard-profile-avatar-fallback" aria-hidden="true">${avatarInitial}</div>`}
+            <div class="dashboard-profile-meta">
+                <p><strong>${memberName}</strong></p>
+                <p><strong>User ID:</strong> ${data.user.id}</p>
+                <p><strong>Role:</strong> ${data.user.role}</p>
+                <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
+            </div>
+        </div>
     `;
 }
 

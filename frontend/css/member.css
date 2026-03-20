@@ -67,6 +67,48 @@
     font-weight: 700;
 }
 
+#profileInfo .dashboard-profile-overview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#profileInfo .dashboard-profile-avatar,
+#profileInfo .dashboard-profile-avatar-fallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+#profileInfo .dashboard-profile-avatar {
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+}
+
+#profileInfo .dashboard-profile-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f4f7;
+    color: #344054;
+    font-size: 24px;
+    font-weight: 700;
+    border: 1px solid #d0d5dd;
+}
+
+#profileInfo .dashboard-profile-meta {
+    min-width: 0;
+}
+
+#profileInfo .dashboard-profile-meta p {
+    margin: 0 0 8px 0;
+}
+
+#profileInfo .dashboard-profile-meta p:last-child {
+    margin-bottom: 0;
+}
+
 .settings-note {
     margin: 0;
     color: #666;
