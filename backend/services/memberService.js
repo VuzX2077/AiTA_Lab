@@ -11,6 +11,10 @@ async function getMember(userId) {
     return memberRepository.findByUserId(userId);
 }
 
+async function getMemberProfile(memberId) {
+    return memberRepository.findByMemberId(memberId);
+}
+
 async function getPublicMembers({ query, section } = {}) {
     return memberRepository.findPublicMembers({ query, section });
 }
@@ -41,6 +45,24 @@ async function updateMemberProfile(userId, fields) {
     });
 }
 
+async function createStandaloneMemberProfile(fields) {
+    return memberRepository.createStandaloneMemberProfile({
+        ...fields,
+        photoAssetId: fields.photo_asset_id
+    });
+}
+
+async function updateStandaloneMemberProfile(memberId, fields) {
+    return memberRepository.updateByMemberId(memberId, {
+        ...fields,
+        photoAssetId: fields.photo_asset_id
+    });
+}
+
+async function deleteMemberProfileById(memberId) {
+    return memberRepository.deleteByMemberId(memberId);
+}
+
 async function deleteMemberByUserId(userId) {
     return withTransaction(async (client) => {
         await memberRepository.deleteByUserId(userId, client);
@@ -52,12 +74,25 @@ async function getProfileByUserId(userId) {
     return memberRepository.findProfileByUserId(userId);
 }
 
+async function updateOwnProfile(userId, fields) {
+    return memberRepository.upsertProfileByUserId(userId, {
+        name: fields.name,
+        bio: fields.bio,
+        photoAssetId: fields.photo_asset_id
+    });
+}
+
 module.exports = {
     getMembers,
     getMember,
+    getMemberProfile,
     getPublicMembers,
     createMemberWithUser,
+    createStandaloneMemberProfile,
     updateMemberProfile,
+    updateStandaloneMemberProfile,
     deleteMemberByUserId,
-    getProfileByUserId
+    deleteMemberProfileById,
+    getProfileByUserId,
+    updateOwnProfile
 };

@@ -35,6 +35,7 @@ let editingPublicationId = null;
 let myPublications = [];
 let selectedAuthors = [];
 let authorSearchTimeout = null;
+let currentProfile = null;
 
 const PUBLICATION_TYPE_LABELS = {
     journal: "Journal Publications",
@@ -214,41 +215,119 @@ async function searchAuthors(keyword) {
     }
 }
 
-// Load profile
-if (isAuthValid) {
-    fetch("/api/profile", {
-        headers: {
-            "Authorization": "Bearer " + token
-        }
-    })
-    .then(async (res) => {
-        if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
-                clearAuth();
-                window.location.href = "/login";
-            }
+function renderProfileInfo(data) {
+    const memberName = data.member?.name || data.user?.email || "N/A";
+    document.getElementById("profileInfo").innerHTML = `
+        <p><strong>${memberName}</strong> </p>
+        <p><strong>User ID:</strong> ${data.user.id}</p>
+        <p><strong>Role:</strong> ${data.user.role}</p>
+        <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
+    `;
+}
 
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.message || "Failed to load profile");
-        }
+function fillProfileForm(data) {
+    const profileNameInput = document.getElementById("profileName");
+    const profileBioInput = document.getElementById("profileBio");
+    const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+    const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 
-        return res.json();
-    })
-    .then(data => {
-        const memberName = data.member?.name || data.user?.name || "N/A";
+    if (profileNameInput) profileNameInput.value = data.member?.name || "";
+    if (profileBioInput) profileBioInput.value = data.member?.bio || "";
+    if (profilePhotoAssetIdInput) profilePhotoAssetIdInput.value = data.member?.photo_asset_id || "";
 
-        document.getElementById("profileInfo").innerHTML = `
-            <p><strong>${memberName}</strong> </p>
-            <p><strong>User ID:</strong> ${data.user.id}</p>
-            <p><strong>Role:</strong> ${data.user.role}</p>
-            <p><strong>Access:</strong> Create / Edit / Delete your own publications</p>
-        `;
-    })
-    .catch((error) => {
-        if (error.message) {
-            showToast(error.message, "error");
+    if (profilePhotoPreview) {
+        const photoUrl = data.member?.photo_url || "";
+        if (photoUrl) {
+            profilePhotoPreview.src = photoUrl;
+            profilePhotoPreview.hidden = false;
+        } else {
+            profilePhotoPreview.hidden = true;
+            profilePhotoPreview.removeAttribute("src");
         }
+    }
+}
+
+async function loadOwnProfile() {
+    const data = await request("/api/profile", { method: "GET" });
+    currentProfile = data;
+    renderProfileInfo(data);
+    fillProfileForm(data);
+}
+
+async function uploadProfileAvatar() {
+    const fileInput = document.getElementById("profilePhotoFile");
+    const status = document.getElementById("profilePhotoUploadStatus");
+    const photoAssetIdInput = document.getElementById("profilePhotoAssetId");
+    const preview = document.getElementById("profilePhotoPreview");
+    const button = document.getElementById("uploadProfilePhotoBtn");
+
+    if (!fileInput || !photoAssetIdInput || !button) return;
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) status.textContent = "Uploading...";
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Failed to upload image");
+
+        photoAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) status.textContent = "Upload successful";
+        showToast("Avatar uploaded successfully", "success");
+    } catch (error) {
+        if (status) status.textContent = "Upload failed";
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveOwnProfile(event) {
+    event.preventDefault();
+
+    const profileNameInput = document.getElementById("profileName");
+    const profileBioInput = document.getElementById("profileBio");
+    const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+
+    const name = profileNameInput ? profileNameInput.value.trim() : "";
+    if (!name) {
+        showToast("Name is required", "error");
+        return;
+    }
+
+    await request("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+            name,
+            bio: profileBioInput ? profileBioInput.value.trim() : "",
+            photo_asset_id: profilePhotoAssetIdInput && profilePhotoAssetIdInput.value
+                ? Number(profilePhotoAssetIdInput.value)
+                : null
+        })
     });
+
+    await loadOwnProfile();
+    showToast("Profile updated successfully", "success");
 }
 
 async function loadMyPublications() {
@@ -428,9 +507,30 @@ if (isAuthValid) {
         });
     }
 
+    loadOwnProfile().catch((error) => {
+        if (error.message) {
+            showToast(error.message, "error");
+        }
+    });
     loadMyPublications();
     renderSelectedAuthors();
     showSection("overviewSection");
+
+    const editProfileForm = document.getElementById("editProfileForm");
+    if (editProfileForm) {
+        editProfileForm.addEventListener("submit", async (e) => {
+            try {
+                await saveOwnProfile(e);
+            } catch (error) {
+                showToast(error.message, "error");
+            }
+        });
+    }
+
+    const uploadProfilePhotoBtn = document.getElementById("uploadProfilePhotoBtn");
+    if (uploadProfilePhotoBtn) {
+        uploadProfilePhotoBtn.addEventListener("click", uploadProfileAvatar);
+    }
 
     // Change password
     const changePasswordForm = document.getElementById("changePasswordForm");

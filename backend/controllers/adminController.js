@@ -262,6 +262,142 @@ async function updateMemberRole(req, res) {
     }
 }
 
+async function getMemberProfileById(req, res) {
+    const memberId = Number(req.params.id);
+    if (!Number.isInteger(memberId)) {
+        return res.status(400).json({ message: "Invalid member profile id" });
+    }
+
+    try {
+        const member = await adminService.getMemberProfile(memberId);
+        if (!member) {
+            return res.status(404).json({ message: "Member profile not found" });
+        }
+        return res.json(member);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Failed to load member profile" });
+    }
+}
+
+async function createMemberProfile(req, res) {
+    const { name, position, bio, section, photo_asset_id, career, links } = req.body;
+    const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
+
+    if (!name || !String(name).trim()) {
+        return res.status(400).json({ message: "Name is required" });
+    }
+
+    if (section && !validSections.includes(section)) {
+        return res.status(400).json({ message: "Invalid section" });
+    }
+
+    if (career !== undefined && !Array.isArray(career)) {
+        return res.status(400).json({ message: "career must be an array" });
+    }
+
+    if (links !== undefined && !Array.isArray(links)) {
+        return res.status(400).json({ message: "links must be an array" });
+    }
+
+    if (photo_asset_id !== undefined && photo_asset_id !== null && photo_asset_id !== "" && !Number.isInteger(Number(photo_asset_id))) {
+        return res.status(400).json({ message: "photo_asset_id must be an integer" });
+    }
+
+    try {
+        const member = await adminService.createMemberProfile({
+            name: String(name).trim(),
+            position: position ? String(position).trim() : "",
+            bio: bio ? String(bio).trim() : "",
+            section: section || "researchers",
+            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id),
+            career: career || [],
+            links: links || []
+        });
+
+        return res.status(201).json({ member });
+    } catch (err) {
+        if (err && err.code === "23503") {
+            return res.status(400).json({ message: "Invalid photo_asset_id" });
+        }
+        console.error(err);
+        return res.status(500).json({ message: "Failed to add member profile" });
+    }
+}
+
+async function updateMemberProfile(req, res) {
+    const memberId = Number(req.params.id);
+    if (!Number.isInteger(memberId)) {
+        return res.status(400).json({ message: "Invalid member profile id" });
+    }
+
+    const { name, position, bio, section, photo_asset_id, career, links } = req.body;
+    const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
+
+    if (!name || !String(name).trim()) {
+        return res.status(400).json({ message: "Name is required" });
+    }
+
+    if (section && !validSections.includes(section)) {
+        return res.status(400).json({ message: "Invalid section" });
+    }
+
+    if (career !== undefined && !Array.isArray(career)) {
+        return res.status(400).json({ message: "career must be an array" });
+    }
+
+    if (links !== undefined && !Array.isArray(links)) {
+        return res.status(400).json({ message: "links must be an array" });
+    }
+
+    if (photo_asset_id !== undefined && photo_asset_id !== null && photo_asset_id !== "" && !Number.isInteger(Number(photo_asset_id))) {
+        return res.status(400).json({ message: "photo_asset_id must be an integer" });
+    }
+
+    try {
+        const member = await adminService.updateMemberProfile(memberId, {
+            name: String(name).trim(),
+            position: position ? String(position).trim() : "",
+            bio: bio ? String(bio).trim() : "",
+            section: section || "researchers",
+            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id),
+            career: career || [],
+            links: links || []
+        });
+
+        if (!member) {
+            return res.status(404).json({ message: "Member profile not found" });
+        }
+
+        return res.json({ member });
+    } catch (err) {
+        if (err && err.code === "23503") {
+            return res.status(400).json({ message: "Invalid photo_asset_id" });
+        }
+        console.error(err);
+        return res.status(500).json({ message: "Failed to update member profile" });
+    }
+}
+
+async function deleteMemberProfile(req, res) {
+    const memberId = Number(req.params.id);
+    if (!Number.isInteger(memberId)) {
+        return res.status(400).json({ message: "Invalid member profile id" });
+    }
+
+    try {
+        const deleted = await adminService.deleteMemberProfile(memberId);
+        if (!deleted) {
+            return res.status(404).json({ message: "Member profile not found" });
+        }
+
+        return res.json({ message: "Member profile deleted" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Failed to delete member profile" });
+    }
+}
+
 module.exports = {
     getPendingPublications,
     approvePublication,
@@ -272,5 +408,9 @@ module.exports = {
     createMember,
     updateMember,
     deleteMember,
-    updateMemberRole
+    updateMemberRole,
+    getMemberProfileById,
+    createMemberProfile,
+    updateMemberProfile,
+    deleteMemberProfile
 };

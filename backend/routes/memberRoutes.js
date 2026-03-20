@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get("/members/public", memberController.getPublicMembers);
 router.get("/profile", verifyToken, authorizeRole(["user", "admin"]), memberController.getProfile);
+router.patch("/profile", verifyToken, authorizeRole(["user", "admin"]), memberController.updateProfile);
 
 module.exports = router;

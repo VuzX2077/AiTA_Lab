@@ -16,4 +16,9 @@ router.patch("/members/:id", verifyToken, authorizeRole("admin"), adminControlle
 router.delete("/members/:id", verifyToken, authorizeRole("admin"), adminController.deleteMember);
 router.patch("/members/:id/role", verifyToken, authorizeRole("admin"), adminController.updateMemberRole);
 
+router.get("/member-profiles/:id", verifyToken, authorizeRole("admin"), adminController.getMemberProfileById);
+router.post("/member-profiles", verifyToken, authorizeRole("admin"), adminController.createMemberProfile);
+router.patch("/member-profiles/:id", verifyToken, authorizeRole("admin"), adminController.updateMemberProfile);
+router.delete("/member-profiles/:id", verifyToken, authorizeRole("admin"), adminController.deleteMemberProfile);
+
 module.exports = router;

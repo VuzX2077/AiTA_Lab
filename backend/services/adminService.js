@@ -26,12 +26,28 @@ async function getMember(userId) {
     return memberService.getMember(userId);
 }
 
+async function getMemberProfile(memberId) {
+    return memberService.getMemberProfile(memberId);
+}
+
 async function createMember(payload) {
     return memberService.createMemberWithUser(payload);
 }
 
 async function updateMember(userId, fields) {
     return memberService.updateMemberProfile(userId, fields);
+}
+
+async function createMemberProfile(fields) {
+    return memberService.createStandaloneMemberProfile(fields);
+}
+
+async function updateMemberProfile(memberId, fields) {
+    return memberService.updateStandaloneMemberProfile(memberId, fields);
+}
+
+async function deleteMemberProfile(memberId) {
+    return memberService.deleteMemberProfileById(memberId);
 }
 
 async function deleteMember(userId) {
@@ -49,8 +65,12 @@ module.exports = {
     deletePublication,
     getMembers,
     getMember,
+    getMemberProfile,
     createMember,
+    createMemberProfile,
     updateMember,
+    updateMemberProfile,
     deleteMember,
+    deleteMemberProfile,
     updateMemberRole
 };

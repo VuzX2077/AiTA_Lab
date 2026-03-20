@@ -31,6 +31,7 @@ let publicationItemsCache = [];
 let publicationSearchEventsBound = false;
 let memberItemsCache = [];
 let memberSearchEventsBound = false;
+let currentProfile = null;
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -765,6 +766,7 @@ async function loadMembers() {
 async function loadAdminProfile() {
     try {
         const data = await request("/api/profile", { method: "GET" });
+        currentProfile = data;
         const profile = document.getElementById("adminProfileInfo");
         const displayName = data.member && data.member.name ? data.member.name : data.user.email;
 
@@ -774,6 +776,116 @@ async function loadAdminProfile() {
             <p><strong>Role:</strong> ${data.user.role}</p>
             <p><strong>Access:</strong> Publication review and member management</p>
         `;
+
+        const profileNameInput = document.getElementById("profileName");
+        const profileBioInput = document.getElementById("profileBio");
+        const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+        const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+        const photoUrl = data.member && data.member.photo_url ? data.member.photo_url : "";
+
+        if (profileNameInput) {
+            profileNameInput.value = data.member && data.member.name ? data.member.name : "";
+        }
+        if (profileBioInput) {
+            profileBioInput.value = data.member && data.member.bio ? data.member.bio : "";
+        }
+        if (profilePhotoAssetIdInput) {
+            profilePhotoAssetIdInput.value = data.member && data.member.photo_asset_id ? data.member.photo_asset_id : "";
+        }
+        if (profilePhotoPreview) {
+            if (photoUrl) {
+                profilePhotoPreview.src = photoUrl;
+                profilePhotoPreview.hidden = false;
+            } else {
+                profilePhotoPreview.hidden = true;
+                profilePhotoPreview.removeAttribute("src");
+            }
+        }
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+async function uploadProfileAvatar() {
+    const fileInput = document.getElementById("profilePhotoFile");
+    const status = document.getElementById("profilePhotoUploadStatus");
+    const photoAssetIdInput = document.getElementById("profilePhotoAssetId");
+    const preview = document.getElementById("profilePhotoPreview");
+    const button = document.getElementById("uploadProfilePhotoBtn");
+
+    if (!fileInput || !photoAssetIdInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) status.textContent = "Uploading...";
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        photoAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) status.textContent = "Upload successful";
+        showToast("Avatar uploaded successfully", "success");
+    } catch (error) {
+        if (status) status.textContent = "Upload failed";
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveOwnProfile(event) {
+    event.preventDefault();
+
+    const profileNameInput = document.getElementById("profileName");
+    const profileBioInput = document.getElementById("profileBio");
+    const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+
+    const name = profileNameInput ? profileNameInput.value.trim() : "";
+    if (!name) {
+        showToast("Name is required", "error");
+        return;
+    }
+
+    try {
+        await request("/api/profile", {
+            method: "PATCH",
+            body: JSON.stringify({
+                name,
+                bio: profileBioInput ? profileBioInput.value.trim() : "",
+                photo_asset_id: profilePhotoAssetIdInput && profilePhotoAssetIdInput.value
+                    ? Number(profilePhotoAssetIdInput.value)
+                    : null
+            })
+        });
+
+        await loadAdminProfile();
+        addActivityLog("Updated own profile");
+        showToast("Profile updated successfully", "success");
     } catch (error) {
         showToast(error.message, "error");
     }
@@ -875,6 +987,16 @@ if (isAuthValid) {
     }
 
     // Change password
+    const editProfileForm = document.getElementById("editProfileForm");
+    if (editProfileForm) {
+        editProfileForm.addEventListener("submit", saveOwnProfile);
+    }
+
+    const uploadProfilePhotoBtn = document.getElementById("uploadProfilePhotoBtn");
+    if (uploadProfilePhotoBtn) {
+        uploadProfilePhotoBtn.addEventListener("click", uploadProfileAvatar);
+    }
+
     const changePasswordForm = document.getElementById("changePasswordForm");
     if (changePasswordForm) {
         changePasswordForm.addEventListener("submit", async (e) => {

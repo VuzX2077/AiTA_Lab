@@ -358,6 +358,25 @@ margin-right: 6px;
     background: #b91c1c;
 }
 
+#editProfileForm .form-group {
+    margin-bottom: 12px;
+}
+
+#editProfileForm textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.profile-avatar-preview {
+    margin-top: 10px;
+    width: 84px;
+    height: 84px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+    display: block;
+}
+
 @media (max-width: 768px) {
     .admin-overview-grid {
         grid-template-columns: 1fr;

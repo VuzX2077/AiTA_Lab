@@ -370,7 +370,7 @@ async function uploadSelectedPhoto() {
 }
 
 function populateForm(m) {
-    document.getElementById("mfUserId").value = m.user_id || "";
+    document.getElementById("mfUserId").value = m.member_id || "";
     document.getElementById("mfName").value = m.name || "";
     document.getElementById("mfPosition").value = m.position || "";
     document.getElementById("mfSection").value = m.section || "researchers";
@@ -394,14 +394,14 @@ async function openEditModal(m) {
     document.getElementById("mmodalTitle").textContent = "Edit Member";
     document.getElementById("mfMode").value = "edit";
 
-    const userId = m.user_id;
-    if (!userId) {
+    const memberId = m.member_id;
+    if (!memberId) {
         showToast("Missing member id", "error");
         return;
     }
 
     try {
-        const res = await fetch(`/api/members/${userId}`, {
+        const res = await fetch(`/api/member-profiles/${memberId}`, {
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
         const raw = await res.text();
@@ -435,7 +435,7 @@ async function handleSubmit(e) {
     e.preventDefault();
 
     const mode = document.getElementById("mfMode").value;
-    const userId = document.getElementById("mfUserId").value;
+    const memberId = document.getElementById("mfUserId").value;
     const name = document.getElementById("mfName").value.trim();
 
     if (!name) {
@@ -464,7 +464,7 @@ async function handleSubmit(e) {
 
     try {
         if (mode === "add") {
-            const res = await fetch("/api/members", {
+            const res = await fetch("/api/member-profiles", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -477,7 +477,7 @@ async function handleSubmit(e) {
             if (!res.ok) throw new Error(data.message || "Failed to add member");
             showToast("Member added");
         } else {
-            const res = await fetch(`/api/members/${userId}`, {
+            const res = await fetch(`/api/member-profiles/${memberId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -504,7 +504,7 @@ async function confirmDelete(m) {
     if (!confirm(`Delete "${m.name}"? This cannot be undone.`)) return;
 
     try {
-        const res = await fetch(`/api/members/${m.user_id}`, {
+        const res = await fetch(`/api/member-profiles/${m.member_id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
