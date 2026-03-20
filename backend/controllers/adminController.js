@@ -91,12 +91,15 @@ async function getMemberById(req, res) {
         res.json(member);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Failed to load member" });
+        res.status(500).json({
+            message: err.message || "Failed to load member",
+            code: err.code || null
+        });
     }
 }
 
 async function createMember(req, res) {
-    const { email, password, role, name, position, bio, section, photo_url, career, links } = req.body;
+    const { email, password, role, name, position, bio, section, photo_asset_id, career, links } = req.body;
     const memberRole = role === "admin" ? "admin" : "user";
     const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
 
@@ -116,6 +119,10 @@ async function createMember(req, res) {
         return res.status(400).json({ message: "links must be an array" });
     }
 
+    if (photo_asset_id !== undefined && photo_asset_id !== null && !Number.isInteger(Number(photo_asset_id))) {
+        return res.status(400).json({ message: "photo_asset_id must be an integer" });
+    }
+
     try {
         const created = await adminService.createMember({
             email: email.trim(),
@@ -125,7 +132,7 @@ async function createMember(req, res) {
             position: position ? position.trim() : "",
             bio: bio ? bio.trim() : "",
             section: section || "researchers",
-            photo_url: photo_url ? photo_url.trim() : "",
+            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id),
             career: career || [],
             links: links || []
         });
@@ -139,6 +146,9 @@ async function createMember(req, res) {
             member: created.member
         });
     } catch (err) {
+        if (err && err.code === "23503") {
+            return res.status(400).json({ message: "Invalid photo_asset_id" });
+        }
         console.error(err);
         res.status(500).json({ message: "Failed to add member" });
     }
@@ -150,7 +160,7 @@ async function updateMember(req, res) {
         return res.status(400).json({ message: "Invalid member id" });
     }
 
-    const { name, position, bio, section, photo_url, career, links } = req.body;
+    const { name, position, bio, section, photo_asset_id, career, links } = req.body;
     const validSections = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
 
     if (!name || !String(name).trim()) {
@@ -169,13 +179,17 @@ async function updateMember(req, res) {
         return res.status(400).json({ message: "links must be an array" });
     }
 
+    if (photo_asset_id !== undefined && photo_asset_id !== null && photo_asset_id !== "" && !Number.isInteger(Number(photo_asset_id))) {
+        return res.status(400).json({ message: "photo_asset_id must be an integer" });
+    }
+
     try {
         const updated = await adminService.updateMember(userId, {
             name: String(name).trim(),
             position: position ? String(position).trim() : "",
             bio: bio ? String(bio).trim() : "",
             section: section || "researchers",
-            photo_url: photo_url ? String(photo_url).trim() : "",
+            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id),
             career: career || [],
             links: links || []
         });
@@ -186,6 +200,9 @@ async function updateMember(req, res) {
 
         res.json({ member: updated });
     } catch (err) {
+        if (err && err.code === "23503") {
+            return res.status(400).json({ message: "Invalid photo_asset_id" });
+        }
         console.error(err);
         res.status(500).json({ message: "Failed to update member" });
     }

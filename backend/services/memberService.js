@@ -15,7 +15,7 @@ async function getPublicMembers({ query, section } = {}) {
     return memberRepository.findPublicMembers({ query, section });
 }
 
-async function createMemberWithUser({ email, password, role, name, position, bio, section, photo_url, career, links }) {
+async function createMemberWithUser({ email, password, role, name, position, bio, section, photo_asset_id, career, links }) {
     return withTransaction(async (client) => {
         const exists = await userRepository.existsByEmail(email, client);
 
@@ -26,7 +26,7 @@ async function createMemberWithUser({ email, password, role, name, position, bio
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await userRepository.createUser({ email, password: hashedPassword, role }, client);
         const member = await memberRepository.createMemberProfile({
-            name, position, bio, section, photo_url, career, links,
+            name, position, bio, section, photoAssetId: photo_asset_id, career, links,
             userId: user.id
         }, client);
 
@@ -35,7 +35,10 @@ async function createMemberWithUser({ email, password, role, name, position, bio
 }
 
 async function updateMemberProfile(userId, fields) {
-    return memberRepository.updateMemberProfile(userId, fields);
+    return memberRepository.updateMemberProfile(userId, {
+        ...fields,
+        photoAssetId: fields.photo_asset_id
+    });
 }
 
 async function deleteMemberByUserId(userId) {

@@ -7,8 +7,17 @@ const { runMigrations } = require("./migrations");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+});
+
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const frontendRoot = path.join(__dirname, "..", "frontend");
 
@@ -62,19 +71,25 @@ const publicationRoutes = require("./routes/publicationRoutes");
 const memberRoutes = require("./routes/memberRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const seminarRoutes = require("./routes/seminarRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
 app.use("/api", memberRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", seminarRoutes);
+app.use("/api", uploadRoutes);
 
 async function startServer() {
   try {
     await runMigrations();
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
+    });
+
+    server.on("error", (error) => {
+      console.error("HTTP server error:", error);
     });
   } catch (error) {
     console.error("Failed to start server", error);
