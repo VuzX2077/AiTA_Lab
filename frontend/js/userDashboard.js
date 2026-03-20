@@ -354,7 +354,7 @@ async function loadMyPublications() {
                     <p><small>DOI: ${pub.doi || "N/A"}</small></p>
                     <p>${pub.description}</p>
                 </div>
-                <div>
+                <div class="pub-btn-group">
                     <button class="edit-pub-btn" data-id="${pub.id}">Edit</button>
                     <button class="delete-pub-btn" data-id="${pub.id}">Delete</button>
                 </div>
