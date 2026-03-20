@@ -4,13 +4,15 @@ const createMembersTable = require("./002-create-members-table");
 const createPublicationsTable = require("./003-create-publications-table");
 const createSeminarsTable = require("./004-create-seminars-table");
 const createImageAssetsTable = require("./005-create-image-assets-table");
+const createHomeNewsTable = require("./006-create-home-news-table");
 
 const migrations = [
     createUsersTable,
     createMembersTable,
     createPublicationsTable,
     createSeminarsTable,
-    createImageAssetsTable
+    createImageAssetsTable,
+    createHomeNewsTable
 ];
 
 let didRunMigrations = false;

@@ -72,6 +72,7 @@ const memberRoutes = require("./routes/memberRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const seminarRoutes = require("./routes/seminarRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const homeNewsRoutes = require("./routes/homeNewsRoutes");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
@@ -79,6 +80,7 @@ app.use("/api", memberRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", seminarRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", homeNewsRoutes);
 
 async function startServer() {
   try {
