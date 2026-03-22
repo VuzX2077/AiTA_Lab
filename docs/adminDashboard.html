@@ -44,6 +44,9 @@
             <li><button class="sidebar-link sidebar-sublink" data-target="rejectedPublicationsSection">Rejected</button></li>
             <li><button class="sidebar-link sidebar-sublink" data-target="allPublicationsSection">All Publications</button></li>
 
+            <li class="sidebar-group-title">Homepage</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="homeNewsSection">Latest Posts</button></li>
+
             <li class="sidebar-group-title">Seminars</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="seminarManagementSection">Seminar Management</button></li>
 
@@ -157,6 +160,65 @@
             <div id="publicationList"></div>
         </div>
 
+        <div class="dashboard-section admin-panel" id="homeNewsSection">
+            <h2>Homepage Latest Posts</h2>
+
+            <form id="homeNewsForm" class="home-news-form-grid">
+                <input type="hidden" id="homeNewsEditId">
+                <input type="hidden" id="homeNewsImageAssetId">
+
+                <label class="home-news-span-2">
+                    Cover Image
+                    <input type="file" id="homeNewsImageFile" accept="image/jpeg,image/png,image/webp">
+                    <button type="button" id="uploadHomeNewsImageBtn" class="btn-primary">Upload Image</button>
+                    <p id="homeNewsUploadStatus" class="settings-note"></p>
+                    <img id="homeNewsImagePreview" alt="Home news image preview" class="home-news-image-preview" hidden>
+                </label>
+
+                <label class="home-news-span-2">
+                    Title
+                    <input type="text" id="homeNewsTitle" placeholder="Post title" required>
+                </label>
+
+                <label class="home-news-span-2">
+                    Summary
+                    <textarea id="homeNewsSummary" rows="4" placeholder="Short description" required></textarea>
+                </label>
+
+                <label class="home-news-span-2">
+                    Content
+                    <textarea id="homeNewsContent" rows="10" placeholder="Full article content" required></textarea>
+                </label>
+
+                <label>
+                    Tag
+                    <input type="text" id="homeNewsTag" value="NEWS" placeholder="NEWS">
+                </label>
+
+                <label>
+                    Publish Date
+                    <input type="date" id="homeNewsPublishedAt">
+                </label>
+
+                <label class="home-news-span-2">
+                    Link (optional)
+                    <input type="url" id="homeNewsLink" placeholder="https://example.com/post-link">
+                </label>
+
+                <label class="home-news-span-2 home-news-checkbox">
+                    <input type="checkbox" id="homeNewsIsPublished" checked>
+                    Show on homepage
+                </label>
+
+                <div class="home-news-form-actions home-news-span-2">
+                    <button type="submit" id="homeNewsSaveBtn">Save Post</button>
+                    <button type="button" id="homeNewsCancelEditBtn" class="seminar-cancel-btn" hidden>Cancel Edit</button>
+                </div>
+            </form>
+
+            <div id="homeNewsList" class="home-news-admin-list"></div>
+        </div>
+
         <div class="dashboard-section admin-panel" id="seminarManagementSection">
             <h2>Seminar Management</h2>
 
@@ -261,6 +323,29 @@
 
         <div class="dashboard-section admin-panel" id="settingsSection">
             <h2>Settings</h2>
+
+            <div class="settings-card">
+                <h3>Edit Profile</h3>
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <textarea id="profileBio" rows="4" placeholder="Short bio"></textarea>
+                    </div>
+                    <input type="hidden" id="profilePhotoAssetId">
+                    <div class="form-group">
+                        <label>Avatar</label>
+                        <input type="file" id="profilePhotoFile" accept="image/jpeg,image/png,image/webp">
+                        <button type="button" id="uploadProfilePhotoBtn" class="btn-primary">Upload Avatar</button>
+                        <p id="profilePhotoUploadStatus" class="settings-note"></p>
+                        <img id="profilePhotoPreview" alt="Profile avatar preview" class="profile-avatar-preview" hidden>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Profile</button>
+                </form>
+            </div>
             
             <div class="settings-card">
                 <h3>Change Password</h3>

@@ -25,6 +25,7 @@ app.use(express.static(frontendRoot));
 
 const cleanPageRoutes = {
   "/": "pages/public/index.html",
+  "/news": "pages/public/news.html",
   "/publications": "pages/public/publications.html",
   "/researches": "pages/public/researches.html",
   "/members": "pages/public/members.html",
@@ -46,6 +47,7 @@ Object.entries(cleanPageRoutes).forEach(([routePath, relativeFilePath]) => {
 
 const legacyRedirectRoutes = {
   "/index.html": "/",
+  "/news.html": "/news",
   "/publications.html": "/publications",
   "/researches.html": "/researches",
   "/members.html": "/members",

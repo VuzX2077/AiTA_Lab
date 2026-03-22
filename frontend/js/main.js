@@ -121,6 +121,16 @@ function getSafeHttpUrl(value) {
 	return "";
 }
 
+function getNewsDetailHref(newsId) {
+	const numericId = Number(newsId);
+	if (!Number.isInteger(numericId) || numericId <= 0) {
+		return typeof window.getPageUrl === "function" ? `${window.getPageUrl("news.html")}` : "/news";
+	}
+
+	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+	return `${basePath}?id=${numericId}`;
+}
+
 async function initHomeLatestPosts() {
 	const list = document.getElementById("homeLatestPostsList");
 	if (!list) {
@@ -146,23 +156,26 @@ async function initHomeLatestPosts() {
 		}
 
 		list.innerHTML = items.map((item) => {
+			const newsId = Number(item.id);
 			const title = escapeHtml(stripHtml(item.title || "Untitled"));
 			const summary = escapeHtml(stripHtml(item.summary || ""));
 			const tag = escapeHtml(stripHtml(item.tag || "NEWS"));
 			const dateText = escapeHtml(formatHomeNewsDate(item.published_at));
 			const imageUrl = typeof item.image_url === "string" && item.image_url.trim() ? item.image_url.trim() : "";
-			const safeLink = getSafeHttpUrl(item.link);
+			const detailHref = getNewsDetailHref(newsId);
+			const ctaLabelRaw = stripHtml(item.cta_label || "KEEP READING");
+			const ctaLabel = escapeHtml(ctaLabelRaw || "KEEP READING");
 
-			const readMore = safeLink
-				? `<a class="home-latest-link" href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer">KEEP READING ›</a>`
-				: `<a class="home-latest-link" href="/publications">KEEP READING ›</a>`;
+			const readMore = `<a class="home-latest-link" href="${detailHref}">${ctaLabel} ›</a>`;
 
 			return `
 				<article class="home-latest-item">
-					<img class="home-latest-thumb" src="${escapeHtml(imageUrl)}" alt="${title}">
+					<a href="${detailHref}" aria-label="Read ${title}">
+						<img class="home-latest-thumb" src="${escapeHtml(imageUrl)}" alt="${title}">
+					</a>
 					<div class="home-latest-content">
 						<p class="home-latest-tag">${tag}</p>
-						<h3 class="home-latest-title">${title}</h3>
+						<h3 class="home-latest-title"><a href="${detailHref}" class="home-latest-title-link">${title}</a></h3>
 						<p class="home-latest-summary">${summary}</p>
 						<div class="home-latest-meta">
 							<p class="home-latest-date">${dateText}</p>

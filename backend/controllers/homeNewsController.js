@@ -4,8 +4,13 @@ function isValidDateString(value) {
     return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "").trim());
 }
 
+function parseNewsId(value) {
+    const id = Number(value);
+    return Number.isInteger(id) ? id : null;
+}
+
 function parsePayload(req, res) {
-    const { title, summary, imageAssetId, link, tag, ctaLabel, publishedAt, isPublished } = req.body;
+    const { title, summary, content, imageAssetId, link, tag, ctaLabel, publishedAt, isPublished } = req.body;
 
     if (!title || !String(title).trim()) {
         res.status(400).json({ message: "Title is required" });
@@ -45,6 +50,7 @@ function parsePayload(req, res) {
     return {
         title: String(title).trim(),
         summary: String(summary).trim(),
+        content: typeof content === "string" ? content.trim() : "",
         imageAssetId: parsedImageAssetId,
         link: normalizedLink,
         tag: tag && String(tag).trim() ? String(tag).trim().toUpperCase() : "NEWS",
@@ -52,6 +58,44 @@ function parsePayload(req, res) {
         publishedAt: normalizedPublishedAt,
         isPublished: Boolean(isPublished)
     };
+}
+
+async function getPublicHomeNewsById(req, res) {
+    const id = parseNewsId(req.params.id);
+    if (!id) {
+        return res.status(400).json({ message: "Invalid news id" });
+    }
+
+    try {
+        const row = await homeNewsService.getPublicHomeNewsById(id);
+        if (!row) {
+            return res.status(404).json({ message: "Home news not found" });
+        }
+
+        return res.json(row);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to load home news" });
+    }
+}
+
+async function getHomeNewsById(req, res) {
+    const id = parseNewsId(req.params.id);
+    if (!id) {
+        return res.status(400).json({ message: "Invalid news id" });
+    }
+
+    try {
+        const row = await homeNewsService.getHomeNewsById(id);
+        if (!row) {
+            return res.status(404).json({ message: "Home news not found" });
+        }
+
+        return res.json(row);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to load home news" });
+    }
 }
 
 async function getPublicHomeNews(req, res) {
@@ -150,6 +194,8 @@ async function deleteHomeNews(req, res) {
 
 module.exports = {
     getPublicHomeNews,
+    getPublicHomeNewsById,
+    getHomeNewsById,
     getHomeNewsForAdmin,
     createHomeNews,
     updateHomeNews,

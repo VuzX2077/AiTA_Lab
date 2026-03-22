@@ -93,6 +93,7 @@
 			<form id="memberForm" novalidate autocomplete="off">
 				<input type="hidden" id="mfUserId">
 				<input type="hidden" id="mfMode" value="edit">
+				<input type="hidden" id="mfPhotoAssetId">
 
 
 				<div class="mf-row">
@@ -115,8 +116,10 @@
 					</select>
 				</div>
 				<div class="mf-row">
-					<label>Photo URL</label>
-					<input type="url" id="mfPhoto" placeholder="https://...">
+					<label>Upload photo from device</label>
+					<input type="file" id="mfPhotoFile" accept="image/jpeg,image/png,image/webp">
+					<button type="button" id="mfUploadPhotoBtn" class="mf-add-link-btn">Upload Photo</button>
+					<small id="mfPhotoUploadStatus" class="mf-hint"></small>
 				</div>
 				<div class="mf-row">
 					<label>Bio / description</label>

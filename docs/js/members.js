@@ -326,12 +326,59 @@ function readLinksFromForm() {
     return result;
 }
 
+async function uploadSelectedPhoto() {
+    const fileInput = document.getElementById("mfPhotoFile");
+    const uploadBtn = document.getElementById("mfUploadPhotoBtn");
+    const status = document.getElementById("mfPhotoUploadStatus");
+    const photoAssetIdInput = document.getElementById("mfPhotoAssetId");
+
+    if (!fileInput || !uploadBtn || !photoAssetIdInput || !adminToken) return;
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    uploadBtn.disabled = true;
+    if (status) status.textContent = "Uploading...";
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${adminToken}`
+            },
+            body: formData
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || "Failed to upload image");
+
+        photoAssetIdInput.value = data.id || "";
+        if (status) status.textContent = "Upload successful";
+        showToast("Photo uploaded successfully", "success");
+    } catch (err) {
+        if (status) status.textContent = "Upload failed";
+        showToast(err.message || "Failed to upload image", "error");
+    } finally {
+        uploadBtn.disabled = false;
+    }
+}
+
 function populateForm(m) {
-    document.getElementById("mfUserId").value = m.user_id || "";
+    document.getElementById("mfUserId").value = m.member_id || "";
     document.getElementById("mfName").value = m.name || "";
     document.getElementById("mfPosition").value = m.position || "";
     document.getElementById("mfSection").value = m.section || "researchers";
-    document.getElementById("mfPhoto").value = m.photo_url || "";
+    document.getElementById("mfPhotoAssetId").value = m.photo_asset_id || "";
+    const fileInput = document.getElementById("mfPhotoFile");
+    if (fileInput) fileInput.value = "";
+    const uploadStatus = document.getElementById("mfPhotoUploadStatus");
+    if (uploadStatus) uploadStatus.textContent = "";
     document.getElementById("mfBio").value = m.bio || "";
     document.getElementById("mfCareer").value = safeArr(m.career).join("\n");
 
@@ -347,18 +394,28 @@ async function openEditModal(m) {
     document.getElementById("mmodalTitle").textContent = "Edit Member";
     document.getElementById("mfMode").value = "edit";
 
-    const userId = m.user_id;
-    if (!userId) {
+    const memberId = m.member_id;
+    if (!memberId) {
         showToast("Missing member id", "error");
         return;
     }
 
     try {
-        const res = await fetch(`/api/members/${userId}`, {
+        const res = await fetch(`/api/member-profiles/${memberId}`, {
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to load member");
+        const raw = await res.text();
+        let data = {};
+        if (raw) {
+            try {
+                data = JSON.parse(raw);
+            } catch {
+                data = { message: raw };
+            }
+        }
+        if (!res.ok) {
+            throw new Error(data.message || `Failed to load member (HTTP ${res.status})`);
+        }
 
         populateForm(data);
         openModal();
@@ -378,7 +435,7 @@ async function handleSubmit(e) {
     e.preventDefault();
 
     const mode = document.getElementById("mfMode").value;
-    const userId = document.getElementById("mfUserId").value;
+    const memberId = document.getElementById("mfUserId").value;
     const name = document.getElementById("mfName").value.trim();
 
     if (!name) {
@@ -390,7 +447,9 @@ async function handleSubmit(e) {
         name,
         position: document.getElementById("mfPosition").value.trim(),
         section: document.getElementById("mfSection").value,
-        photo_url: document.getElementById("mfPhoto").value.trim(),
+        photo_asset_id: document.getElementById("mfPhotoAssetId").value
+            ? Number(document.getElementById("mfPhotoAssetId").value)
+            : null,
         bio: document.getElementById("mfBio").value.trim(),
         career: document
             .getElementById("mfCareer")
@@ -405,7 +464,7 @@ async function handleSubmit(e) {
 
     try {
         if (mode === "add") {
-            const res = await fetch("/api/members", {
+            const res = await fetch("/api/member-profiles", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -418,7 +477,7 @@ async function handleSubmit(e) {
             if (!res.ok) throw new Error(data.message || "Failed to add member");
             showToast("Member added");
         } else {
-            const res = await fetch(`/api/members/${userId}`, {
+            const res = await fetch(`/api/member-profiles/${memberId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -445,7 +504,7 @@ async function confirmDelete(m) {
     if (!confirm(`Delete "${m.name}"? This cannot be undone.`)) return;
 
     try {
-        const res = await fetch(`/api/members/${m.user_id}`, {
+        const res = await fetch(`/api/member-profiles/${m.member_id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
@@ -470,6 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target === document.getElementById("memberModal")) closeModal();
     });
     document.getElementById("addLinkBtn")?.addEventListener("click", () => buildLinkRow());
+    document.getElementById("mfUploadPhotoBtn")?.addEventListener("click", uploadSelectedPhoto);
     document.getElementById("memberForm")?.addEventListener("submit", handleSubmit);
 
     const nameInput = document.getElementById("mfName");

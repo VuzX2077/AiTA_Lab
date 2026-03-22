@@ -10,6 +10,7 @@ const docsPagesDir = path.join(docsDir, "pages");
 
 const pageMappings = [
     { source: ["public", "index.html"], target: "index.html" },
+    { source: ["public", "news.html"], target: "news.html" },
     { source: ["public", "members.html"], target: "members.html" },
     { source: ["public", "publications.html"], target: "publications.html" },
     { source: ["public", "researches.html"], target: "researches.html" },
@@ -24,6 +25,7 @@ const pageMappings = [
 
 const routeReplacements = [
     ["href=\"/\"", "href=\"./index.html\""],
+    ["href=\"/news\"", "href=\"./news.html\""],
     ["href=\"/members\"", "href=\"./members.html\""],
     ["href=\"/publications\"", "href=\"./publications.html\""],
     ["href=\"/researches\"", "href=\"./researches.html\""],

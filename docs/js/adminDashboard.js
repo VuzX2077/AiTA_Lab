@@ -31,6 +31,8 @@ let publicationItemsCache = [];
 let publicationSearchEventsBound = false;
 let memberItemsCache = [];
 let memberSearchEventsBound = false;
+let homeNewsItemsCache = [];
+let currentProfile = null;
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -747,6 +749,304 @@ async function deleteSeminarEntry(id) {
     }
 }
 
+function resetHomeNewsForm() {
+    const form = document.getElementById("homeNewsForm");
+    const editId = document.getElementById("homeNewsEditId");
+    const imageAssetId = document.getElementById("homeNewsImageAssetId");
+    const preview = document.getElementById("homeNewsImagePreview");
+    const status = document.getElementById("homeNewsUploadStatus");
+    const saveBtn = document.getElementById("homeNewsSaveBtn");
+    const cancelBtn = document.getElementById("homeNewsCancelEditBtn");
+    const publishDateInput = document.getElementById("homeNewsPublishedAt");
+    const isPublishedInput = document.getElementById("homeNewsIsPublished");
+    const tagInput = document.getElementById("homeNewsTag");
+
+    if (form) {
+        form.reset();
+    }
+
+    if (editId) {
+        editId.value = "";
+    }
+
+    if (imageAssetId) {
+        imageAssetId.value = "";
+    }
+
+    if (preview) {
+        preview.hidden = true;
+        preview.removeAttribute("src");
+    }
+
+    if (status) {
+        status.textContent = "";
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = "Save Post";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = true;
+    }
+
+    if (publishDateInput) {
+        publishDateInput.value = new Date().toISOString().slice(0, 10);
+    }
+
+    if (isPublishedInput) {
+        isPublishedInput.checked = true;
+    }
+
+    if (tagInput) {
+        tagInput.value = "NEWS";
+    }
+}
+
+function startEditHomeNews(item) {
+    const editId = document.getElementById("homeNewsEditId");
+    const imageAssetId = document.getElementById("homeNewsImageAssetId");
+    const titleInput = document.getElementById("homeNewsTitle");
+    const summaryInput = document.getElementById("homeNewsSummary");
+    const contentInput = document.getElementById("homeNewsContent");
+    const linkInput = document.getElementById("homeNewsLink");
+    const tagInput = document.getElementById("homeNewsTag");
+    const publishedAtInput = document.getElementById("homeNewsPublishedAt");
+    const isPublishedInput = document.getElementById("homeNewsIsPublished");
+    const preview = document.getElementById("homeNewsImagePreview");
+    const status = document.getElementById("homeNewsUploadStatus");
+    const saveBtn = document.getElementById("homeNewsSaveBtn");
+    const cancelBtn = document.getElementById("homeNewsCancelEditBtn");
+
+    if (!editId || !imageAssetId || !titleInput || !summaryInput || !contentInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+        return;
+    }
+
+    editId.value = String(item.id);
+    imageAssetId.value = String(item.image_asset_id || "");
+    titleInput.value = item.title || "";
+    summaryInput.value = item.summary || "";
+    contentInput.value = item.content || "";
+    if (linkInput) {
+        linkInput.value = item.link || "";
+    }
+    tagInput.value = item.tag || "NEWS";
+    publishedAtInput.value = formatDateForInput(item.published_at) || new Date().toISOString().slice(0, 10);
+    isPublishedInput.checked = Boolean(item.is_published);
+
+    if (preview) {
+        if (item.image_url) {
+            preview.src = item.image_url;
+            preview.hidden = false;
+        } else {
+            preview.hidden = true;
+            preview.removeAttribute("src");
+        }
+    }
+
+    if (status) {
+        status.textContent = item.image_url ? "Image loaded from saved post" : "";
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = "Update Post";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = false;
+    }
+
+    showSection("homeNewsSection");
+}
+
+function renderHomeNewsAdmin(rows) {
+    const list = document.getElementById("homeNewsList");
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = "<p class=\"admin-note\">No homepage posts yet.</p>";
+        return;
+    }
+
+    list.innerHTML = rows.map((item) => `
+        <div class="home-news-admin-item">
+            <img src="${escapeHtml(item.image_url || "")}" alt="${escapeHtml(item.title || "Home post image")}" class="home-news-admin-thumb">
+            <div>
+                <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
+                <p><small>${escapeHtml(item.tag || "NEWS")} | ${escapeHtml(formatDateForDisplay(item.published_at))} | ${item.is_published ? "Visible" : "Hidden"}</small></p>
+                <p>${escapeHtml(item.summary || "")}</p>
+                <p><small><a href="/news?id=${item.id}">Open detail page</a></small></p>
+                <p><small>Link: ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : "N/A"}</small></p>
+            </div>
+            <div class="home-news-admin-actions">
+                <button type="button" class="home-news-edit-btn" data-id="${item.id}">Edit</button>
+                <button type="button" class="home-news-delete-btn" data-id="${item.id}">Delete</button>
+            </div>
+        </div>
+    `).join("");
+
+    list.querySelectorAll(".home-news-edit-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            const selected = homeNewsItemsCache.find((row) => Number(row.id) === id);
+            if (selected) {
+                startEditHomeNews(selected);
+            }
+        });
+    });
+
+    list.querySelectorAll(".home-news-delete-btn").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const id = Number(button.dataset.id);
+            if (!Number.isInteger(id)) {
+                return;
+            }
+
+            try {
+                await request(`/api/home-news/${id}`, { method: "DELETE" });
+                await loadHomeNewsAdmin();
+                addActivityLog(`Deleted home post #${id}`);
+                showToast("Homepage post deleted", "success");
+            } catch (error) {
+                showToast(`Could not delete post: ${error.message}`, "error");
+            }
+        });
+    });
+}
+
+async function loadHomeNewsAdmin() {
+    const list = document.getElementById("homeNewsList");
+    if (!list) {
+        return;
+    }
+
+    try {
+        const rows = await request("/api/home-news", { method: "GET" });
+        homeNewsItemsCache = Array.isArray(rows) ? rows : [];
+        renderHomeNewsAdmin(homeNewsItemsCache);
+    } catch (error) {
+        list.innerHTML = `<p class="admin-note">${escapeHtml(error.message || "Failed to load homepage posts")}</p>`;
+    }
+}
+
+async function uploadHomeNewsImage() {
+    const fileInput = document.getElementById("homeNewsImageFile");
+    const imageAssetIdInput = document.getElementById("homeNewsImageAssetId");
+    const status = document.getElementById("homeNewsUploadStatus");
+    const preview = document.getElementById("homeNewsImagePreview");
+    const button = document.getElementById("uploadHomeNewsImageBtn");
+
+    if (!fileInput || !imageAssetIdInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) {
+        status.textContent = "Uploading...";
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        imageAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) {
+            status.textContent = "Upload successful";
+        }
+        showToast("Image uploaded successfully", "success");
+    } catch (error) {
+        if (status) {
+            status.textContent = "Upload failed";
+        }
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveHomeNews(event) {
+    event.preventDefault();
+
+    const editId = document.getElementById("homeNewsEditId");
+    const imageAssetIdInput = document.getElementById("homeNewsImageAssetId");
+    const titleInput = document.getElementById("homeNewsTitle");
+    const summaryInput = document.getElementById("homeNewsSummary");
+    const contentInput = document.getElementById("homeNewsContent");
+    const linkInput = document.getElementById("homeNewsLink");
+    const tagInput = document.getElementById("homeNewsTag");
+    const publishedAtInput = document.getElementById("homeNewsPublishedAt");
+    const isPublishedInput = document.getElementById("homeNewsIsPublished");
+
+    if (!imageAssetIdInput || !titleInput || !summaryInput || !contentInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+        return;
+    }
+
+    const imageAssetId = Number(imageAssetIdInput.value);
+    if (!Number.isInteger(imageAssetId)) {
+        showToast("Please upload image first", "error");
+        return;
+    }
+
+    const payload = {
+        title: titleInput.value.trim(),
+        summary: summaryInput.value.trim(),
+        content: contentInput.value.trim(),
+        imageAssetId,
+        link: linkInput ? linkInput.value.trim() : "",
+        tag: tagInput.value.trim() || "NEWS",
+        publishedAt: formatDateForInput(publishedAtInput.value) || new Date().toISOString().slice(0, 10),
+        isPublished: Boolean(isPublishedInput.checked)
+    };
+
+    if (!payload.title || !payload.summary || !payload.content) {
+        showToast("Title, summary and content are required", "error");
+        return;
+    }
+
+    const isEdit = Boolean(editId && editId.value);
+    const method = isEdit ? "PUT" : "POST";
+    const url = isEdit ? `/api/home-news/${editId.value}` : "/api/home-news";
+
+    try {
+        await request(url, {
+            method,
+            body: JSON.stringify(payload)
+        });
+
+        resetHomeNewsForm();
+        await loadHomeNewsAdmin();
+        addActivityLog(`${isEdit ? "Updated" : "Created"} homepage post`);
+        showToast(`Homepage post ${isEdit ? "updated" : "created"} successfully`, "success");
+    } catch (error) {
+        showToast(`Could not save post: ${error.message}`, "error");
+    }
+}
+
 async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
@@ -765,15 +1065,134 @@ async function loadMembers() {
 async function loadAdminProfile() {
     try {
         const data = await request("/api/profile", { method: "GET" });
+        currentProfile = data;
         const profile = document.getElementById("adminProfileInfo");
         const displayName = data.member && data.member.name ? data.member.name : data.user.email;
+        const photoUrl = data.member && data.member.photo_url ? data.member.photo_url : "";
+        const avatarInitial = (displayName || "A").trim().charAt(0).toUpperCase() || "A";
 
         profile.innerHTML = `
-            <p><strong>${displayName}</strong></p>
-            <p><strong>User ID:</strong> ${data.user.id}</p>
-            <p><strong>Role:</strong> ${data.user.role}</p>
-            <p><strong>Access:</strong> Publication review and member management</p>
+            <div class="dashboard-profile-overview">
+                ${photoUrl
+                    ? `<img src="${photoUrl}" alt="${displayName} avatar" class="dashboard-profile-avatar">`
+                    : `<div class="dashboard-profile-avatar-fallback" aria-hidden="true">${avatarInitial}</div>`}
+                <div class="dashboard-profile-meta">
+                    <p><strong>${displayName}</strong></p>
+                    <p><strong>User ID:</strong> ${data.user.id}</p>
+                    <p><strong>Role:</strong> ${data.user.role}</p>
+                    <p><strong>Access:</strong> Publication review and member management</p>
+                </div>
+            </div>
         `;
+
+        const profileNameInput = document.getElementById("profileName");
+        const profileBioInput = document.getElementById("profileBio");
+        const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+        const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+
+        if (profileNameInput) {
+            profileNameInput.value = data.member && data.member.name ? data.member.name : "";
+        }
+        if (profileBioInput) {
+            profileBioInput.value = data.member && data.member.bio ? data.member.bio : "";
+        }
+        if (profilePhotoAssetIdInput) {
+            profilePhotoAssetIdInput.value = data.member && data.member.photo_asset_id ? data.member.photo_asset_id : "";
+        }
+        if (profilePhotoPreview) {
+            if (photoUrl) {
+                profilePhotoPreview.src = photoUrl;
+                profilePhotoPreview.hidden = false;
+            } else {
+                profilePhotoPreview.hidden = true;
+                profilePhotoPreview.removeAttribute("src");
+            }
+        }
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+async function uploadProfileAvatar() {
+    const fileInput = document.getElementById("profilePhotoFile");
+    const status = document.getElementById("profilePhotoUploadStatus");
+    const photoAssetIdInput = document.getElementById("profilePhotoAssetId");
+    const preview = document.getElementById("profilePhotoPreview");
+    const button = document.getElementById("uploadProfilePhotoBtn");
+
+    if (!fileInput || !photoAssetIdInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) status.textContent = "Uploading...";
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        photoAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) status.textContent = "Upload successful";
+        showToast("Avatar uploaded successfully", "success");
+    } catch (error) {
+        if (status) status.textContent = "Upload failed";
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveOwnProfile(event) {
+    event.preventDefault();
+
+    const profileNameInput = document.getElementById("profileName");
+    const profileBioInput = document.getElementById("profileBio");
+    const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+
+    const name = profileNameInput ? profileNameInput.value.trim() : "";
+    if (!name) {
+        showToast("Name is required", "error");
+        return;
+    }
+
+    try {
+        await request("/api/profile", {
+            method: "PATCH",
+            body: JSON.stringify({
+                name,
+                bio: profileBioInput ? profileBioInput.value.trim() : "",
+                photo_asset_id: profilePhotoAssetIdInput && profilePhotoAssetIdInput.value
+                    ? Number(profilePhotoAssetIdInput.value)
+                    : null
+            })
+        });
+
+        await loadAdminProfile();
+        addActivityLog("Updated own profile");
+        showToast("Profile updated successfully", "success");
     } catch (error) {
         showToast(error.message, "error");
     }
@@ -862,6 +1281,7 @@ if (isAuthValid) {
     loadAllPublications();
     loadMembers();
     loadSeminarsAdmin();
+    loadHomeNewsAdmin();
     showSection("profileSection");
     addActivityLog("Admin dashboard opened");
 
@@ -874,7 +1294,34 @@ if (isAuthValid) {
         cancelEditBtn.addEventListener("click", resetSeminarForm);
     }
 
+    const homeNewsForm = document.getElementById("homeNewsForm");
+    if (homeNewsForm) {
+        homeNewsForm.addEventListener("submit", saveHomeNews);
+    }
+
+    const uploadHomeNewsImageBtn = document.getElementById("uploadHomeNewsImageBtn");
+    if (uploadHomeNewsImageBtn) {
+        uploadHomeNewsImageBtn.addEventListener("click", uploadHomeNewsImage);
+    }
+
+    const homeNewsCancelEditBtn = document.getElementById("homeNewsCancelEditBtn");
+    if (homeNewsCancelEditBtn) {
+        homeNewsCancelEditBtn.addEventListener("click", resetHomeNewsForm);
+    }
+
+    resetHomeNewsForm();
+
     // Change password
+    const editProfileForm = document.getElementById("editProfileForm");
+    if (editProfileForm) {
+        editProfileForm.addEventListener("submit", saveOwnProfile);
+    }
+
+    const uploadProfilePhotoBtn = document.getElementById("uploadProfilePhotoBtn");
+    if (uploadProfilePhotoBtn) {
+        uploadProfilePhotoBtn.addEventListener("click", uploadProfileAvatar);
+    }
+
     const changePasswordForm = document.getElementById("changePasswordForm");
     if (changePasswordForm) {
         changePasswordForm.addEventListener("submit", async (e) => {

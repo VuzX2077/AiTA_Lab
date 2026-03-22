@@ -81,6 +81,115 @@ function getSafePublicationLink(pub) {
 	return "";
 }
 
+function formatHomeNewsDate(value) {
+	const raw = String(value || "").trim();
+	if (!raw) {
+		return "N/A";
+	}
+
+	const normalized = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : raw.split("T")[0];
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+		return "N/A";
+	}
+
+	const [yyyy, mm, dd] = normalized.split("-");
+	const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+	const monthIndex = Number(mm) - 1;
+	const dayNumber = Number(dd);
+
+	if (monthIndex < 0 || monthIndex > 11 || !Number.isInteger(dayNumber)) {
+		return "N/A";
+	}
+
+	return `${monthNames[monthIndex]} ${dayNumber}, ${yyyy}`;
+}
+
+function getSafeHttpUrl(value) {
+	if (typeof value !== "string" || !value.trim()) {
+		return "";
+	}
+
+	try {
+		const parsed = new URL(value.trim());
+		if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+			return parsed.toString();
+		}
+	} catch (error) {
+		return "";
+	}
+
+	return "";
+}
+
+function getNewsDetailHref(newsId) {
+	const numericId = Number(newsId);
+	if (!Number.isInteger(numericId) || numericId <= 0) {
+		return typeof window.getPageUrl === "function" ? `${window.getPageUrl("news.html")}` : "/news";
+	}
+
+	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+	return `${basePath}?id=${numericId}`;
+}
+
+async function initHomeLatestPosts() {
+	const list = document.getElementById("homeLatestPostsList");
+	if (!list) {
+		return;
+	}
+
+	const renderEmpty = (message) => {
+		list.innerHTML = `<p class="home-latest-empty">${escapeHtml(message)}</p>`;
+	};
+
+	try {
+		const response = await fetch("/api/home-news/public?limit=6");
+		const rows = await response.json();
+
+		if (!response.ok) {
+			throw new Error((rows && rows.message) || "Failed to load latest posts");
+		}
+
+		const items = Array.isArray(rows) ? rows : [];
+		if (!items.length) {
+			renderEmpty("No latest posts yet.");
+			return;
+		}
+
+		list.innerHTML = items.map((item) => {
+			const newsId = Number(item.id);
+			const title = escapeHtml(stripHtml(item.title || "Untitled"));
+			const summary = escapeHtml(stripHtml(item.summary || ""));
+			const tag = escapeHtml(stripHtml(item.tag || "NEWS"));
+			const dateText = escapeHtml(formatHomeNewsDate(item.published_at));
+			const imageUrl = typeof item.image_url === "string" && item.image_url.trim() ? item.image_url.trim() : "";
+			const detailHref = getNewsDetailHref(newsId);
+			const ctaLabelRaw = stripHtml(item.cta_label || "KEEP READING");
+			const ctaLabel = escapeHtml(ctaLabelRaw || "KEEP READING");
+
+			const readMore = `<a class="home-latest-link" href="${detailHref}">${ctaLabel} ›</a>`;
+
+			return `
+				<article class="home-latest-item">
+					<a href="${detailHref}" aria-label="Read ${title}">
+						<img class="home-latest-thumb" src="${escapeHtml(imageUrl)}" alt="${title}">
+					</a>
+					<div class="home-latest-content">
+						<p class="home-latest-tag">${tag}</p>
+						<h3 class="home-latest-title"><a href="${detailHref}" class="home-latest-title-link">${title}</a></h3>
+						<p class="home-latest-summary">${summary}</p>
+						<div class="home-latest-meta">
+							<p class="home-latest-date">${dateText}</p>
+							${readMore}
+						</div>
+					</div>
+				</article>
+			`;
+		}).join("");
+	} catch (error) {
+		renderEmpty(error.message || "Latest posts are temporarily unavailable.");
+	}
+}
+
 async function initPublicationSearch() {
 	const header = document.querySelector("header");
 	const nav = document.querySelector(".nav-container");
@@ -251,3 +360,4 @@ async function initPublicationSearch() {
 }
 
 initPublicationSearch();
+initHomeLatestPosts();

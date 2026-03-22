@@ -875,14 +875,27 @@ function renderHomeNewsAdmin(rows) {
                 <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
                 <p><small>${escapeHtml(item.tag || "NEWS")} | ${escapeHtml(formatDateForDisplay(item.published_at))} | ${item.is_published ? "Visible" : "Hidden"}</small></p>
                 <p>${escapeHtml(item.summary || "")}</p>
+                <p><small><a href="/news?id=${item.id}">Open detail page</a></small></p>
                 <p><small>Link: ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : "N/A"}</small></p>
             </div>
             <div class="home-news-admin-actions">
+                <button type="button" class="home-news-content-btn" data-id="${item.id}">Add Content</button>
                 <button type="button" class="home-news-edit-btn" data-id="${item.id}">Edit</button>
                 <button type="button" class="home-news-delete-btn" data-id="${item.id}">Delete</button>
             </div>
         </div>
     `).join("");
+
+    list.querySelectorAll(".home-news-content-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            if (!Number.isInteger(id)) {
+                return;
+            }
+
+            window.location.href = `/news?id=${id}`;
+        });
+    });
 
     list.querySelectorAll(".home-news-edit-btn").forEach((button) => {
         button.addEventListener("click", () => {
@@ -1011,6 +1024,7 @@ async function saveHomeNews(event) {
     const payload = {
         title: titleInput.value.trim(),
         summary: summaryInput.value.trim(),
+        content: "",
         imageAssetId,
         link: linkInput ? linkInput.value.trim() : "",
         tag: tagInput.value.trim() || "NEWS",
