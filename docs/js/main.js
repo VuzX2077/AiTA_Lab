@@ -202,13 +202,16 @@ async function initPublicationSearch() {
 		return;
 	}
 
+	const SEARCH_QUERY_STORAGE_KEY = "siteSearchQuery";
+	const SEARCH_ACTIVE_STORAGE_KEY = "siteSearchActive";
+
 	let publicationRows = [];
 
 	const shell = document.createElement("div");
 	shell.className = "site-search-shell";
 	shell.innerHTML = `
 		<div class="site-search-inner">
-			<input id="globalPublicationSearch" type="search" placeholder="Search publications..." aria-label="Search publications" autocomplete="off">
+			<input id="globalPublicationSearch" type="text" placeholder="Search publications..." aria-label="Search publications" autocomplete="off">
 			<button id="globalSearchClear" type="button" aria-label="Clear search" hidden>×</button>
 		</div>
 	`;
@@ -222,7 +225,7 @@ async function initPublicationSearch() {
 		</div>
 	`;
 
-	header.insertBefore(shell, nav);
+	header.parentNode.insertBefore(shell, header);
 	document.body.appendChild(overlay);
 
 	const input = document.getElementById("globalPublicationSearch");
@@ -233,6 +236,19 @@ async function initPublicationSearch() {
 		return;
 	}
 
+	header.classList.add("site-header-managed");
+
+	const floatingNavShell = document.createElement("div");
+	floatingNavShell.className = "site-floating-nav";
+	const floatingNav = nav.cloneNode(true);
+	const floatingLogout = floatingNav.querySelector("#logoutBtn");
+	if (floatingLogout) {
+		floatingLogout.removeAttribute("id");
+		floatingLogout.setAttribute("data-floating-logout", "true");
+	}
+	floatingNavShell.appendChild(floatingNav);
+	document.body.appendChild(floatingNavShell);
+
 	const renderMessage = (message) => {
 		resultBox.innerHTML = `<p class="site-search-message">${escapeHtml(message)}</p>`;
 	};
@@ -240,18 +256,39 @@ async function initPublicationSearch() {
 	const closeOverlay = () => {
 		overlay.hidden = true;
 		document.body.classList.remove("site-search-active");
+		sessionStorage.setItem(SEARCH_ACTIVE_STORAGE_KEY, "0");
 	};
 
 	const openOverlay = () => {
 		overlay.hidden = false;
 		document.body.classList.add("site-search-active");
+		sessionStorage.setItem(SEARCH_ACTIVE_STORAGE_KEY, "1");
+		isFloatingNavVisible = false;
+		floatingNavShell.classList.remove("is-visible");
 	};
 
-	const setShellVisibility = () => {
-		const isAtTop = window.scrollY <= 30;
-		shell.classList.toggle("is-hidden", !isAtTop);
+	let isFloatingNavVisible = false;
 
-		if (!isAtTop) {
+	const setFloatingNavVisibility = () => {
+		if (document.body.classList.contains("site-search-active")) {
+			isFloatingNavVisible = false;
+			floatingNavShell.classList.remove("is-visible");
+			return;
+		}
+
+		const headerRect = header.getBoundingClientRect();
+		const hideAtMenuTop = headerRect.top >= 2;
+		const showAtMenuTop = headerRect.top <= -2;
+
+		if (hideAtMenuTop) {
+			isFloatingNavVisible = false;
+		} else if (showAtMenuTop) {
+			isFloatingNavVisible = true;
+		}
+
+		floatingNavShell.classList.toggle("is-visible", isFloatingNavVisible);
+
+		if (isFloatingNavVisible) {
 			closeOverlay();
 		}
 	};
@@ -322,23 +359,19 @@ async function initPublicationSearch() {
 	}
 
 	input.addEventListener("focus", () => {
-		if (window.scrollY <= 30) {
-			openOverlay();
-			renderResults(input.value);
-		}
+		openOverlay();
+		renderResults(input.value);
 	});
 
 	input.addEventListener("input", () => {
-		if (window.scrollY > 30) {
-			return;
-		}
-
+		sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, input.value);
 		openOverlay();
 		renderResults(input.value);
 	});
 
 	clearBtn.addEventListener("click", () => {
 		input.value = "";
+		sessionStorage.removeItem(SEARCH_QUERY_STORAGE_KEY);
 		renderResults("");
 		input.focus();
 	});
@@ -349,14 +382,39 @@ async function initPublicationSearch() {
 		}
 	});
 
+	floatingNavShell.addEventListener("click", (event) => {
+		const logoutLink = event.target.closest("[data-floating-logout='true']");
+		if (!logoutLink) {
+			return;
+		}
+
+		event.preventDefault();
+		clearAuth();
+		window.location.href = "/";
+	});
+
 	document.addEventListener("keydown", (event) => {
 		if (event.key === "Escape") {
 			closeOverlay();
 		}
 	});
 
-	window.addEventListener("scroll", setShellVisibility, { passive: true });
-	setShellVisibility();
+	window.addEventListener("scroll", setFloatingNavVisibility, { passive: true });
+	window.addEventListener("resize", () => {
+		setFloatingNavVisibility();
+	}, { passive: true });
+
+	const savedQuery = sessionStorage.getItem(SEARCH_QUERY_STORAGE_KEY) || "";
+	const wasSearchActive = sessionStorage.getItem(SEARCH_ACTIVE_STORAGE_KEY) === "1";
+	if (savedQuery) {
+		input.value = savedQuery;
+		renderResults(savedQuery);
+	}
+	if (wasSearchActive && savedQuery.trim()) {
+		openOverlay();
+	}
+
+	setFloatingNavVisibility();
 }
 
 initPublicationSearch();

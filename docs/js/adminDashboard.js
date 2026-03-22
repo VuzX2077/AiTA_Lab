@@ -808,7 +808,6 @@ function startEditHomeNews(item) {
     const imageAssetId = document.getElementById("homeNewsImageAssetId");
     const titleInput = document.getElementById("homeNewsTitle");
     const summaryInput = document.getElementById("homeNewsSummary");
-    const contentInput = document.getElementById("homeNewsContent");
     const linkInput = document.getElementById("homeNewsLink");
     const tagInput = document.getElementById("homeNewsTag");
     const publishedAtInput = document.getElementById("homeNewsPublishedAt");
@@ -818,7 +817,7 @@ function startEditHomeNews(item) {
     const saveBtn = document.getElementById("homeNewsSaveBtn");
     const cancelBtn = document.getElementById("homeNewsCancelEditBtn");
 
-    if (!editId || !imageAssetId || !titleInput || !summaryInput || !contentInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+    if (!editId || !imageAssetId || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
         return;
     }
 
@@ -826,7 +825,6 @@ function startEditHomeNews(item) {
     imageAssetId.value = String(item.image_asset_id || "");
     titleInput.value = item.title || "";
     summaryInput.value = item.summary || "";
-    contentInput.value = item.content || "";
     if (linkInput) {
         linkInput.value = item.link || "";
     }
@@ -881,11 +879,23 @@ function renderHomeNewsAdmin(rows) {
                 <p><small>Link: ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : "N/A"}</small></p>
             </div>
             <div class="home-news-admin-actions">
+                <button type="button" class="home-news-content-btn" data-id="${item.id}">Add Content</button>
                 <button type="button" class="home-news-edit-btn" data-id="${item.id}">Edit</button>
                 <button type="button" class="home-news-delete-btn" data-id="${item.id}">Delete</button>
             </div>
         </div>
     `).join("");
+
+    list.querySelectorAll(".home-news-content-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            if (!Number.isInteger(id)) {
+                return;
+            }
+
+            window.location.href = `/news?id=${id}`;
+        });
+    });
 
     list.querySelectorAll(".home-news-edit-btn").forEach((button) => {
         button.addEventListener("click", () => {
@@ -996,13 +1006,12 @@ async function saveHomeNews(event) {
     const imageAssetIdInput = document.getElementById("homeNewsImageAssetId");
     const titleInput = document.getElementById("homeNewsTitle");
     const summaryInput = document.getElementById("homeNewsSummary");
-    const contentInput = document.getElementById("homeNewsContent");
     const linkInput = document.getElementById("homeNewsLink");
     const tagInput = document.getElementById("homeNewsTag");
     const publishedAtInput = document.getElementById("homeNewsPublishedAt");
     const isPublishedInput = document.getElementById("homeNewsIsPublished");
 
-    if (!imageAssetIdInput || !titleInput || !summaryInput || !contentInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+    if (!imageAssetIdInput || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
         return;
     }
 
@@ -1015,7 +1024,7 @@ async function saveHomeNews(event) {
     const payload = {
         title: titleInput.value.trim(),
         summary: summaryInput.value.trim(),
-        content: contentInput.value.trim(),
+        content: "",
         imageAssetId,
         link: linkInput ? linkInput.value.trim() : "",
         tag: tagInput.value.trim() || "NEWS",
@@ -1023,8 +1032,8 @@ async function saveHomeNews(event) {
         isPublished: Boolean(isPublishedInput.checked)
     };
 
-    if (!payload.title || !payload.summary || !payload.content) {
-        showToast("Title, summary and content are required", "error");
+    if (!payload.title || !payload.summary) {
+        showToast("Title and summary are required", "error");
         return;
     }
 

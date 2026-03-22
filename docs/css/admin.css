@@ -578,6 +578,7 @@ margin-right: 6px;
 }
 
 .home-news-edit-btn,
+.home-news-content-btn,
 .home-news-delete-btn {
     border: none;
     border-radius: 6px;
@@ -585,6 +586,14 @@ margin-right: 6px;
     color: #fff;
     cursor: pointer;
     font-weight: 600;
+}
+
+.home-news-content-btn {
+    background: #0f766e;
+}
+
+.home-news-content-btn:hover {
+    background: #0d5f59;
 }
 
 .home-news-edit-btn {
