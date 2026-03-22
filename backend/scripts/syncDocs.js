@@ -148,7 +148,7 @@ function writeRootPages() {
     <title>Register - AiTA Lab</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/public.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 
 <body class="login-page">

@@ -131,7 +131,11 @@ AiTA_Lab/
 |   |   |-- components.css
 |   |   |-- layout.css
 |   |   |-- member.css
-|   |   |-- public.css
+|   |   |-- auth.css
+|   |   |-- public-home.css
+|   |   |-- public-news.css
+|   |   |-- public-content-pages.css
+|   |   |-- public-members.css
 |   |-- js/
 |   |   |-- adminDashboard.js
 |   |   |-- login.js
