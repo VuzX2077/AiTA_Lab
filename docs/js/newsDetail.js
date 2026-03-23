@@ -49,6 +49,17 @@ function getNewsIdFromQuery() {
     return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function getNewsDetailHref(newsId) {
+    const numericId = Number(newsId);
+    const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+        return basePath;
+    }
+
+    return `${basePath}?id=${numericId}`;
+}
+
 function parseJwt(token) {
     try {
         return JSON.parse(atob(token.split(".")[1]));
@@ -97,9 +108,176 @@ function apiUrl(path) {
     return path;
 }
 
+function showToast(message, type = "success") {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = String(message || "");
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add("show"));
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+    }, 2600);
+}
+
+function stripHtml(value) {
+    return String(value || "").replace(/<[^>]*>/g, "");
+}
+
+function truncateText(value, maxLength) {
+    const text = String(value || "").trim();
+    if (!text || text.length <= maxLength) {
+        return text;
+    }
+
+    return `${text.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
 let currentNews = null;
 let adminToken = getAdminToken();
 let currentAuthors = [];
+let newsSearchItems = [];
+
+function buildNewsSearchLabel(item) {
+    const title = String(item && item.title ? item.title : "Untitled").trim();
+    return `${title} (#${item.id})`;
+}
+
+function parseNewsIdFromSearchLabel(value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
+        return null;
+    }
+
+    const byLabelMatch = raw.match(/\(#(\d+)\)\s*$/);
+    if (byLabelMatch) {
+        const parsed = Number(byLabelMatch[1]);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    const numericOnly = Number(raw);
+    return Number.isInteger(numericOnly) && numericOnly > 0 ? numericOnly : null;
+}
+
+function resolveTypedNewsId(value) {
+    const parsedByLabel = parseNewsIdFromSearchLabel(value);
+    if (parsedByLabel) {
+        return parsedByLabel;
+    }
+
+    const normalizedTitle = String(value || "").trim().toLowerCase();
+    if (!normalizedTitle) {
+        return null;
+    }
+
+    const found = newsSearchItems.find((item) => String(item.title || "").trim().toLowerCase() === normalizedTitle);
+    return found ? Number(found.id) : null;
+}
+
+function setLinkedNewsFieldValue(inputEl, hiddenEl, newsId) {
+    if (!inputEl || !hiddenEl) {
+        return;
+    }
+
+    if (!Number.isInteger(Number(newsId)) || Number(newsId) <= 0) {
+        inputEl.value = "";
+        hiddenEl.value = "";
+        return;
+    }
+
+    const id = Number(newsId);
+    const selected = newsSearchItems.find((item) => Number(item.id) === id);
+    inputEl.value = selected ? buildNewsSearchLabel(selected) : `#${id}`;
+    hiddenEl.value = String(id);
+}
+
+function bindLinkedNewsAutocomplete(inputEl, hiddenEl, currentId) {
+    if (!inputEl || !hiddenEl) {
+        return;
+    }
+
+    const syncSelection = () => {
+        const resolvedId = resolveTypedNewsId(inputEl.value);
+        if (!resolvedId) {
+            hiddenEl.value = "";
+            return;
+        }
+
+        if (Number(resolvedId) === Number(currentId)) {
+            inputEl.value = "";
+            hiddenEl.value = "";
+            return;
+        }
+
+        hiddenEl.value = String(resolvedId);
+        const selected = newsSearchItems.find((item) => Number(item.id) === resolvedId);
+        if (selected) {
+            inputEl.value = buildNewsSearchLabel(selected);
+        }
+    };
+
+    inputEl.addEventListener("change", syncSelection);
+    inputEl.addEventListener("blur", syncSelection);
+}
+
+async function loadNewsSearchItems() {
+    if (!adminToken) {
+        newsSearchItems = [];
+        return [];
+    }
+
+    try {
+        const response = await fetch(apiUrl("/api/home-news"), {
+            headers: {
+                "Authorization": "Bearer " + adminToken
+            }
+        });
+
+        if (!response.ok) {
+            newsSearchItems = [];
+            return [];
+        }
+
+        const rows = await response.json().catch(() => []);
+        newsSearchItems = Array.isArray(rows)
+            ? rows
+                .filter((row) => Number.isInteger(Number(row.id)))
+                .map((row) => ({
+                    id: Number(row.id),
+                    title: String(row.title || "Untitled")
+                }))
+            : [];
+
+        return newsSearchItems;
+    } catch (error) {
+        newsSearchItems = [];
+        return [];
+    }
+}
+
+function renderNewsSearchOptions(currentId) {
+    const datalist = document.getElementById("newsAdminNewsOptions");
+    if (!datalist) {
+        return;
+    }
+
+    const options = newsSearchItems
+        .filter((item) => Number(item.id) !== Number(currentId))
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map((item) => `<option value="${escapeHtml(buildNewsSearchLabel(item))}"></option>`)
+        .join("");
+
+    datalist.innerHTML = options;
+}
 
 async function fetchMembers() {
     try {
@@ -244,6 +422,43 @@ function renderBlockContentHtml(block, authors) {
     return parts.join("");
 }
 
+function getShareArticleUrl(item) {
+    const detailHref = getNewsDetailHref(item && item.id);
+    return new URL(detailHref, window.location.origin).toString();
+}
+
+function renderShareSection(item) {
+    const sectionEl = document.getElementById("newsShareSection");
+    const facebookEl = document.getElementById("newsShareFacebook");
+    const xEl = document.getElementById("newsShareX");
+    const linkedInEl = document.getElementById("newsShareLinkedIn");
+    const copyEl = document.getElementById("newsShareCopy");
+
+    if (!sectionEl || !facebookEl || !xEl || !linkedInEl || !copyEl) {
+        return;
+    }
+
+    const articleUrl = getShareArticleUrl(item);
+    const articleTitle = String(item && item.title ? item.title : "AiTA Lab News").trim();
+    const encodedUrl = encodeURIComponent(articleUrl);
+    const encodedTitle = encodeURIComponent(articleTitle);
+
+    facebookEl.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    xEl.href = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+    linkedInEl.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+
+    copyEl.onclick = async () => {
+        try {
+            await navigator.clipboard.writeText(articleUrl);
+            showToast("Article link copied", "success");
+        } catch (error) {
+            showToast("Could not copy article link", "error");
+        }
+    };
+
+    sectionEl.hidden = false;
+}
+
 function renderNewsDetail(item) {
     const article = document.getElementById("newsDetailArticle");
     const status = document.getElementById("newsDetailStatus");
@@ -291,11 +506,79 @@ function renderNewsDetail(item) {
         ? `<a href="${escapeHtml(externalUrl)}" target="_blank" rel="noopener noreferrer" class="news-detail-external-link">Open external source</a>`
         : "";
 
+    renderShareSection(item);
+
     status.hidden = true;
     article.hidden = false;
 }
 
-function bindAdminForm(item) {
+function buildNeighborCardHtml(label, arrow, item) {
+    const title = escapeHtml(truncateText(item.title || "Untitled", 68));
+    const summary = escapeHtml(truncateText(stripHtml(item.summary || ""), 115));
+    const dateText = escapeHtml(formatDisplayDate(item.published_at));
+
+    return `
+        <span class="news-neighbor-label">${escapeHtml(label)}</span>
+        <div class="news-neighbor-headline">${escapeHtml(arrow)} ${title}</div>
+        <p class="news-neighbor-summary">${summary || "Open this article to continue reading."}</p>
+        <span class="news-neighbor-date">${dateText}</span>
+    `;
+}
+
+function renderNewsConnections(data) {
+    const section = document.getElementById("newsConnections");
+    const newerEl = document.getElementById("newsNavNewer");
+    const olderEl = document.getElementById("newsNavOlder");
+
+    if (!section || !newerEl || !olderEl) {
+        return;
+    }
+
+    const left = data && data.left ? data.left : null;
+    const right = data && data.right ? data.right : null;
+
+    if (left) {
+        newerEl.href = getNewsDetailHref(left.id);
+        newerEl.innerHTML = buildNeighborCardHtml("Left connection", "←", left);
+        newerEl.hidden = false;
+    } else {
+        newerEl.hidden = true;
+        newerEl.removeAttribute("href");
+        newerEl.innerHTML = "";
+    }
+
+    if (right) {
+        olderEl.href = getNewsDetailHref(right.id);
+        olderEl.innerHTML = buildNeighborCardHtml("Right connection", "→", right);
+        olderEl.hidden = false;
+    } else {
+        olderEl.hidden = true;
+        olderEl.removeAttribute("href");
+        olderEl.innerHTML = "";
+    }
+
+    section.hidden = !left && !right;
+}
+
+async function loadNewsConnections(newsId) {
+    try {
+        const response = await fetch(apiUrl(`/api/home-news/public/${newsId}/connections?limit=3`));
+        if (!response.ok) {
+            return;
+        }
+
+        const data = await response.json().catch(() => null);
+        if (!data) {
+            return;
+        }
+
+        renderNewsConnections(data);
+    } catch (error) {
+        // Do not block detail rendering when the connections panel fails.
+    }
+}
+
+async function bindAdminForm(item) {
     const panel = document.getElementById("newsAdminPanel");
     const btnContainer = document.getElementById("newsEditBtnContainer");
     const editBtn = document.getElementById("newsEditBtn");
@@ -309,11 +592,15 @@ function bindAdminForm(item) {
     const contentInput = document.getElementById("newsAdminContent");
     const tagInput = document.getElementById("newsAdminTag");
     const publishedAtInput = document.getElementById("newsAdminPublishedAt");
+    const leftNewsSearchInput = document.getElementById("newsAdminLeftNewsSearch");
+    const leftNewsIdInput = document.getElementById("newsAdminLeftNewsId");
+    const rightNewsSearchInput = document.getElementById("newsAdminRightNewsSearch");
+    const rightNewsIdInput = document.getElementById("newsAdminRightNewsId");
     const linkInput = document.getElementById("newsAdminLink");
     const isPublishedInput = document.getElementById("newsAdminIsPublished");
     const preview = document.getElementById("newsAdminImagePreview");
 
-    if (!form || !idInput || !imageAssetIdInput || !titleInput || !contentInput || !tagInput || !publishedAtInput || !linkInput || !isPublishedInput || !preview) {
+    if (!form || !idInput || !imageAssetIdInput || !titleInput || !contentInput || !tagInput || !publishedAtInput || !leftNewsSearchInput || !leftNewsIdInput || !rightNewsSearchInput || !rightNewsIdInput || !linkInput || !isPublishedInput || !preview) {
         return;
     }
 
@@ -357,6 +644,13 @@ function bindAdminForm(item) {
     publishedAtInput.value = formatDateForInput(item.published_at);
     linkInput.value = item.link || "";
     isPublishedInput.checked = Boolean(item.is_published);
+
+    await loadNewsSearchItems();
+    renderNewsSearchOptions(item.id);
+    setLinkedNewsFieldValue(leftNewsSearchInput, leftNewsIdInput, Number(item.left_news_id));
+    setLinkedNewsFieldValue(rightNewsSearchInput, rightNewsIdInput, Number(item.right_news_id));
+    bindLinkedNewsAutocomplete(leftNewsSearchInput, leftNewsIdInput, item.id);
+    bindLinkedNewsAutocomplete(rightNewsSearchInput, rightNewsIdInput, item.id);
 
     if (item.image_url) {
         preview.src = item.image_url;
@@ -479,17 +773,56 @@ async function saveNewsFromAdminForm(event) {
     const contentInput = document.getElementById("newsAdminContent");
     const tagInput = document.getElementById("newsAdminTag");
     const publishedAtInput = document.getElementById("newsAdminPublishedAt");
+    const leftNewsSearchInput = document.getElementById("newsAdminLeftNewsSearch");
+    const leftNewsIdInput = document.getElementById("newsAdminLeftNewsId");
+    const rightNewsSearchInput = document.getElementById("newsAdminRightNewsSearch");
+    const rightNewsIdInput = document.getElementById("newsAdminRightNewsId");
     const linkInput = document.getElementById("newsAdminLink");
     const isPublishedInput = document.getElementById("newsAdminIsPublished");
     const saveStatus = document.getElementById("newsAdminSaveStatus");
 
-    if (!adminToken || !idInput || !imageAssetIdInput || !titleInput || !contentInput || !tagInput || !publishedAtInput || !linkInput || !isPublishedInput || !saveStatus) {
+    if (!adminToken || !idInput || !imageAssetIdInput || !titleInput || !contentInput || !tagInput || !publishedAtInput || !leftNewsSearchInput || !leftNewsIdInput || !rightNewsSearchInput || !rightNewsIdInput || !linkInput || !isPublishedInput || !saveStatus) {
         return;
     }
 
     const imageAssetId = Number(imageAssetIdInput.value);
     if (!Number.isInteger(imageAssetId)) {
         saveStatus.textContent = "Please upload/select a valid image first.";
+        showToast("Please upload/select a valid image first.", "error");
+        return;
+    }
+
+    const currentId = Number(idInput.value);
+    const leftNewsId = leftNewsIdInput.value ? Number(leftNewsIdInput.value) : resolveTypedNewsId(leftNewsSearchInput.value);
+    const rightNewsId = rightNewsIdInput.value ? Number(rightNewsIdInput.value) : resolveTypedNewsId(rightNewsSearchInput.value);
+
+    if (leftNewsSearchInput.value.trim() && (!Number.isInteger(leftNewsId) || leftNewsId <= 0)) {
+        saveStatus.textContent = "Left connected news is invalid. Please choose from suggestions.";
+        showToast("Left connected news is invalid. Please choose from suggestions.", "error");
+        return;
+    }
+
+    if (rightNewsSearchInput.value.trim() && (!Number.isInteger(rightNewsId) || rightNewsId <= 0)) {
+        saveStatus.textContent = "Right connected news is invalid. Please choose from suggestions.";
+        showToast("Right connected news is invalid. Please choose from suggestions.", "error");
+        return;
+    }
+
+    if (Number.isInteger(leftNewsId) && leftNewsId === currentId) {
+        saveStatus.textContent = "Left connected news cannot be the current article.";
+        showToast("Left connected news cannot be the current article.", "error");
+        return;
+    }
+
+    if (Number.isInteger(rightNewsId) && rightNewsId === currentId) {
+        saveStatus.textContent = "Right connected news cannot be the current article.";
+        showToast("Right connected news cannot be the current article.", "error");
+        return;
+    }
+
+    if (Number.isInteger(leftNewsId) && Number.isInteger(rightNewsId) && leftNewsId === rightNewsId) {
+        saveStatus.textContent = "Left and right connected news must be different.";
+        showToast("Left and right connected news must be different.", "error");
         return;
     }
 
@@ -501,6 +834,8 @@ async function saveNewsFromAdminForm(event) {
         summaryImageAssetId: currentNews && Number.isInteger(Number(currentNews.summary_image_asset_id))
             ? Number(currentNews.summary_image_asset_id)
             : undefined,
+        leftNewsId: Number.isInteger(leftNewsId) ? leftNewsId : null,
+        rightNewsId: Number.isInteger(rightNewsId) ? rightNewsId : null,
         link: linkInput.value.trim(),
         tag: tagInput.value.trim() || "NEWS",
         ctaLabel: currentNews && currentNews.cta_label ? String(currentNews.cta_label).trim() : "KEEP READING",
@@ -511,6 +846,7 @@ async function saveNewsFromAdminForm(event) {
 
     if (!payload.title || !payload.content || !payload.publishedAt) {
         saveStatus.textContent = "Title, content, and publish date are required.";
+        showToast("Title, content, and publish date are required.", "error");
         return;
     }
 
@@ -533,9 +869,12 @@ async function saveNewsFromAdminForm(event) {
 
         currentNews = { ...currentNews, ...data };
         renderNewsDetail(currentNews);
+        loadNewsConnections(currentId);
         saveStatus.textContent = "Saved successfully.";
+        showToast("News updated", "success");
     } catch (error) {
         saveStatus.textContent = error.message || "Could not save news.";
+        showToast(error.message || "Could not save news.", "error");
     }
 }
 
@@ -570,6 +909,7 @@ async function loadNewsDetail() {
 
         currentNews = data;
         renderNewsDetail(data);
+        loadNewsConnections(newsId);
 
         if (adminToken) {
             bindAdminForm(data);

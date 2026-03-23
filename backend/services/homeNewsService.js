@@ -8,6 +8,10 @@ async function getPublicHomeNewsById(id) {
     return homeNewsRepository.findPublishedById(id);
 }
 
+async function getPublicHomeNewsConnections(id, relatedLimit) {
+    return homeNewsRepository.findPublishedConnections(id, relatedLimit);
+}
+
 async function getHomeNewsById(id) {
     return homeNewsRepository.findById(id);
 }
@@ -31,6 +35,7 @@ async function deleteHomeNews(id) {
 module.exports = {
     getPublicHomeNews,
     getPublicHomeNewsById,
+    getPublicHomeNewsConnections,
     getHomeNewsById,
     getHomeNewsForAdmin,
     createHomeNews,

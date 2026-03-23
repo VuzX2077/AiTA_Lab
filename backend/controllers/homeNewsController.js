@@ -10,7 +10,7 @@ function parseNewsId(value) {
 }
 
 function parsePayload(req, res) {
-    const { title, summary, content, imageAssetId, summaryImageAssetId, link, tag, ctaLabel, publishedAt, isPublished, authors } = req.body;
+    const { title, summary, content, imageAssetId, summaryImageAssetId, leftNewsId, rightNewsId, link, tag, ctaLabel, publishedAt, isPublished, authors } = req.body;
 
     if (!title || !String(title).trim()) {
         res.status(400).json({ message: "Title is required" });
@@ -74,12 +74,43 @@ function parsePayload(req, res) {
         ? String(publishedAt).trim()
         : new Date().toISOString().slice(0, 10);
 
+    const parseOptionalNewsId = (value, fieldName) => {
+        if (value === undefined || value === null || value === "") {
+            return null;
+        }
+
+        const parsedValue = Number(value);
+        if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+            res.status(400).json({ message: `${fieldName} must be a positive integer` });
+            return null;
+        }
+
+        return parsedValue;
+    };
+
+    const parsedLeftNewsId = parseOptionalNewsId(leftNewsId, "leftNewsId");
+    if (leftNewsId !== undefined && leftNewsId !== null && leftNewsId !== "" && parsedLeftNewsId === null) {
+        return null;
+    }
+
+    const parsedRightNewsId = parseOptionalNewsId(rightNewsId, "rightNewsId");
+    if (rightNewsId !== undefined && rightNewsId !== null && rightNewsId !== "" && parsedRightNewsId === null) {
+        return null;
+    }
+
+    if (parsedLeftNewsId !== null && parsedRightNewsId !== null && parsedLeftNewsId === parsedRightNewsId) {
+        res.status(400).json({ message: "leftNewsId and rightNewsId must be different" });
+        return null;
+    }
+
     return {
         title: String(title).trim(),
         summary: String(summary).trim(),
         content: typeof content === "string" ? content.trim() : "",
         imageAssetId: parsedImageAssetId,
         summaryImageAssetId: parsedSummaryImageAssetId,
+        leftNewsId: parsedLeftNewsId,
+        rightNewsId: parsedRightNewsId,
         link: normalizedLink,
         tag: tag && String(tag).trim() ? String(tag).trim().toUpperCase() : "NEWS",
         ctaLabel: ctaLabel && String(ctaLabel).trim() ? String(ctaLabel).trim() : "KEEP READING",
@@ -105,6 +136,28 @@ async function getPublicHomeNewsById(req, res) {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Failed to load home news" });
+    }
+}
+
+async function getPublicHomeNewsConnections(req, res) {
+    const id = parseNewsId(req.params.id);
+    if (!id) {
+        return res.status(400).json({ message: "Invalid news id" });
+    }
+
+    const parsedLimit = Number(req.query.limit);
+    const relatedLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 6) : 3;
+
+    try {
+        const data = await homeNewsService.getPublicHomeNewsConnections(id, relatedLimit);
+        if (!data) {
+            return res.status(404).json({ message: "Home news not found" });
+        }
+
+        return res.json(data);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to load connected home news" });
     }
 }
 
@@ -183,6 +236,10 @@ async function updateHomeNews(req, res) {
         return;
     }
 
+    if (payload.leftNewsId === id || payload.rightNewsId === id) {
+        return res.status(400).json({ message: "leftNewsId/rightNewsId cannot reference the current news" });
+    }
+
     try {
         const updated = await homeNewsService.updateHomeNews({
             id,
@@ -224,6 +281,7 @@ async function deleteHomeNews(req, res) {
 module.exports = {
     getPublicHomeNews,
     getPublicHomeNewsById,
+    getPublicHomeNewsConnections,
     getHomeNewsById,
     getHomeNewsForAdmin,
     createHomeNews,
