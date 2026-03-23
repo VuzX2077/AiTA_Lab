@@ -42,12 +42,22 @@
         <p id="newsDetailMeta" class="news-detail-meta"></p>
         <img id="newsDetailImage" class="news-detail-image" alt="News cover image">
         <div id="newsDetailContent" class="news-detail-content"></div>
+        <div id="newsDetailAuthors" class="news-detail-authors" hidden></div>
         <div id="newsDetailLinks" class="news-detail-links"></div>
     </article>
 
-    <section id="newsAdminPanel" class="news-admin-panel" hidden>
-        <h2>Edit This News (Admin)</h2>
-        <form id="newsAdminForm" class="news-admin-form-grid">
+    <div id="newsEditBtnContainer" hidden style="margin-top: 32px; text-align: center;">
+        <button type="button" id="newsEditBtn" class="news-edit-btn">✎ Edit This News</button>
+    </div>
+
+    <div id="newsEditModal" class="news-modal-backdrop">
+        <div class="news-modal">
+            <div class="news-modal-header">
+                <h2>Edit This News</h2>
+                <button type="button" id="newsModalClose" class="news-modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="news-modal-body">
+                <form id="newsAdminForm" class="news-admin-form-grid">
             <input type="hidden" id="newsAdminId">
             <input type="hidden" id="newsAdminImageAssetId">
 
@@ -65,14 +75,17 @@
             </label>
 
             <label class="news-admin-span-2">
-                Summary
-                <textarea id="newsAdminSummary" rows="3" required></textarea>
+                Content
+                <textarea id="newsAdminContent" rows="10" required placeholder="Enter news content here"></textarea>
+                <small class="news-admin-help">Clickable link format: [Link text](https://example.com)</small>
+                <small class="news-admin-help">For author highlighting: You can add author names below then add once again in the content</small>
             </label>
 
-            <label class="news-admin-span-2">
-                Content
-                <textarea id="newsAdminContent" rows="10" required></textarea>
-            </label>
+            <div class="news-admin-span-2 news-admin-authors-section">
+                <label>Authors/Contributors</label>
+                <div id="newsAdminAuthorsList" class="news-admin-authors-list"></div>
+                <button type="button" id="newsAdminAddAuthorBtn" class="btn-secondary">+ Add Author</button>
+            </div>
 
             <label>
                 Tag
@@ -99,7 +112,16 @@
                 <p id="newsAdminSaveStatus" class="settings-note"></p>
             </div>
         </form>
-    </section>
+            </div>
+        </div>
+    </div>
+
+    <div id="newsAdminAuthorsModal" class="news-admin-authors-modal">
+        <div class="news-admin-authors-modal-content">
+            <div class="news-admin-authors-modal-header">Select Author/Contributor</div>
+            <div id="newsAdminAuthorsOptionsList" class="news-admin-authors-list-modal"></div>
+        </div>
+    </div>
 </main>
 
 <footer>

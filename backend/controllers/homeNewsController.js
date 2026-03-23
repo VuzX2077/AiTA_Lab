@@ -10,7 +10,7 @@ function parseNewsId(value) {
 }
 
 function parsePayload(req, res) {
-    const { title, summary, content, imageAssetId, link, tag, ctaLabel, publishedAt, isPublished } = req.body;
+    const { title, summary, content, imageAssetId, summaryImageAssetId, link, tag, ctaLabel, publishedAt, isPublished, authors } = req.body;
 
     if (!title || !String(title).trim()) {
         res.status(400).json({ message: "Title is required" });
@@ -28,6 +28,20 @@ function parsePayload(req, res) {
         return null;
     }
 
+    const hasSummaryImageAssetId = summaryImageAssetId !== undefined && summaryImageAssetId !== null && summaryImageAssetId !== "";
+    let parsedSummaryImageAssetId = null;
+
+    if (hasSummaryImageAssetId) {
+        parsedSummaryImageAssetId = Number(summaryImageAssetId);
+        if (!Number.isInteger(parsedSummaryImageAssetId)) {
+            res.status(400).json({ message: "summaryImageAssetId must be an integer" });
+            return null;
+        }
+    } else if (req.method === "POST") {
+        // On create, default summary image to detail image when not explicitly provided.
+        parsedSummaryImageAssetId = parsedImageAssetId;
+    }
+
     let normalizedLink = null;
     if (typeof link === "string" && link.trim()) {
         try {
@@ -43,6 +57,19 @@ function parsePayload(req, res) {
         }
     }
 
+    // Parse authors array
+    let parsedAuthors = [];
+    if (Array.isArray(authors)) {
+        parsedAuthors = authors
+            .filter(author => author && author.id && author.name)
+            .map(author => ({
+                id: Number(author.id),
+                name: String(author.name).trim(),
+                link: author.link ? String(author.link).trim() : null
+            }))
+            .filter(author => Number.isInteger(author.id));
+    }
+
     const normalizedPublishedAt = isValidDateString(publishedAt)
         ? String(publishedAt).trim()
         : new Date().toISOString().slice(0, 10);
@@ -52,11 +79,13 @@ function parsePayload(req, res) {
         summary: String(summary).trim(),
         content: typeof content === "string" ? content.trim() : "",
         imageAssetId: parsedImageAssetId,
+        summaryImageAssetId: parsedSummaryImageAssetId,
         link: normalizedLink,
         tag: tag && String(tag).trim() ? String(tag).trim().toUpperCase() : "NEWS",
         ctaLabel: ctaLabel && String(ctaLabel).trim() ? String(ctaLabel).trim() : "KEEP READING",
         publishedAt: normalizedPublishedAt,
-        isPublished: Boolean(isPublished)
+        isPublished: Boolean(isPublished),
+        authors: parsedAuthors
     };
 }
 

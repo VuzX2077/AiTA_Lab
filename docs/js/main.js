@@ -161,7 +161,9 @@ async function initHomeLatestPosts() {
 			const summary = escapeHtml(stripHtml(item.summary || ""));
 			const tag = escapeHtml(stripHtml(item.tag || "NEWS"));
 			const dateText = escapeHtml(formatHomeNewsDate(item.published_at));
-			const imageUrl = typeof item.image_url === "string" && item.image_url.trim() ? item.image_url.trim() : "";
+			const summaryImageUrl = typeof item.summary_image_url === "string" && item.summary_image_url.trim() ? item.summary_image_url.trim() : "";
+			const detailImageUrl = typeof item.image_url === "string" && item.image_url.trim() ? item.image_url.trim() : "";
+			const imageUrl = summaryImageUrl || detailImageUrl;
 			const detailHref = getNewsDetailHref(newsId);
 			const ctaLabelRaw = stripHtml(item.cta_label || "KEEP READING");
 			const ctaLabel = escapeHtml(ctaLabelRaw || "KEEP READING");
