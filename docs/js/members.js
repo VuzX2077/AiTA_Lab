@@ -50,10 +50,6 @@ function showToast(msg, type = "success") {
 }
 
 // ─── render helpers ───────────────────────────────────────────────────────────
-function getInitials(name) {
-    return (name || "?").split(" ").map(w => w[0] || "").join("").toUpperCase().slice(0, 2);
-}
-
 function safeArr(v) {
     if (Array.isArray(v)) return v;
     if (typeof v === "string") { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
@@ -138,19 +134,20 @@ function renderMemberCard(m) {
     const bodyRow = document.createElement("div");
     bodyRow.className = "member-body-row";
 
-    // avatar
-    const avatar = document.createElement("div");
-    avatar.className = "member-avatar";
-    if (m.photo_url) {
+    // avatar: render only when a valid photo URL exists
+    const photoUrl = String(m.photo_url || "").trim();
+    if (photoUrl) {
+        const avatar = document.createElement("div");
+        avatar.className = "member-avatar";
+
         const img = document.createElement("img");
-        img.src = m.photo_url;
+        img.src = photoUrl;
         img.alt = m.name || "";
-        img.onerror = () => { img.remove(); avatar.textContent = getInitials(m.name); };
+        img.onerror = () => avatar.remove();
+
         avatar.appendChild(img);
-    } else {
-        avatar.textContent = getInitials(m.name);
+        bodyRow.appendChild(avatar);
     }
-    bodyRow.appendChild(avatar);
 
     // info (position + bio)
     const info = document.createElement("div");

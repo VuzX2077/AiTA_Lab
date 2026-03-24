@@ -121,14 +121,41 @@ function getSafeHttpUrl(value) {
 	return "";
 }
 
-function getNewsDetailHref(newsId) {
-	const numericId = Number(newsId);
-	if (!Number.isInteger(numericId) || numericId <= 0) {
-		return typeof window.getPageUrl === "function" ? `${window.getPageUrl("news.html")}` : "/news";
+function toNewsSlug(value) {
+	return String(value || "")
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.replace(/-{2,}/g, "-");
+}
+
+function getNewsDetailHref(news) {
+	const id = Number(news && typeof news === "object" ? news.id : news);
+	const title = news && typeof news === "object" ? news.title : "";
+	const slug = toNewsSlug(title);
+	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+
+	if (basePath.toLowerCase().endsWith(".html")) {
+		if (slug) {
+			return `${basePath}?slug=${encodeURIComponent(slug)}`;
+		}
+		if (Number.isInteger(id) && id > 0) {
+			return `${basePath}?id=${id}`;
+		}
+		return basePath;
 	}
 
-	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
-	return `${basePath}?id=${numericId}`;
+	if (slug) {
+		return `${String(basePath).replace(/\/$/, "")}/${encodeURIComponent(slug)}`;
+	}
+
+	if (Number.isInteger(id) && id > 0) {
+		return `${basePath}?id=${id}`;
+	}
+
+	return basePath;
 }
 
 async function initHomeLatestPosts() {
@@ -164,7 +191,7 @@ async function initHomeLatestPosts() {
 			const summaryImageUrl = typeof item.summary_image_url === "string" && item.summary_image_url.trim() ? item.summary_image_url.trim() : "";
 			const detailImageUrl = typeof item.image_url === "string" && item.image_url.trim() ? item.image_url.trim() : "";
 			const imageUrl = summaryImageUrl || detailImageUrl;
-			const detailHref = getNewsDetailHref(newsId);
+			const detailHref = getNewsDetailHref(item);
 			const ctaLabelRaw = stripHtml(item.cta_label || "KEEP READING");
 			const ctaLabel = escapeHtml(ctaLabelRaw || "KEEP READING");
 

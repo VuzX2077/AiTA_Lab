@@ -43,21 +43,79 @@ function formatDisplayDate(value) {
     return `${monthNames[monthIndex]} ${dayNumber}, ${yyyy}`;
 }
 
-function getNewsIdFromQuery() {
-    const params = new URLSearchParams(window.location.search);
-    const id = Number(params.get("id"));
-    return Number.isInteger(id) && id > 0 ? id : null;
+function toNewsSlug(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
 }
 
-function getNewsDetailHref(newsId) {
-    const numericId = Number(newsId);
+function normalizeNewsSlug(value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
+        return "";
+    }
+
+    let decoded = raw;
+    try {
+        decoded = decodeURIComponent(raw);
+    } catch (error) {
+        decoded = raw;
+    }
+
+    return toNewsSlug(decoded);
+}
+
+function getNewsSlugFromPath() {
+    const path = String(window.location.pathname || "");
+    const match = path.match(/^\/news\/([^/?#]+)/i);
+    return match ? normalizeNewsSlug(match[1]) : "";
+}
+
+function getNewsLookupFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const id = Number(params.get("id"));
+    if (Number.isInteger(id) && id > 0) {
+        return { id, slug: "" };
+    }
+
+    const querySlug = normalizeNewsSlug(params.get("slug"));
+    if (querySlug) {
+        return { id: null, slug: querySlug };
+    }
+
+    const pathSlug = getNewsSlugFromPath();
+    return { id: null, slug: pathSlug };
+}
+
+function getNewsDetailHref(news) {
+    const id = Number(news && typeof news === "object" ? news.id : news);
+    const title = news && typeof news === "object" ? news.title : "";
+    const slug = toNewsSlug(title);
     const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
 
-    if (!Number.isInteger(numericId) || numericId <= 0) {
+    if (basePath.toLowerCase().endsWith(".html")) {
+        if (slug) {
+            return `${basePath}?slug=${encodeURIComponent(slug)}`;
+        }
+        if (Number.isInteger(id) && id > 0) {
+            return `${basePath}?id=${id}`;
+        }
         return basePath;
     }
 
-    return `${basePath}?id=${numericId}`;
+    if (slug) {
+        return `${String(basePath).replace(/\/$/, "")}/${encodeURIComponent(slug)}`;
+    }
+
+    if (Number.isInteger(id) && id > 0) {
+        return `${basePath}?id=${id}`;
+    }
+
+    return basePath;
 }
 
 function parseJwt(token) {
@@ -423,7 +481,7 @@ function renderBlockContentHtml(block, authors) {
 }
 
 function getShareArticleUrl(item) {
-    const detailHref = getNewsDetailHref(item && item.id);
+    const detailHref = getNewsDetailHref(item);
     return new URL(detailHref, window.location.origin).toString();
 }
 
@@ -484,7 +542,7 @@ function renderNewsDetail(item) {
 
     dateEl.textContent = safeDate;
     titleEl.textContent = item.title || "Untitled";
-    metaEl.innerHTML = `By AiTA@FPTU &bull; <span class="news-detail-tag">${safeTag}</span>`;
+    metaEl.innerHTML = `By <span class="news-inline-author">AiTA@FPTU</span> &bull; <span class="news-detail-tag">${safeTag}</span>`;
     imageEl.src = imageUrl;
     imageEl.alt = item.title || "News cover image";
 
@@ -538,7 +596,7 @@ function renderNewsConnections(data) {
     const right = data && data.right ? data.right : null;
 
     if (left) {
-        newerEl.href = getNewsDetailHref(left.id);
+        newerEl.href = getNewsDetailHref(left);
         newerEl.innerHTML = buildNeighborCardHtml("Left connection", "←", left);
         newerEl.hidden = false;
     } else {
@@ -548,7 +606,7 @@ function renderNewsConnections(data) {
     }
 
     if (right) {
-        olderEl.href = getNewsDetailHref(right.id);
+        olderEl.href = getNewsDetailHref(right);
         olderEl.innerHTML = buildNeighborCardHtml("Right connection", "→", right);
         olderEl.hidden = false;
     } else {
@@ -884,18 +942,24 @@ async function loadNewsDetail() {
         return;
     }
 
-    const newsId = getNewsIdFromQuery();
-    if (!newsId) {
-        status.textContent = "Invalid news id.";
+    const lookup = getNewsLookupFromUrl();
+    if (!lookup.id && !lookup.slug) {
+        status.textContent = "Invalid news link.";
         return;
     }
 
     try {
-        let response = await fetch(apiUrl(`/api/home-news/public/${newsId}`));
+        let response;
+        if (lookup.id) {
+            response = await fetch(apiUrl(`/api/home-news/public/${lookup.id}`));
+        } else {
+            response = await fetch(apiUrl(`/api/home-news/public/slug/${encodeURIComponent(lookup.slug)}`));
+        }
+
         let data = await response.json().catch(() => ({}));
 
-        if (!response.ok && adminToken) {
-            response = await fetch(apiUrl(`/api/home-news/${newsId}`), {
+        if (!response.ok && adminToken && lookup.id) {
+            response = await fetch(apiUrl(`/api/home-news/${lookup.id}`), {
                 headers: {
                     "Authorization": "Bearer " + adminToken
                 }
@@ -909,7 +973,12 @@ async function loadNewsDetail() {
 
         currentNews = data;
         renderNewsDetail(data);
-        loadNewsConnections(newsId);
+        loadNewsConnections(Number(data.id));
+
+        const canonicalPath = new URL(getNewsDetailHref(data), window.location.origin);
+        if (window.location.pathname !== canonicalPath.pathname || window.location.search !== canonicalPath.search) {
+            window.history.replaceState({}, "", canonicalPath.pathname + canonicalPath.search);
+        }
 
         if (adminToken) {
             bindAdminForm(data);

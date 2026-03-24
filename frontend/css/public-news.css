@@ -23,13 +23,13 @@
 .news-detail-title {
     margin: 8px 0 10px;
     color: #2f3640;
-    font-size: clamp(34px, 4.4vw, 48px);
+    font-size: clamp(25px, 4.1vw, 33px);
     line-height: 1.16;
 }
 
 .news-detail-meta {
     margin: 0 0 18px;
-    color: #374151;
+    color: #2f3640;
     font-size: 16px;
     font-weight: 600;
 }
@@ -541,7 +541,7 @@
     }
 
     .news-detail-title {
-        font-size: clamp(28px, 8vw, 38px);
+        font-size: clamp(26px, 7.4vw, 34px);
     }
 
     .news-admin-form-grid {

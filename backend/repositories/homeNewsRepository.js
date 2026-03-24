@@ -1,5 +1,33 @@
 const pool = require("../db");
 
+function toNewsSlug(value) {
+    const normalized = String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
+
+    return normalized;
+}
+
+function normalizeSlugInput(value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
+        return "";
+    }
+
+    let decoded = raw;
+    try {
+        decoded = decodeURIComponent(raw);
+    } catch (error) {
+        decoded = raw;
+    }
+
+    return toNewsSlug(decoded);
+}
+
 async function findPublished(limit = 6, db = pool) {
     const result = await db.query(
         `
@@ -41,6 +69,29 @@ async function findPublishedById(id, db = pool) {
     );
 
     return result.rows[0] || null;
+}
+
+async function findPublishedBySlug(slug, db = pool) {
+    const normalizedSlug = normalizeSlugInput(slug);
+    if (!normalizedSlug) {
+        return null;
+    }
+
+    const candidatesResult = await db.query(
+        `
+        SELECT id, title, published_at, created_at
+        FROM home_news
+        WHERE is_published = TRUE
+        ORDER BY published_at DESC, created_at DESC
+        `
+    );
+
+    const matched = candidatesResult.rows.find((row) => toNewsSlug(row.title) === normalizedSlug);
+    if (!matched) {
+        return null;
+    }
+
+    return findPublishedById(matched.id, db);
 }
 
 async function findPublishedConnections(id, relatedLimit = 3, db = pool) {
@@ -245,6 +296,7 @@ async function deleteNews(id, db = pool) {
 module.exports = {
     findPublished,
     findPublishedById,
+    findPublishedBySlug,
     findPublishedConnections,
     findById,
     findAll,

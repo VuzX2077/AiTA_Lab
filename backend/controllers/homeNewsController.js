@@ -139,6 +139,25 @@ async function getPublicHomeNewsById(req, res) {
     }
 }
 
+async function getPublicHomeNewsBySlug(req, res) {
+    const slug = String(req.params.slug || "").trim();
+    if (!slug) {
+        return res.status(400).json({ message: "Invalid news slug" });
+    }
+
+    try {
+        const row = await homeNewsService.getPublicHomeNewsBySlug(slug);
+        if (!row) {
+            return res.status(404).json({ message: "Home news not found" });
+        }
+
+        return res.json(row);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to load home news" });
+    }
+}
+
 async function getPublicHomeNewsConnections(req, res) {
     const id = parseNewsId(req.params.id);
     if (!id) {
@@ -281,6 +300,7 @@ async function deleteHomeNews(req, res) {
 module.exports = {
     getPublicHomeNews,
     getPublicHomeNewsById,
+    getPublicHomeNewsBySlug,
     getPublicHomeNewsConnections,
     getHomeNewsById,
     getHomeNewsForAdmin,

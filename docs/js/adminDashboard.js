@@ -81,6 +81,32 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
+function toNewsSlug(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
+}
+
+function getNewsDetailHref(news) {
+    const id = Number(news && typeof news === "object" ? news.id : news);
+    const title = news && typeof news === "object" ? news.title : "";
+    const slug = toNewsSlug(title);
+
+    if (slug) {
+        return `/news/${encodeURIComponent(slug)}`;
+    }
+
+    if (Number.isInteger(id) && id > 0) {
+        return `/news?id=${id}`;
+    }
+
+    return "/news";
+}
+
 function setBar(id, labelId, value, total) {
     const element = document.getElementById(id);
     const labelElement = document.getElementById(labelId);
@@ -875,7 +901,7 @@ function renderHomeNewsAdmin(rows) {
                 <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
                 <p><small>${escapeHtml(item.tag || "NEWS")} | ${escapeHtml(formatDateForDisplay(item.published_at))} | ${item.is_published ? "Visible" : "Hidden"}</small></p>
                 <p>${escapeHtml(item.summary || "")}</p>
-                <p><small><a href="/news?id=${item.id}">Open detail page</a></small></p>
+                <p><small><a href="${escapeHtml(getNewsDetailHref(item))}">Open detail page</a></small></p>
                 <p><small>Link: ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : "N/A"}</small></p>
             </div>
             <div class="home-news-admin-actions">
@@ -893,7 +919,8 @@ function renderHomeNewsAdmin(rows) {
                 return;
             }
 
-            window.location.href = `/news?id=${id}`;
+            const selected = homeNewsItemsCache.find((row) => Number(row.id) === id);
+            window.location.href = getNewsDetailHref(selected || { id });
         });
     });
 

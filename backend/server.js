@@ -45,6 +45,10 @@ Object.entries(cleanPageRoutes).forEach(([routePath, relativeFilePath]) => {
   });
 });
 
+app.get("/news/:slug", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "pages/public/news.html"));
+});
+
 const legacyRedirectRoutes = {
   "/index.html": "/",
   "/news.html": "/news",

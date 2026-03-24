@@ -5,6 +5,7 @@ const homeNewsController = require("../controllers/homeNewsController");
 const router = express.Router();
 
 router.get("/home-news/public", homeNewsController.getPublicHomeNews);
+router.get("/home-news/public/slug/:slug", homeNewsController.getPublicHomeNewsBySlug);
 router.get("/home-news/public/:id", homeNewsController.getPublicHomeNewsById);
 router.get("/home-news/public/:id/connections", homeNewsController.getPublicHomeNewsConnections);
 router.get("/home-news", verifyToken, authorizeRole("admin"), homeNewsController.getHomeNewsForAdmin);
