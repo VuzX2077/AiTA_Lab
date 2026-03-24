@@ -78,7 +78,8 @@ async function updateOwnProfile(userId, fields) {
     return memberRepository.upsertProfileByUserId(userId, {
         name: fields.name,
         bio: fields.bio,
-        photoAssetId: fields.photo_asset_id
+        photoAssetId: fields.photo_asset_id,
+        career: fields.career
     });
 }
 

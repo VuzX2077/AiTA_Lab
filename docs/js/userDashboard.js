@@ -238,11 +238,13 @@ function renderProfileInfo(data) {
 function fillProfileForm(data) {
     const profileNameInput = document.getElementById("profileName");
     const profileBioInput = document.getElementById("profileBio");
+    const profileCareerInput = document.getElementById("profileCareer");
     const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
     const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 
     if (profileNameInput) profileNameInput.value = data.member?.name || "";
     if (profileBioInput) profileBioInput.value = data.member?.bio || "";
+    if (profileCareerInput) profileCareerInput.value = parseCareerEntries(data.member?.career).join("\n");
     if (profilePhotoAssetIdInput) profilePhotoAssetIdInput.value = data.member?.photo_asset_id || "";
 
     if (profilePhotoPreview) {
@@ -317,6 +319,7 @@ async function saveOwnProfile(event) {
 
     const profileNameInput = document.getElementById("profileName");
     const profileBioInput = document.getElementById("profileBio");
+    const profileCareerInput = document.getElementById("profileCareer");
     const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
 
     const name = profileNameInput ? profileNameInput.value.trim() : "";
@@ -330,6 +333,7 @@ async function saveOwnProfile(event) {
         body: JSON.stringify({
             name,
             bio: profileBioInput ? profileBioInput.value.trim() : "",
+            career: parseCareerEntries(profileCareerInput ? profileCareerInput.value : ""),
             photo_asset_id: profilePhotoAssetIdInput && profilePhotoAssetIdInput.value
                 ? Number(profilePhotoAssetIdInput.value)
                 : null
@@ -542,6 +546,14 @@ if (isAuthValid) {
         uploadProfilePhotoBtn.addEventListener("click", uploadProfileAvatar);
     }
 
+    const removeProfilePhotoBtn = document.getElementById("removeProfilePhotoBtn");
+    if (removeProfilePhotoBtn) {
+        removeProfilePhotoBtn.addEventListener("click", () => {
+            clearProfileAvatarSelection();
+            showToast("Avatar removed. Click Save Profile to confirm.", "success");
+        });
+    }
+
     // Change password
     const changePasswordForm = document.getElementById("changePasswordForm");
     if (changePasswordForm) {
@@ -586,4 +598,52 @@ if (isAuthValid) {
         clearAuth();
         window.location.href = "/";
     });
+}
+
+function parseCareerEntries(value) {
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item || "").trim()).filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+                return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+            }
+        } catch (error) {
+            // ignore parse errors and treat as plain text
+        }
+
+        return value
+            .split(/\r?\n/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+}
+
+function clearProfileAvatarSelection() {
+    const profilePhotoAssetIdInput = document.getElementById("profilePhotoAssetId");
+    const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+    const profilePhotoFileInput = document.getElementById("profilePhotoFile");
+    const status = document.getElementById("profilePhotoUploadStatus");
+
+    if (profilePhotoAssetIdInput) {
+        profilePhotoAssetIdInput.value = "";
+    }
+
+    if (profilePhotoPreview) {
+        profilePhotoPreview.hidden = true;
+        profilePhotoPreview.removeAttribute("src");
+    }
+
+    if (profilePhotoFileInput) {
+        profilePhotoFileInput.value = "";
+    }
+
+    if (status) {
+        status.textContent = "Avatar removed. Save profile to apply changes.";
+    }
 }

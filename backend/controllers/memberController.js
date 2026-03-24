@@ -34,7 +34,7 @@ async function getProfile(req, res) {
 }
 
 async function updateProfile(req, res) {
-    const { name, bio, photo_asset_id } = req.body;
+    const { name, bio, photo_asset_id, career } = req.body;
 
     if (!name || !String(name).trim()) {
         return res.status(400).json({ message: "Name is required" });
@@ -44,11 +44,18 @@ async function updateProfile(req, res) {
         return res.status(400).json({ message: "photo_asset_id must be an integer" });
     }
 
+    if (career !== undefined && !Array.isArray(career)) {
+        return res.status(400).json({ message: "career must be an array" });
+    }
+
     try {
         const member = await memberService.updateOwnProfile(req.user.id, {
             name: String(name).trim(),
             bio: bio ? String(bio).trim() : "",
-            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id)
+            photo_asset_id: photo_asset_id === undefined || photo_asset_id === null || photo_asset_id === "" ? null : Number(photo_asset_id),
+            career: Array.isArray(career)
+                ? career.map((item) => String(item || "").trim()).filter(Boolean)
+                : []
         });
 
         return res.json({ member });

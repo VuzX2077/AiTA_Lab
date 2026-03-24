@@ -58,7 +58,9 @@
             <li class="sidebar-group-title">Reports</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="activityLogSection">Activity Log</button></li>
 
-            <li><button class="sidebar-link" data-target="settingsSection">Settings</button></li>
+            <li class="sidebar-group-title">Settings</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="settingsProfileSection">Update Profile</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="settingsAuthSection">Authentication</button></li>
         </ul>
     </aside>
 
@@ -316,12 +318,22 @@
             <div id="activityLogList"></div>
         </div>
 
-        <div class="dashboard-section admin-panel" id="settingsSection">
-            <h2>Settings</h2>
+        <div class="dashboard-section admin-panel" id="settingsProfileSection">
+            <h2>Update Profile</h2>
 
             <div class="settings-card">
-                <h3>Edit Profile</h3>
                 <form id="editProfileForm">
+                    <input type="hidden" id="profilePhotoAssetId">
+                    <div class="form-group">
+                        <label>Avatar</label>
+                        <input type="file" id="profilePhotoFile" accept="image/jpeg,image/png,image/webp">
+                        <div class="settings-avatar-actions">
+                            <button type="button" id="uploadProfilePhotoBtn" class="btn-primary">Upload Avatar</button>
+                            <button type="button" id="removeProfilePhotoBtn" class="btn-secondary">Remove Avatar</button>
+                        </div>
+                        <p id="profilePhotoUploadStatus" class="settings-note"></p>
+                        <img id="profilePhotoPreview" alt="Profile avatar preview" class="profile-avatar-preview" hidden>
+                    </div>
                     <div class="form-group">
                         <label>Full Name</label>
                         <input type="text" id="profileName" required>
@@ -330,18 +342,18 @@
                         <label>Bio</label>
                         <textarea id="profileBio" rows="4" placeholder="Short bio"></textarea>
                     </div>
-                    <input type="hidden" id="profilePhotoAssetId">
                     <div class="form-group">
-                        <label>Avatar</label>
-                        <input type="file" id="profilePhotoFile" accept="image/jpeg,image/png,image/webp">
-                        <button type="button" id="uploadProfilePhotoBtn" class="btn-primary">Upload Avatar</button>
-                        <p id="profilePhotoUploadStatus" class="settings-note"></p>
-                        <img id="profilePhotoPreview" alt="Profile avatar preview" class="profile-avatar-preview" hidden>
+                        <label>Career</label>
+                        <textarea id="profileCareer" rows="4" placeholder="One item per line"></textarea>
                     </div>
                     <button type="submit" class="btn-primary">Save Profile</button>
                 </form>
             </div>
-            
+        </div>
+
+        <div class="dashboard-section admin-panel" id="settingsAuthSection">
+            <h2>Authentication</h2>
+
             <div class="settings-card">
                 <h3>Change Password</h3>
                 <form id="changePasswordForm">

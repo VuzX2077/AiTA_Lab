@@ -271,7 +271,7 @@ async function findByUserId(userId, db = pool) {
     return result.rows[0] || null;
 }
 
-async function upsertProfileByUserId(userId, { name, bio, photoAssetId }, db = pool) {
+async function upsertProfileByUserId(userId, { name, bio, photoAssetId, career }, db = pool) {
     const existing = await db.query(
         `
         SELECT id
@@ -290,20 +290,21 @@ async function upsertProfileByUserId(userId, { name, bio, photoAssetId }, db = p
             UPDATE members
             SET name = $1,
                 bio = $2,
-                photo_asset_id = $3
-            WHERE id = $4
+                photo_asset_id = $3,
+                career = $4
+            WHERE id = $5
             RETURNING id, name, position, bio, section, photo_asset_id, career, links, user_id
             `,
-            [name, bio || "", photoAssetId ?? null, existing.rows[0].id]
+            [name, bio || "", photoAssetId ?? null, JSON.stringify(career || []), existing.rows[0].id]
         );
     } else {
         result = await db.query(
             `
             INSERT INTO members (user_id, name, position, bio, section, photo_asset_id, career, links)
-            VALUES ($1, $2, $3, $4, 'researchers', $5, '[]'::jsonb, '[]'::jsonb)
+            VALUES ($1, $2, $3, $4, 'researchers', $5, $6, '[]'::jsonb)
             RETURNING id, name, position, bio, section, photo_asset_id, career, links, user_id
             `,
-            [userId, name, "", bio || "", photoAssetId ?? null]
+            [userId, name, "", bio || "", photoAssetId ?? null, JSON.stringify(career || [])]
         );
     }
 

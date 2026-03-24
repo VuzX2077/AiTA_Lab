@@ -109,10 +109,33 @@ form button:hover {
     color: #ff9800;
 }
 
+.sidebar-group-title {
+    margin-top: 10px;
+    padding: 10px 8px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #7a7a7a;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.sidebar-sublink {
+    padding-left: 24px;
+    font-size: 15px;
+}
+
 .sidebar-logout {
     margin-top: 10px;
     border-top: 1px solid #ececec;
     padding-top: 14px;
+}
+
+.settings-avatar-actions {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
 }
 
 #toast-container {
