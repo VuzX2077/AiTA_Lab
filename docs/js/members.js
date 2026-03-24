@@ -29,6 +29,17 @@ function getAdminToken() {
 
 const adminToken = getAdminToken();
 let memberNamePool = [];
+let memberSuggestionPool = [];
+
+function normalizeName(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function findSuggestedMemberByName(name) {
+    const normalized = normalizeName(name);
+    if (!normalized) return null;
+    return memberSuggestionPool.find((member) => normalizeName(member?.name) === normalized) || null;
+}
 
 // ─── toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = "success") {
@@ -57,7 +68,7 @@ function safeArr(v) {
 }
 
 async function ensureMemberNamePool() {
-    if (!adminToken || memberNamePool.length) return;
+    if (!adminToken || memberSuggestionPool.length) return;
     try {
         const res = await fetch("/api/members", {
             headers: { "Authorization": `Bearer ${adminToken}` },
@@ -65,13 +76,16 @@ async function ensureMemberNamePool() {
         const data = await res.json();
         if (!res.ok || !Array.isArray(data)) return;
 
+        memberSuggestionPool = data.filter((member) => String(member?.name || "").trim());
+
         memberNamePool = [...new Set(
-            data
+            memberSuggestionPool
                 .map((member) => String(member?.name || "").trim())
                 .filter(Boolean)
         )];
     } catch {
         memberNamePool = [];
+        memberSuggestionPool = [];
     }
 }
 
@@ -366,11 +380,14 @@ async function uploadSelectedPhoto() {
     }
 }
 
-function populateForm(m) {
+function populateForm(m, options = {}) {
+    const preserveSection = Boolean(options.preserveSection);
+    const currentSection = document.getElementById("mfSection")?.value || "researchers";
+
     document.getElementById("mfUserId").value = m.member_id || "";
     document.getElementById("mfName").value = m.name || "";
     document.getElementById("mfPosition").value = m.position || "";
-    document.getElementById("mfSection").value = m.section || "researchers";
+    document.getElementById("mfSection").value = preserveSection ? currentSection : (m.section || "researchers");
     document.getElementById("mfPhotoAssetId").value = m.photo_asset_id || "";
     const fileInput = document.getElementById("mfPhotoFile");
     if (fileInput) fileInput.value = "";
@@ -387,9 +404,49 @@ function populateForm(m) {
     links.forEach(lk => buildLinkRow(lk));
 }
 
+function setModalEditModeForSuggestion(member) {
+    const modeInput = document.getElementById("mfMode");
+    const titleEl = document.getElementById("mmodalTitle");
+    const idInput = document.getElementById("mfUserId");
+    const autoSwitchedInput = document.getElementById("mfAutoSwitchedToEdit");
+    if (!modeInput || !titleEl || !idInput) return;
+
+    modeInput.value = "edit";
+    titleEl.textContent = "Edit Member";
+    idInput.value = member.member_id || "";
+    if (autoSwitchedInput) autoSwitchedInput.value = "1";
+}
+
+function maybeAutofillFromNameSuggestion() {
+    const nameInput = document.getElementById("mfName");
+    const modeInput = document.getElementById("mfMode");
+    const autoSwitchedInput = document.getElementById("mfAutoSwitchedToEdit");
+    const titleEl = document.getElementById("mmodalTitle");
+    const idInput = document.getElementById("mfUserId");
+    if (!nameInput || !modeInput) return;
+
+    const matched = findSuggestedMemberByName(nameInput.value);
+    if (!matched) {
+        if (autoSwitchedInput?.value === "1") {
+            modeInput.value = "add";
+            if (titleEl) titleEl.textContent = "Add Member";
+            if (idInput) idInput.value = "";
+            autoSwitchedInput.value = "0";
+        }
+        return;
+    }
+
+    if (modeInput.value === "add" || autoSwitchedInput?.value === "1") {
+        populateForm(matched, { preserveSection: true });
+        setModalEditModeForSuggestion(matched);
+    }
+}
+
 async function openEditModal(m) {
     document.getElementById("mmodalTitle").textContent = "Edit Member";
     document.getElementById("mfMode").value = "edit";
+    const autoSwitchedInput = document.getElementById("mfAutoSwitchedToEdit");
+    if (autoSwitchedInput) autoSwitchedInput.value = "0";
 
     const memberId = m.member_id;
     if (!memberId) {
@@ -424,6 +481,8 @@ async function openEditModal(m) {
 function openAddModal(sectionId) {
     document.getElementById("mmodalTitle").textContent = "Add Member";
     document.getElementById("mfMode").value = "add";
+    const autoSwitchedInput = document.getElementById("mfAutoSwitchedToEdit");
+    if (autoSwitchedInput) autoSwitchedInput.value = "0";
     populateForm({ section: sectionId });
     openModal();
 }
@@ -508,7 +567,7 @@ async function confirmDelete(m) {
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to delete member");
-        showToast("Member deleted");
+        showToast("Member removed from page");
         loadMembers();
     } catch (err) {
         showToast(err.message, "error");
@@ -538,6 +597,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         nameInput.addEventListener("input", () => {
             updateNameSuggestions(nameInput.value);
+            maybeAutofillFromNameSuggestion();
         });
+        nameInput.addEventListener("change", maybeAutofillFromNameSuggestion);
     }
 });

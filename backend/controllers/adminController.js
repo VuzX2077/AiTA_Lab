@@ -391,10 +391,10 @@ async function deleteMemberProfile(req, res) {
             return res.status(404).json({ message: "Member profile not found" });
         }
 
-        return res.json({ message: "Member profile deleted" });
+        return res.json({ message: "Member profile removed from members page" });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: "Failed to delete member profile" });
+        return res.status(500).json({ message: "Failed to remove member profile from members page" });
     }
 }
 

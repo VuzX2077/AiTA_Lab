@@ -94,6 +94,7 @@
 			<form id="memberForm" novalidate autocomplete="off">
 				<input type="hidden" id="mfUserId">
 				<input type="hidden" id="mfMode" value="edit">
+				<input type="hidden" id="mfAutoSwitchedToEdit" value="0">
 				<input type="hidden" id="mfPhotoAssetId">
 
 
@@ -101,6 +102,12 @@
 					<label>Full name<span class="mf-req">*</span></label>
 					<input type="text" id="mfName" list="memberNameSuggestList" placeholder="e.g. Nguyen Van A, Ph.D.">
 					<datalist id="memberNameSuggestList"></datalist>
+				</div>
+				<div class="mf-row">
+					<label>Upload photo from device</label>
+					<input type="file" id="mfPhotoFile" accept="image/jpeg,image/png,image/webp">
+					<button type="button" id="mfUploadPhotoBtn" class="mf-add-link-btn">Upload Photo</button>
+					<small id="mfPhotoUploadStatus" class="mf-hint"></small>
 				</div>
 				<div class="mf-row">
 					<label>Position / Role / Title</label>
@@ -115,12 +122,6 @@
 						<option value="alumni">Alumni</option>
 						<option value="collaborators">Collaborators</option>
 					</select>
-				</div>
-				<div class="mf-row">
-					<label>Upload photo from device</label>
-					<input type="file" id="mfPhotoFile" accept="image/jpeg,image/png,image/webp">
-					<button type="button" id="mfUploadPhotoBtn" class="mf-add-link-btn">Upload Photo</button>
-					<small id="mfPhotoUploadStatus" class="mf-hint"></small>
 				</div>
 				<div class="mf-row">
 					<label>Bio / description</label>

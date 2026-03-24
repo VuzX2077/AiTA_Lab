@@ -1,5 +1,7 @@
 const pool = require("../db");
 
+const VISIBLE_SECTIONS = ["director", "researchers", "undergraduate", "alumni", "collaborators"];
+
 const MEMBER_COLS = "m.id AS member_id, u.id AS user_id, u.email, u.role, m.name, m.position, m.bio, m.section, m.photo_asset_id, COALESCE(ia.public_url, '') AS photo_url, m.career, m.links";
 
 async function findAll(db = pool) {
@@ -31,12 +33,13 @@ async function findPublicMembers({ query = "", section = "" } = {}, db = pool) {
         FROM members m
         LEFT JOIN users u ON u.id = m.user_id
         LEFT JOIN image_assets ia ON ia.id = m.photo_asset_id
-        WHERE ($1::text = '' OR m.section = $1)
+                WHERE m.section = ANY($3::text[])
+                    AND ($1::text = '' OR m.section = $1)
           AND ($2::text = '' OR m.name ILIKE '%' || $2 || '%' OR m.position ILIKE '%' || $2 || '%')
         ORDER BY m.id ASC
         LIMIT 30
         `,
-        [normalizedSection, normalizedQuery]
+                [normalizedSection, normalizedQuery, VISIBLE_SECTIONS]
     );
     return result.rows;
 }
@@ -145,7 +148,12 @@ async function updateByMemberId(memberId, { name, position, bio, section, photoA
 
 async function deleteByMemberId(memberId, db = pool) {
     const result = await db.query(
-        "DELETE FROM members WHERE id = $1 RETURNING id",
+        `
+        UPDATE members
+        SET section = 'hidden'
+        WHERE id = $1
+        RETURNING id
+        `,
         [memberId]
     );
 
