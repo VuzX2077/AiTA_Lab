@@ -206,6 +206,15 @@
     box-sizing: border-box;
 }
 
+#editPublicPageForm .form-group {
+    margin-bottom: 12px;
+}
+
+#editPublicPageForm textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 #publicationList .pub-btn-group {
     margin-left: auto;
     justify-content: flex-end;

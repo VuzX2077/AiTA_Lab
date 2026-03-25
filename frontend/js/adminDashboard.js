@@ -33,6 +33,7 @@ let memberItemsCache = [];
 let memberSearchEventsBound = false;
 let homeNewsItemsCache = [];
 let currentProfile = null;
+let currentPublicPage = null;
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -1153,6 +1154,229 @@ async function loadAdminProfile() {
     }
 }
 
+function parseMultilineEntries(value) {
+    return String(value || "")
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function parsePublicPageLinksText(value) {
+    return String(value || "")
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+            const [labelRaw, urlRaw, colorRaw] = line.split("|").map((item) => String(item || "").trim());
+            if (!labelRaw || !urlRaw) return null;
+
+            const link = { label: labelRaw, url: urlRaw };
+            if (colorRaw) {
+                link.color = colorRaw;
+            }
+            return link;
+        })
+        .filter(Boolean);
+}
+
+function formatPublicPageLinks(value) {
+    if (!Array.isArray(value)) return "";
+    return value
+        .filter((item) => item && item.label && item.url)
+        .map((item) => [item.label, item.url, item.color || ""].filter(Boolean).join("|"))
+        .join("\n");
+}
+
+function showHidePublicPageFieldsBySection(data) {
+    const normalizedSection = String(data.section || "").trim().toLowerCase();
+    const isAdminSection = ["director", "researcher", "researchers"].includes(normalizedSection);
+    const adminOnlyFields = [
+        "publicPageWorkingExperienceGroup",
+        "publicPageBookChaptersGroup",
+        "publicPagePatentsGroup",
+        "publicPageActivitiesAdvisorGroup",
+        "publicPageActivitiesConferenceCommitteeGroup",
+        "publicPageActivitiesPeerReviewGroup"
+    ];
+    const memberOnlyFields = ["publicPageResearchExperienceGroup"];
+    
+    adminOnlyFields.forEach(fieldId => {
+        const el = document.getElementById(fieldId);
+        if (el) el.style.display = isAdminSection ? "block" : "none";
+    });
+    
+    memberOnlyFields.forEach(fieldId => {
+        const el = document.getElementById(fieldId);
+        if (el) el.style.display = isAdminSection ? "none" : "block";
+    });
+}
+
+function fillPublicPageForm(data) {
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    };
+
+    setValue("publicPageName", data.name || "");
+    setValue("publicPageQuote", data.quote || "");
+    setValue("publicPageHeroPhotoAssetId", data.hero_photo_asset_id || "");
+    setValue("publicPageLinks", formatPublicPageLinks(data.links));
+    setValue("publicPageEducation", (data.education || []).join("\n"));
+    setValue("publicPageResearchExperience", (data.research_experience || []).join("\n"));
+    setValue("publicPageWorkingExperience", (data.working_experience || []).join("\n"));
+    setValue("publicPageAwardsGrants", (data.awards_grants || []).join("\n"));
+    setValue("publicPageJournalPublications", (data.journal_publications || []).join("\n"));
+    setValue("publicPageConferenceProceedings", (data.conference_proceedings || []).join("\n"));
+    setValue("publicPageBookChapters", (data.book_chapters || []).join("\n"));
+    setValue("publicPagePatents", (data.patents || []).join("\n"));
+    setValue("publicPageActivitiesAdvisor", (data.academic_activities && data.academic_activities.advisor ? data.academic_activities.advisor : []).join("\n"));
+    setValue("publicPageActivitiesConferenceCommittee", (data.academic_activities && data.academic_activities.conference_committee ? data.academic_activities.conference_committee : []).join("\n"));
+    setValue("publicPageActivitiesPeerReview", (data.academic_activities && data.academic_activities.peer_review ? data.academic_activities.peer_review : []).join("\n"));
+    setValue("publicPageProjectsPrincipalInvestigator", (data.projects && data.projects.principal_investigator ? data.projects.principal_investigator : []).join("\n"));
+
+    const heroPreview = document.getElementById("publicPageHeroPhotoPreview");
+    if (heroPreview) {
+        if (data.hero_photo_url) {
+            heroPreview.src = data.hero_photo_url;
+            heroPreview.hidden = false;
+        } else {
+            heroPreview.hidden = true;
+            heroPreview.removeAttribute("src");
+        }
+    }
+
+    if (data.section) {
+        showHidePublicPageFieldsBySection(data);
+    }
+}
+
+async function loadOwnPublicPage() {
+    const data = await request("/api/profile/public-page", { method: "GET" });
+    currentPublicPage = data;
+    fillPublicPageForm(data);
+}
+
+async function uploadPublicPageHeroPhoto() {
+    const fileInput = document.getElementById("publicPageHeroPhotoFile");
+    const status = document.getElementById("publicPageHeroPhotoUploadStatus");
+    const heroAssetIdInput = document.getElementById("publicPageHeroPhotoAssetId");
+    const preview = document.getElementById("publicPageHeroPhotoPreview");
+    const button = document.getElementById("uploadPublicPageHeroPhotoBtn");
+
+    if (!fileInput || !heroAssetIdInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) status.textContent = "Uploading...";
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/uploads/images", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        heroAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) status.textContent = "Upload successful";
+        showToast("Hero photo uploaded successfully", "success");
+    } catch (error) {
+        if (status) status.textContent = "Upload failed";
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function clearPublicPageHeroSelection() {
+    const heroAssetIdInput = document.getElementById("publicPageHeroPhotoAssetId");
+    const heroPreview = document.getElementById("publicPageHeroPhotoPreview");
+    const heroFileInput = document.getElementById("publicPageHeroPhotoFile");
+    const status = document.getElementById("publicPageHeroPhotoUploadStatus");
+
+    if (heroAssetIdInput) heroAssetIdInput.value = "";
+    if (heroPreview) {
+        heroPreview.hidden = true;
+        heroPreview.removeAttribute("src");
+    }
+    if (heroFileInput) heroFileInput.value = "";
+    if (status) status.textContent = "Hero photo removed. Save public page to apply changes.";
+}
+
+async function saveOwnPublicPage(event) {
+    event.preventDefault();
+
+    const nameInput = document.getElementById("publicPageName");
+    const name = nameInput ? nameInput.value.trim() : "";
+    if (!name) {
+        showToast("Display name is required", "error");
+        return;
+    }
+
+    const payload = {
+        name,
+        quote: document.getElementById("publicPageQuote") ? document.getElementById("publicPageQuote").value.trim() : "",
+        hero_photo_asset_id: document.getElementById("publicPageHeroPhotoAssetId") && document.getElementById("publicPageHeroPhotoAssetId").value
+            ? Number(document.getElementById("publicPageHeroPhotoAssetId").value)
+            : null,
+        links: parsePublicPageLinksText(document.getElementById("publicPageLinks") ? document.getElementById("publicPageLinks").value : ""),
+        education: parseMultilineEntries(document.getElementById("publicPageEducation") ? document.getElementById("publicPageEducation").value : ""),
+        working_experience: parseMultilineEntries(document.getElementById("publicPageWorkingExperience") ? document.getElementById("publicPageWorkingExperience").value : ""),
+        awards_grants: parseMultilineEntries(document.getElementById("publicPageAwardsGrants") ? document.getElementById("publicPageAwardsGrants").value : ""),
+        journal_publications: parseMultilineEntries(document.getElementById("publicPageJournalPublications") ? document.getElementById("publicPageJournalPublications").value : ""),
+        conference_proceedings: parseMultilineEntries(document.getElementById("publicPageConferenceProceedings") ? document.getElementById("publicPageConferenceProceedings").value : ""),
+        book_chapters: parseMultilineEntries(document.getElementById("publicPageBookChapters") ? document.getElementById("publicPageBookChapters").value : ""),
+        patents: parseMultilineEntries(document.getElementById("publicPagePatents") ? document.getElementById("publicPagePatents").value : ""),
+        academic_activities: {
+            advisor: parseMultilineEntries(document.getElementById("publicPageActivitiesAdvisor") ? document.getElementById("publicPageActivitiesAdvisor").value : ""),
+            conference_committee: parseMultilineEntries(document.getElementById("publicPageActivitiesConferenceCommittee") ? document.getElementById("publicPageActivitiesConferenceCommittee").value : ""),
+            peer_review: parseMultilineEntries(document.getElementById("publicPageActivitiesPeerReview") ? document.getElementById("publicPageActivitiesPeerReview").value : "")
+        },
+        projects: {
+            principal_investigator: parseMultilineEntries(document.getElementById("publicPageProjectsPrincipalInvestigator") ? document.getElementById("publicPageProjectsPrincipalInvestigator").value : "")
+        }
+    };
+
+    await request("/api/profile/public-page", {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+    });
+
+    await loadOwnPublicPage();
+    addActivityLog("Updated own public page");
+    showToast("Public page updated successfully", "success");
+}
+
+function openOwnPublicPage() {
+    const memberId = Number(currentPublicPage && currentPublicPage.member_id);
+    if (!Number.isInteger(memberId) || memberId <= 0) {
+        showToast("Cannot open public page yet. Save your public page first.", "error");
+        return;
+    }
+
+    window.open(`/member/${memberId}`, "_blank", "noopener");
+}
+
 async function uploadProfileAvatar() {
     const fileInput = document.getElementById("profilePhotoFile");
     const status = document.getElementById("profilePhotoUploadStatus");
@@ -1319,6 +1543,11 @@ window.deleteSeminarEntry = deleteSeminarEntry;
 
 if (isAuthValid) {
     loadAdminProfile();
+    loadOwnPublicPage().catch((error) => {
+        if (error && error.message) {
+            showToast(error.message, "error");
+        }
+    });
     loadPendingPublications();
     loadAllPublications();
     loadMembers();
@@ -1370,6 +1599,35 @@ if (isAuthValid) {
             clearProfileAvatarSelection();
             showToast("Avatar removed. Click Save Profile to confirm.", "success");
         });
+    }
+
+    const editPublicPageForm = document.getElementById("editPublicPageForm");
+    if (editPublicPageForm) {
+        editPublicPageForm.addEventListener("submit", async (e) => {
+            try {
+                await saveOwnPublicPage(e);
+            } catch (error) {
+                showToast(error.message, "error");
+            }
+        });
+    }
+
+    const uploadPublicPageHeroPhotoBtn = document.getElementById("uploadPublicPageHeroPhotoBtn");
+    if (uploadPublicPageHeroPhotoBtn) {
+        uploadPublicPageHeroPhotoBtn.addEventListener("click", uploadPublicPageHeroPhoto);
+    }
+
+    const removePublicPageHeroPhotoBtn = document.getElementById("removePublicPageHeroPhotoBtn");
+    if (removePublicPageHeroPhotoBtn) {
+        removePublicPageHeroPhotoBtn.addEventListener("click", () => {
+            clearPublicPageHeroSelection();
+            showToast("Hero photo removed. Click Save Public Page to confirm.", "success");
+        });
+    }
+
+    const openMyPublicPageBtn = document.getElementById("openMyPublicPageBtn");
+    if (openMyPublicPageBtn) {
+        openMyPublicPageBtn.addEventListener("click", openOwnPublicPage);
     }
 
     const changePasswordForm = document.getElementById("changePasswordForm");

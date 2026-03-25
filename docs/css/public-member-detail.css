@@ -1,0 +1,165 @@
+.member-detail-page .container {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.detail-hero {
+    margin-top: 132px;
+    text-align: center;
+}
+
+.detail-hero h1 {
+    margin: 0;
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1.15;
+    color: #333a46;
+}
+
+.member-quote {
+    margin: 20px auto 0;
+    max-width: 760px;
+    font-size: 34px;
+    color: #4f5764;
+    line-height: 1.35;
+}
+
+.detail-image-wrap {
+    margin-top: 36px;
+}
+
+#memberHeroImage {
+    width: 100%;
+    max-height: 620px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #dce3eb;
+    background: #f2f4f8;
+}
+
+.detail-links {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.detail-links .tag-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 6px 11px;
+    border-radius: 4px;
+    color: #fff;
+    background: #1e4ea8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.detail-toc {
+    margin-top: 40px;
+    padding: 26px 0;
+    border-top: 1px solid #d9dfe6;
+    border-bottom: 1px solid #d9dfe6;
+}
+
+.detail-toc h2 {
+    margin: 0 0 12px;
+    font-size: 36px;
+    color: #313844;
+}
+
+.detail-toc ul {
+    margin: 0;
+    padding-left: 24px;
+}
+
+.detail-toc li {
+    margin-bottom: 8px;
+}
+
+.detail-toc a {
+    color: #f49d10;
+    text-decoration: none;
+    font-size: 30px;
+}
+
+.detail-toc a:hover {
+    color: #ce7f08;
+    text-decoration: underline;
+}
+
+.detail-section {
+    margin-top: 28px;
+    padding-top: 26px;
+    border-top: 1px solid #d9dfe6;
+}
+
+.detail-section h2 {
+    margin: 0 0 16px;
+    font-size: clamp(40px, 4vw, 50px);
+    color: #313844;
+}
+
+.detail-section h3 {
+    margin: 16px 0 10px;
+    font-size: clamp(28px, 3vw, 36px);
+    color: #313844;
+}
+
+.detail-section ul {
+    margin: 0;
+    padding-left: 26px;
+}
+
+.detail-section li {
+    font-size: 31px;
+    line-height: 1.5;
+    color: #454c58;
+    margin-bottom: 9px;
+}
+
+.detail-empty {
+    margin-top: 32px;
+    text-align: center;
+    padding: 24px 0;
+    border-top: 1px solid #d9dfe6;
+}
+
+.detail-empty p {
+    margin: 0;
+    color: #747e8c;
+    font-size: 18px;
+}
+
+@media (max-width: 1000px) {
+    .member-detail-page .container {
+        max-width: 94%;
+    }
+
+    .member-quote {
+        font-size: 24px;
+    }
+
+    .detail-toc a {
+        font-size: 22px;
+    }
+
+    .detail-section li {
+        font-size: 21px;
+    }
+}
+
+@media (max-width: 640px) {
+    .detail-hero {
+        margin-top: 108px;
+    }
+
+    .member-quote {
+        font-size: 20px;
+    }
+
+    .detail-section li {
+        font-size: 18px;
+    }
+}

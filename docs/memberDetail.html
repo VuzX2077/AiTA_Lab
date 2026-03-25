@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Member Profile - AiTA Lab</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/public-content-pages.css">
+    <link rel="stylesheet" href="css/public-member-detail.css">
+</head>
+
+<body>
+
+<header>
+    <nav class="nav-container">
+        <div class="logo">
+            <a href="./index.html">AiTA Lab</a>
+        </div>
+
+        <ul class="menu">
+            <li><a href="./members.html" data-text="Member">Member</a></li>
+            <li><a href="./publications.html" data-text="Publication">Publication</a></li>
+            <li><a href="./researches.html" data-text="Research">Research</a></li>
+            <li><a href="./lectures.html" data-text="Lecture">Lecture</a></li>
+            <li><a href="./seminars.html" data-text="Seminar">Seminar</a></li>
+            <li><a href="./archives.html" data-text="Archive">Archive</a></li>
+            <li><a href="./contact.html" data-text="Contact">Contact</a></li>
+        </ul>
+
+        <div class="auth" id="authActions">
+            <a href="./login.html">Login</a>
+        </div>
+    </nav>
+</header>
+
+<main class="member-detail-page">
+    <section class="container detail-hero">
+        <h1 id="memberName">Member Profile</h1>
+        <p id="memberQuote" class="member-quote"></p>
+    </section>
+
+    <section class="container detail-image-wrap" id="memberHeroWrap">
+        <img id="memberHeroImage" alt="Member hero picture">
+    </section>
+
+    <section class="container detail-links" id="memberLinks"></section>
+
+    <nav class="container detail-toc" aria-label="Profile table of contents" id="detailTocWrap" hidden>
+        <h2>Table of Contents</h2>
+        <ul id="detailToc"></ul>
+    </nav>
+
+    <section class="container detail-section" id="section-education" hidden>
+        <h2>Education</h2>
+        <ul id="educationList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-working-experience" hidden>
+        <h2>Working Experience</h2>
+        <ul id="workingExperienceList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-awards-grants" hidden>
+        <h2>Awards &amp; Grants</h2>
+        <ul id="awardsGrantsList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-journal-publications" hidden>
+        <h2>Journal Publications</h2>
+        <ul id="journalPublicationsList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-conference-proceedings" hidden>
+        <h2>Conference Proceedings</h2>
+        <ul id="conferenceProceedingsList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-book-chapters" hidden>
+        <h2>Book Chapters</h2>
+        <ul id="bookChaptersList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-patents" hidden>
+        <h2>Patents</h2>
+        <ul id="patentsList"></ul>
+    </section>
+
+    <section class="container detail-section" id="section-academic-activities" hidden>
+        <h2>Academic Activities</h2>
+
+        <div class="sub-section" id="activities-advisor-wrap" hidden>
+            <h3>Advisor</h3>
+            <ul id="activitiesAdvisorList"></ul>
+        </div>
+
+        <div class="sub-section" id="activities-conference-wrap" hidden>
+            <h3>Conference Committee</h3>
+            <ul id="activitiesConferenceList"></ul>
+        </div>
+
+        <div class="sub-section" id="activities-peer-review-wrap" hidden>
+            <h3>Peer Review</h3>
+            <ul id="activitiesPeerReviewList"></ul>
+        </div>
+    </section>
+
+    <section class="container detail-section" id="section-projects" hidden>
+        <h2>Projects</h2>
+
+        <div class="sub-section" id="projects-pi-wrap" hidden>
+            <h3>Principal Investigator</h3>
+            <ul id="projectsPiList"></ul>
+        </div>
+    </section>
+
+    <section class="container detail-empty" id="detailEmpty" hidden>
+        <p>No detail information available for this member yet.</p>
+    </section>
+</main>
+
+<footer>
+    <div class="container footer-content">
+        <p>Copyright © 2025 AI Technology and Application Research Lab @ FPTU - HCMC — All right Reserved.</p>
+    </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script src="js/memberDetail.js"></script>
+
+</body>
+
+</html>

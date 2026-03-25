@@ -18,6 +18,7 @@ const pageMappings = [
     { source: ["public", "seminars.html"], target: "seminars.html" },
     { source: ["public", "archives.html"], target: "archives.html" },
     { source: ["public", "contact.html"], target: "contact.html" },
+    { source: ["public", "memberDetail.html"], target: "memberDetail.html" },
     { source: ["auth", "login.html"], target: "login.html" },
     { source: ["member", "memberDashboard.html"], target: "memberDashboard.html" },
     { source: ["admin", "adminDashboard.html"], target: "adminDashboard.html" }
@@ -33,6 +34,7 @@ const routeReplacements = [
     ["href=\"/seminars\"", "href=\"./seminars.html\""],
     ["href=\"/archives\"", "href=\"./archives.html\""],
     ["href=\"/contact\"", "href=\"./contact.html\""],
+    ["href=\"/memberDetail\"", "href=\"./memberDetail.html\""],
     ["href=\"/login\"", "href=\"./login.html\""],
     ["href=\"/register\"", "href=\"./register.html\""],
     ["href=\"/adminDashboard\"", "href=\"./adminDashboard.html\""],

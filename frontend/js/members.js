@@ -31,6 +31,31 @@ const adminToken = getAdminToken();
 let memberNamePool = [];
 let memberSuggestionPool = [];
 
+function apiUrl(path) {
+    if (typeof window.getApiUrl === "function") {
+        return window.getApiUrl(path);
+    }
+
+    return path;
+}
+
+function getMemberDetailHref(member) {
+    const memberId = Number(member && member.member_id);
+    if (!Number.isInteger(memberId) || memberId <= 0) {
+        return "#";
+    }
+
+    const isStaticHtml = window.location.hostname.includes("github.io") || /\.html$/i.test(window.location.pathname);
+    if (isStaticHtml) {
+        const base = typeof window.getPageUrl === "function"
+            ? window.getPageUrl("memberDetail.html")
+            : "./memberDetail.html";
+        return `${base}?id=${memberId}`;
+    }
+
+    return `/member/${memberId}`;
+}
+
 function normalizeName(value) {
     return String(value || "").trim().toLowerCase();
 }
@@ -70,7 +95,7 @@ function safeArr(v) {
 async function ensureMemberNamePool() {
     if (!adminToken || memberSuggestionPool.length) return;
     try {
-        const res = await fetch("/api/members", {
+        const res = await fetch(apiUrl("/api/members"), {
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
         const data = await res.json();
@@ -118,7 +143,11 @@ function renderMemberCard(m) {
     h3.className = "member-name";
     const memberName = (m.name || "").trim();
     const memberPosition = (m.position || "").trim();
-    h3.textContent = memberPosition ? `${memberName}, ${memberPosition}.` : memberName;
+    const nameLink = document.createElement("a");
+    nameLink.className = "member-name-link";
+    nameLink.href = getMemberDetailHref(m);
+    nameLink.textContent = memberPosition ? `${memberName}, ${memberPosition}.` : memberName;
+    h3.appendChild(nameLink);
     nameRow.appendChild(h3);
 
     if (adminToken) {
@@ -223,7 +252,7 @@ function renderMemberCard(m) {
 // ─── load & render page ───────────────────────────────────────────────────────
 async function loadMembers() {
     try {
-        const res = await fetch("/api/members/public");
+        const res = await fetch(apiUrl("/api/members/public"));
         if (!res.ok) throw new Error("Failed to load members");
         const members = await res.json();
 
@@ -358,7 +387,7 @@ async function uploadSelectedPhoto() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("/api/uploads/images", {
+        const res = await fetch(apiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${adminToken}`
@@ -455,7 +484,7 @@ async function openEditModal(m) {
     }
 
     try {
-        const res = await fetch(`/api/member-profiles/${memberId}`, {
+        const res = await fetch(apiUrl(`/api/member-profiles/${memberId}`), {
             headers: { "Authorization": `Bearer ${adminToken}` },
         });
         const raw = await res.text();
@@ -520,7 +549,7 @@ async function handleSubmit(e) {
 
     try {
         if (mode === "add") {
-            const res = await fetch("/api/member-profiles", {
+            const res = await fetch(apiUrl("/api/member-profiles"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -533,7 +562,7 @@ async function handleSubmit(e) {
             if (!res.ok) throw new Error(data.message || "Failed to add member");
             showToast("Member added");
         } else {
-            const res = await fetch(`/api/member-profiles/${memberId}`, {
+            const res = await fetch(apiUrl(`/api/member-profiles/${memberId}`), {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -560,7 +589,7 @@ async function confirmDelete(m) {
     if (!confirm(`Delete "${m.name}"? This cannot be undone.`)) return;
 
     try {
-        const res = await fetch(`/api/member-profiles/${m.member_id}`, {
+        const res = await fetch(apiUrl(`/api/member-profiles/${m.member_id}`), {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${adminToken}` },
         });

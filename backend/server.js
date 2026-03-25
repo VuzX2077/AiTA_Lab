@@ -33,6 +33,7 @@ const cleanPageRoutes = {
   "/seminars": "pages/public/seminars.html",
   "/archives": "pages/public/archives.html",
   "/contact": "pages/public/contact.html",
+  "/memberDetail": "pages/public/memberDetail.html",
   "/login": "pages/auth/login.html",
   "/register": "pages/auth/register.html",
   "/adminDashboard": "pages/admin/adminDashboard.html",
@@ -49,6 +50,10 @@ app.get("/news/:slug", (req, res) => {
   res.sendFile(path.join(frontendRoot, "pages/public/news.html"));
 });
 
+app.get("/member/:id", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "pages/public/memberDetail.html"));
+});
+
 const legacyRedirectRoutes = {
   "/index.html": "/",
   "/news.html": "/news",
@@ -59,6 +64,7 @@ const legacyRedirectRoutes = {
   "/seminars.html": "/seminars",
   "/archives.html": "/archives",
   "/contact.html": "/contact",
+  "/memberDetail.html": "/memberDetail",
   "/login.html": "/login",
   "/register.html": "/register",
   "/adminDashboard.html": "/adminDashboard",

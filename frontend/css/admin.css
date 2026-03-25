@@ -455,6 +455,15 @@ margin-right: 6px;
     box-sizing: border-box;
 }
 
+#editPublicPageForm .form-group {
+    margin-bottom: 12px;
+}
+
+#editPublicPageForm textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .profile-avatar-preview {
     margin-top: 10px;
     width: 84px;

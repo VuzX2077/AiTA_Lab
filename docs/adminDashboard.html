@@ -58,8 +58,9 @@
             <li class="sidebar-group-title">Reports</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="activityLogSection">Activity Log</button></li>
 
-            <li class="sidebar-group-title">Settings</li>
+            <li class="sidebar-group-title">Account</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="settingsProfileSection">Update Profile</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="settingsPublicPageSection">My Public Page</button></li>
             <li><button class="sidebar-link sidebar-sublink" data-target="settingsAuthSection">Authentication</button></li>
         </ul>
     </aside>
@@ -347,6 +348,107 @@
                         <textarea id="profileCareer" rows="4" placeholder="One item per line"></textarea>
                     </div>
                     <button type="submit" class="btn-primary">Save Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="settingsPublicPageSection">
+            <h2>My Public Page</h2>
+
+            <div class="settings-card">
+                <form id="editPublicPageForm">
+                    <input type="hidden" id="publicPageHeroPhotoAssetId">
+
+                    <div class="form-group">
+                        <label>Public Hero Photo</label>
+                        <input type="file" id="publicPageHeroPhotoFile" accept="image/jpeg,image/png,image/webp">
+                        <div class="settings-avatar-actions">
+                            <button type="button" id="uploadPublicPageHeroPhotoBtn" class="btn-primary">Upload Hero Photo</button>
+                            <button type="button" id="removePublicPageHeroPhotoBtn" class="btn-secondary">Remove Hero Photo</button>
+                        </div>
+                        <p id="publicPageHeroPhotoUploadStatus" class="settings-note"></p>
+                        <img id="publicPageHeroPhotoPreview" alt="Public page hero preview" class="profile-avatar-preview" hidden>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="publicPageName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quote</label>
+                        <textarea id="publicPageQuote" rows="3" placeholder="Always be happy and keep smiling"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Links (one per line: Label|URL|Color)</label>
+                        <textarea id="publicPageLinks" rows="5" placeholder="Google Scholar|https://scholar.google.com/...|#4285f4"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageEducationGroup">
+                        <label>Education (one item per line)</label>
+                        <textarea id="publicPageEducation" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageResearchExperienceGroup">
+                        <label>Research Experience (one item per line)</label>
+                        <textarea id="publicPageResearchExperience" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageWorkingExperienceGroup">
+                        <label>Working Experience (one item per line)</label>
+                        <textarea id="publicPageWorkingExperience" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageAwardsGrantsGroup">
+                        <label>Awards &amp; Grants (one item per line)</label>
+                        <textarea id="publicPageAwardsGrants" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageJournalPublicationsGroup">
+                        <label>Journal Publications (one item per line)</label>
+                        <textarea id="publicPageJournalPublications" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageConferenceProceedingsGroup">
+                        <label>Conference Proceedings (one item per line)</label>
+                        <textarea id="publicPageConferenceProceedings" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageBookChaptersGroup">
+                        <label>Book Chapters (one item per line)</label>
+                        <textarea id="publicPageBookChapters" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPagePatentsGroup">
+                        <label>Patents (one item per line)</label>
+                        <textarea id="publicPagePatents" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageActivitiesAdvisorGroup">
+                        <label>Academic Activities - Advisor (one item per line)</label>
+                        <textarea id="publicPageActivitiesAdvisor" rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageActivitiesConferenceCommitteeGroup">
+                        <label>Academic Activities - Conference Committee (one item per line)</label>
+                        <textarea id="publicPageActivitiesConferenceCommittee" rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group" id="publicPageActivitiesPeerReviewGroup">
+                        <label>Academic Activities - Peer Review (one item per line)</label>
+                        <textarea id="publicPageActivitiesPeerReview" rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Projects - Principal Investigator (one item per line)</label>
+                        <textarea id="publicPageProjectsPrincipalInvestigator" rows="5"></textarea>
+                    </div>
+
+                    <div class="settings-avatar-actions">
+                        <button type="submit" class="btn-primary">Save Public Page</button>
+                        <button type="button" id="openMyPublicPageBtn" class="btn-secondary">View My Public Page</button>
+                    </div>
                 </form>
             </div>
         </div>

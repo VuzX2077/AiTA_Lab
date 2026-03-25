@@ -44,6 +44,26 @@ async function findPublicMembers({ query = "", section = "" } = {}, db = pool) {
     return result.rows;
 }
 
+async function findPublicMemberById(memberId, db = pool) {
+        const result = await db.query(
+                `
+                SELECT m.id AS member_id, u.id AS user_id,
+                         m.name, m.position, m.bio, m.section, m.photo_asset_id,
+                             COALESCE(ia.public_url, '') AS photo_url,
+                         m.career, m.links
+                FROM members m
+                LEFT JOIN users u ON u.id = m.user_id
+                LEFT JOIN image_assets ia ON ia.id = m.photo_asset_id
+                WHERE m.id = $1
+                    AND m.section = ANY($2::text[])
+                LIMIT 1
+                `,
+                [memberId, VISIBLE_SECTIONS]
+        );
+
+        return result.rows[0] || null;
+}
+
 async function findByMemberId(memberId, db = pool) {
     const result = await db.query(
         `
@@ -333,6 +353,7 @@ async function upsertProfileByUserId(userId, { name, bio, photoAssetId, career }
 module.exports = {
     findAll,
     findPublicMembers,
+    findPublicMemberById,
     findByMemberId,
     createMemberProfile,
     createStandaloneMemberProfile,
