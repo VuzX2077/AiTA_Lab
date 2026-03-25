@@ -118,9 +118,15 @@ function isAdminProfileContext(role, section) {
     return normalizedRole === "admin" || ["director", "researcher", "researchers"].includes(normalizedSection);
 }
 
+async function resolveOwnProfileContext(user) {
+    const memberProfile = await memberService.getProfileByUserId(user.id);
+    const section = String(memberProfile && memberProfile.section ? memberProfile.section : "").trim().toLowerCase();
+    return ["director", "researcher", "researchers"].includes(section);
+}
+
 async function getOwnPublicPage(req, res) {
     try {
-        const useAdminProfile = isAdminProfileContext(req.user.role, "");
+        const useAdminProfile = await resolveOwnProfileContext(req.user);
         const detail = useAdminProfile
             ? await memberService.getOwnAdminPublicPageByUserId(req.user.id)
             : await memberService.getOwnPublicPageByUserId(req.user.id);
@@ -132,7 +138,7 @@ async function getOwnPublicPage(req, res) {
 }
 
 async function updateOwnPublicPage(req, res) {
-    const isAdminRole = isAdminProfileContext(req.user.role, "");
+    const isAdminRole = await resolveOwnProfileContext(req.user);
     
     const {
         name,
@@ -141,7 +147,6 @@ async function updateOwnPublicPage(req, res) {
         links,
         education,
         research_experience,
-        working_experience,
         awards_grants,
         journal_publications,
         conference_proceedings,
@@ -162,7 +167,7 @@ async function updateOwnPublicPage(req, res) {
     // Validate fields based on user role
     if (isAdminRole) {
         // Admin can edit admin_profile_details with full fields
-        if (!isArrayOrUndefined(links) || !isArrayOrUndefined(education) || !isArrayOrUndefined(working_experience)
+        if (!isArrayOrUndefined(links) || !isArrayOrUndefined(education) || !isArrayOrUndefined(research_experience)
             || !isArrayOrUndefined(awards_grants) || !isArrayOrUndefined(journal_publications)
             || !isArrayOrUndefined(conference_proceedings) || !isArrayOrUndefined(book_chapters)
             || !isArrayOrUndefined(patents)) {
@@ -210,7 +215,7 @@ async function updateOwnPublicPage(req, res) {
                 hero_photo_asset_id: hero_photo_asset_id === undefined || hero_photo_asset_id === null || hero_photo_asset_id === "" ? null : Number(hero_photo_asset_id),
                 links: normalizeLinks(links),
                 education: normalizeStringArray(education),
-                working_experience: normalizeStringArray(working_experience),
+                research_experience: normalizeStringArray(research_experience),
                 awards_grants: normalizeStringArray(awards_grants),
                 journal_publications: normalizeStringArray(journal_publications),
                 conference_proceedings: normalizeStringArray(conference_proceedings),

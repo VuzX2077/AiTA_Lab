@@ -47,6 +47,8 @@ function normalizeProjects(value) {
 }
 
 function buildDetailResponse(detail, member) {
+    const normalizedResearchExperience = asArray(detail.research_experience);
+
     return {
         member_id: member.member_id,
         section: member.section || "researchers",
@@ -56,7 +58,7 @@ function buildDetailResponse(detail, member) {
         quote: detail.quote || "",
         links: asArray(detail.links),
         education: asArray(detail.education),
-        working_experience: asArray(detail.working_experience),
+        research_experience: normalizedResearchExperience,
         awards_grants: asArray(detail.awards_grants),
         journal_publications: asArray(detail.journal_publications),
         conference_proceedings: asArray(detail.conference_proceedings),
@@ -68,6 +70,8 @@ function buildDetailResponse(detail, member) {
 }
 
 function buildAdminDetailResponse(detail, member) {
+    const normalizedResearchExperience = asArray(detail.research_experience || detail.working_experience);
+
     return {
         member_id: member.member_id,
         section: member.section || "researchers",
@@ -77,7 +81,7 @@ function buildAdminDetailResponse(detail, member) {
         quote: detail.quote || "",
         links: asArray(detail.links),
         education: asArray(detail.education),
-        working_experience: asArray(detail.working_experience),
+        research_experience: normalizedResearchExperience,
         awards_grants: asArray(detail.awards_grants),
         journal_publications: asArray(detail.journal_publications),
         conference_proceedings: asArray(detail.conference_proceedings),
@@ -211,7 +215,10 @@ async function updateOwnAdminPublicPageByUserId(userId, fields) {
         return null;
     }
 
-    const updatedDetail = await adminProfileDetailRepository.upsertByMemberId(member.member_id, fields);
+    const updatedDetail = await adminProfileDetailRepository.upsertByMemberId(member.member_id, {
+        ...fields,
+        working_experience: asArray(fields.research_experience)
+    });
     if (!updatedDetail) {
         return null;
     }

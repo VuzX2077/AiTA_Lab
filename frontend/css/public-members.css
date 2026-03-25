@@ -159,7 +159,8 @@
 
 .member-name-link:hover {
     color: #ce7f08;
-    border-color: currentColor;
+    border-color: transparent;
+    text-decoration: none;
 }
 
 .member-body-row {

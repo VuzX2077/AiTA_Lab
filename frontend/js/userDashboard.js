@@ -304,14 +304,13 @@ function showHidePublicPageFieldsBySection(data) {
     const normalizedSection = String(data.section || "").trim().toLowerCase();
     const isAdminSection = ["director", "researcher", "researchers"].includes(normalizedSection);
     const adminOnlyFields = [
-        "publicPageWorkingExperienceGroup",
         "publicPageBookChaptersGroup",
         "publicPagePatentsGroup",
         "publicPageActivitiesAdvisorGroup",
         "publicPageActivitiesConferenceCommitteeGroup",
         "publicPageActivitiesPeerReviewGroup"
     ];
-    const memberOnlyFields = ["publicPageResearchExperienceGroup"];
+    const memberOnlyFields = [];
     
     adminOnlyFields.forEach(fieldId => {
         const el = document.getElementById(fieldId);
@@ -322,6 +321,12 @@ function showHidePublicPageFieldsBySection(data) {
         const el = document.getElementById(fieldId);
         if (el) el.style.display = isAdminSection ? "none" : "block";
     });
+
+    const researchGroup = document.getElementById("publicPageResearchExperienceGroup");
+    if (researchGroup) researchGroup.style.display = "block";
+
+    const workingGroup = document.getElementById("publicPageWorkingExperienceGroup");
+    if (workingGroup) workingGroup.style.display = "none";
 }
 
 function fillPublicPageForm(data) {
@@ -336,7 +341,6 @@ function fillPublicPageForm(data) {
     setValue("publicPageLinks", formatPublicPageLinks(data.links));
     setValue("publicPageEducation", (data.education || []).join("\n"));
     setValue("publicPageResearchExperience", (data.research_experience || []).join("\n"));
-    setValue("publicPageWorkingExperience", (data.working_experience || []).join("\n"));
     setValue("publicPageAwardsGrants", (data.awards_grants || []).join("\n"));
     setValue("publicPageJournalPublications", (data.journal_publications || []).join("\n"));
     setValue("publicPageConferenceProceedings", (data.conference_proceedings || []).join("\n"));
@@ -450,7 +454,7 @@ async function saveOwnPublicPage(event) {
             : null,
         links: parsePublicPageLinksText(document.getElementById("publicPageLinks") ? document.getElementById("publicPageLinks").value : ""),
         education: parseMultilineEntries(document.getElementById("publicPageEducation") ? document.getElementById("publicPageEducation").value : ""),
-        working_experience: parseMultilineEntries(document.getElementById("publicPageWorkingExperience") ? document.getElementById("publicPageWorkingExperience").value : ""),
+        research_experience: parseMultilineEntries(document.getElementById("publicPageResearchExperience") ? document.getElementById("publicPageResearchExperience").value : ""),
         awards_grants: parseMultilineEntries(document.getElementById("publicPageAwardsGrants") ? document.getElementById("publicPageAwardsGrants").value : ""),
         journal_publications: parseMultilineEntries(document.getElementById("publicPageJournalPublications") ? document.getElementById("publicPageJournalPublications").value : ""),
         conference_proceedings: parseMultilineEntries(document.getElementById("publicPageConferenceProceedings") ? document.getElementById("publicPageConferenceProceedings").value : ""),

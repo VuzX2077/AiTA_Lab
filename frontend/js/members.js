@@ -146,6 +146,8 @@ function renderMemberCard(m) {
     const nameLink = document.createElement("a");
     nameLink.className = "member-name-link";
     nameLink.href = getMemberDetailHref(m);
+    nameLink.target = "_blank";
+    nameLink.rel = "noopener noreferrer";
     nameLink.textContent = memberPosition ? `${memberName}, ${memberPosition}.` : memberName;
     h3.appendChild(nameLink);
     nameRow.appendChild(h3);

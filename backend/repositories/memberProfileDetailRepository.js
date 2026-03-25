@@ -35,7 +35,7 @@ async function upsertBootstrapFromMember(member, db = pool) {
 
     const result = await db.query(
         `
-        INSERT INTO member_profile_details (member_id, name, hero_photo_asset_id, links, working_experience)
+        INSERT INTO member_profile_details (member_id, name, hero_photo_asset_id, links, research_experience)
         VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (member_id)
         DO UPDATE SET
