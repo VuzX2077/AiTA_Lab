@@ -32,7 +32,7 @@ function getValidSession() {
 
 const session = getValidSession();
 if (session) {
-    window.location.href = session.role === "admin" ? "/adminDashboard" : "/memberDashboard";
+    window.location.href = session.role === "admin" ? "/adminDashboard.html" : "/memberDashboard.html";
 }
 
 function resolveApiUrl(path) {
@@ -69,9 +69,9 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         localStorage.setItem("role", data.role);
 
         if (data.role === "admin") {
-            window.location.href = "/adminDashboard";
+            window.location.href = "/adminDashboard.html";
         } else if (data.role === "user") {
-            window.location.href = "/memberDashboard";
+            window.location.href = "/memberDashboard.html";
         } else {
             window.location.href = "/";
         }
