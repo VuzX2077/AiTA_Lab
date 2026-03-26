@@ -40,7 +40,7 @@ function resolveApiUrl(path) {
         return window.getApiUrl(path);
     }
 
-    return path;
+    return "https://aita-lab.onrender.com" + path;
 }
 
 document.getElementById("loginForm").addEventListener("submit", async function (e) {

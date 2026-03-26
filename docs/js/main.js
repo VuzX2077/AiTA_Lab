@@ -395,7 +395,7 @@ async function initPublicationSearch() {
 			}
 
 			return `
-				<a class="site-search-item" href="/publications">
+				<a class="site-search-item" href="${getApiUrl("/publications")}">
 					<strong>${title}</strong>
 					<span>${meta}</span>
 				</a>
@@ -405,8 +405,8 @@ async function initPublicationSearch() {
 
 	try {
 		const [publicationResult, newsResult] = await Promise.allSettled([
-			fetch("/api/publications/public"),
-			fetch("/api/home-news/public?limit=12")
+			fetch(getApiUrl("/api/publications/public")),
+			fetch(getApiUrl("/api/home-news/public?limit=12"))
 		]);
 		let hasAnySource = false;
 
