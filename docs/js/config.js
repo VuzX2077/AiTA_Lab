@@ -4,7 +4,7 @@
     const existingConfig = window.APP_CONFIG || {};
     const apiBaseUrl = typeof existingConfig.API_BASE_URL === "string"
         ? existingConfig.API_BASE_URL.replace(/\/$/, "")
-        : (isLocalhost ? "http://localhost:3000" : "");
+        : (isLocalhost ? "http://localhost:3000" : "https://aita-lab.onrender.com");
 
     window.APP_CONFIG = {
         ...existingConfig,
