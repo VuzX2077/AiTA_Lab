@@ -45,7 +45,7 @@ function renderPublicationItems(listEl, rows) {
     }
 
     if (!rows || rows.length === 0) {
-        listEl.innerHTML = "<p>No approved publications available.</p>";
+        listEl.innerHTML = "<p>No approved publications available yet.</p>";
         return;
     }
 
@@ -74,7 +74,7 @@ async function loadApprovedPublications() {
     const listManuscript = document.getElementById("publicationListManuscript");
 
     try {
-        const response = await fetch(getApiUrl("/api/publications/publications/public"));
+        const response = await fetch(getApiUrl("/api/publications/public"));
         const data = await response.json();
 
         if (!response.ok) {
