@@ -36,6 +36,16 @@
 <main class="news-detail-page">
     <div id="newsDetailStatus" class="news-detail-status">Loading news...</div>
 
+    <section id="newsListSection" class="news-list-section" hidden>
+        <h1 class="news-list-title">Latest News</h1>
+        <div id="newsListItems" class="news-list-items"></div>
+        <div id="newsListPagination" class="news-list-pagination" hidden>
+            <button id="newsListPrev" type="button" class="news-list-page-btn" aria-label="Previous page">&larr;</button>
+            <span id="newsListPageText" class="news-list-page-text">1/1</span>
+            <button id="newsListNext" type="button" class="news-list-page-btn" aria-label="Next page">&rarr;</button>
+        </div>
+    </section>
+
     <article id="newsDetailArticle" class="news-detail-article" hidden>
         <p id="newsDetailDate" class="news-detail-date"></p>
         <h1 id="newsDetailTitle" class="news-detail-title"></h1>

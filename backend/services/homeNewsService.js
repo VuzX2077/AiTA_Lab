@@ -4,6 +4,10 @@ async function getPublicHomeNews(limit) {
     return homeNewsRepository.findPublished(limit);
 }
 
+async function getPublicHomeNewsPaged(page, limit) {
+    return homeNewsRepository.findPublishedPaged(page, limit);
+}
+
 async function getPublicHomeNewsById(id) {
     return homeNewsRepository.findPublishedById(id);
 }
@@ -38,6 +42,7 @@ async function deleteHomeNews(id) {
 
 module.exports = {
     getPublicHomeNews,
+    getPublicHomeNewsPaged,
     getPublicHomeNewsById,
     getPublicHomeNewsBySlug,
     getPublicHomeNewsConnections,

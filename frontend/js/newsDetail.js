@@ -91,6 +91,30 @@ function getNewsLookupFromUrl() {
     return { id: null, slug: pathSlug };
 }
 
+function getNewsListPageFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const parsed = Number(params.get("page"));
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function setNewsListPageInUrl(page) {
+    const safePage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const params = new URLSearchParams(window.location.search);
+
+    params.delete("id");
+    params.delete("slug");
+
+    if (safePage > 1) {
+        params.set("page", String(safePage));
+    } else {
+        params.delete("page");
+    }
+
+    const query = params.toString();
+    const target = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.history.replaceState({}, "", target);
+}
+
 function getNewsDetailHref(news) {
     const id = Number(news && typeof news === "object" ? news.id : news);
     const title = news && typeof news === "object" ? news.title : "";
@@ -570,6 +594,105 @@ function renderNewsDetail(item) {
     article.hidden = false;
 }
 
+function renderNewsList(items, page, totalPages) {
+    const status = document.getElementById("newsDetailStatus");
+    const listSection = document.getElementById("newsListSection");
+    const listItems = document.getElementById("newsListItems");
+    const pagination = document.getElementById("newsListPagination");
+    const pageText = document.getElementById("newsListPageText");
+    const prevBtn = document.getElementById("newsListPrev");
+    const nextBtn = document.getElementById("newsListNext");
+    const article = document.getElementById("newsDetailArticle");
+    const connections = document.getElementById("newsConnections");
+    const editBtnContainer = document.getElementById("newsEditBtnContainer");
+
+    if (!status || !listSection || !listItems || !pagination || !pageText || !prevBtn || !nextBtn) {
+        return;
+    }
+
+    if (article) {
+        article.hidden = true;
+    }
+    if (connections) {
+        connections.hidden = true;
+    }
+    if (editBtnContainer) {
+        editBtnContainer.hidden = true;
+    }
+
+    const rows = Array.isArray(items) ? items : [];
+    if (!rows.length) {
+        listItems.innerHTML = "<p>No news available.</p>";
+    } else {
+        listItems.innerHTML = rows.map((item) => {
+            const href = escapeHtml(getNewsDetailHref(item));
+            const title = escapeHtml(item.title || "Untitled");
+            const summary = escapeHtml(truncateText(stripHtml(item.summary || ""), 220));
+            const dateText = escapeHtml(formatDisplayDate(item.published_at));
+            const tag = escapeHtml(item.tag || "NEWS");
+            const imageUrl = escapeHtml((item.summary_image_url || item.image_url || "").trim());
+
+            return `
+                <a class="news-list-card" href="${href}">
+                    <img class="news-list-image" src="${imageUrl}" alt="${title}">
+                    <div>
+                        <h2 class="news-list-card-title">${title}</h2>
+                        <p class="news-list-card-meta">${tag} | ${dateText}</p>
+                        <p class="news-list-card-summary">${summary}</p>
+                    </div>
+                </a>
+            `;
+        }).join("");
+    }
+
+    pageText.textContent = `${page}/${totalPages}`;
+    prevBtn.disabled = page <= 1;
+    nextBtn.disabled = page >= totalPages;
+    pagination.hidden = false;
+    status.hidden = true;
+    listSection.hidden = false;
+
+    prevBtn.onclick = () => {
+        if (page > 1) {
+            loadNewsListPage(page - 1);
+        }
+    };
+
+    nextBtn.onclick = () => {
+        if (page < totalPages) {
+            loadNewsListPage(page + 1);
+        }
+    };
+}
+
+async function loadNewsListPage(page) {
+    const status = document.getElementById("newsDetailStatus");
+    if (!status) {
+        return;
+    }
+
+    status.hidden = false;
+    status.textContent = "Loading latest news...";
+
+    try {
+        const safePage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+        const response = await fetch(apiUrl(`/api/home-news/public/list?page=${safePage}&limit=10`));
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load latest news.");
+        }
+
+        const currentPage = Number.isInteger(Number(data.page)) && Number(data.page) > 0 ? Number(data.page) : safePage;
+        const totalPages = Number.isInteger(Number(data.totalPages)) && Number(data.totalPages) > 0 ? Number(data.totalPages) : 1;
+        renderNewsList(Array.isArray(data.items) ? data.items : [], currentPage, totalPages);
+        setNewsListPageInUrl(currentPage);
+    } catch (error) {
+        status.hidden = false;
+        status.textContent = error.message || "Failed to load latest news.";
+    }
+}
+
 function buildNeighborCardHtml(label, arrow, item) {
     const title = escapeHtml(truncateText(item.title || "Untitled", 68));
     const summary = escapeHtml(truncateText(stripHtml(item.summary || ""), 115));
@@ -944,7 +1067,7 @@ async function loadNewsDetail() {
 
     const lookup = getNewsLookupFromUrl();
     if (!lookup.id && !lookup.slug) {
-        status.textContent = "Invalid news link.";
+        loadNewsListPage(getNewsListPageFromUrl());
         return;
     }
 

@@ -192,7 +192,7 @@ async function loadMemberDetail() {
         renderLinks(payload.links);
 
         const educationVisible = renderList(document.getElementById("educationList"), payload.education);
-        const workVisible = renderList(document.getElementById("workingExperienceList"), payload.working_experience);
+        const researchVisible = renderList(document.getElementById("researchExperienceList"), payload.research_experience);
         const awardVisible = renderList(document.getElementById("awardsGrantsList"), payload.awards_grants);
         const journalVisible = renderList(document.getElementById("journalPublicationsList"), payload.journal_publications);
         const conferenceVisible = renderList(document.getElementById("conferenceProceedingsList"), payload.conference_proceedings);
@@ -208,7 +208,7 @@ async function loadMemberDetail() {
         const projectsPiVisible = renderList(document.getElementById("projectsPiList"), projects.principal_investigator);
 
         const sectionEducation = document.getElementById("section-education");
-        const sectionWork = document.getElementById("section-working-experience");
+        const sectionResearch = document.getElementById("section-research-experience");
         const sectionAward = document.getElementById("section-awards-grants");
         const sectionJournal = document.getElementById("section-journal-publications");
         const sectionConference = document.getElementById("section-conference-proceedings");
@@ -223,7 +223,7 @@ async function loadMemberDetail() {
         const projectsPiWrap = document.getElementById("projects-pi-wrap");
 
         if (sectionEducation) sectionEducation.hidden = !educationVisible;
-        if (sectionWork) sectionWork.hidden = !workVisible;
+        if (sectionResearch) sectionResearch.hidden = !researchVisible;
         if (sectionAward) sectionAward.hidden = !awardVisible;
         if (sectionJournal) sectionJournal.hidden = !journalVisible;
         if (sectionConference) sectionConference.hidden = !conferenceVisible;
@@ -238,7 +238,7 @@ async function loadMemberDetail() {
         if (projectsPiWrap) projectsPiWrap.hidden = !projectsPiVisible;
         if (sectionProjects) sectionProjects.hidden = !projectsPiVisible;
 
-        const hasAnyContent = educationVisible || workVisible || awardVisible || journalVisible || conferenceVisible || bookVisible || patentsVisible
+        const hasAnyContent = educationVisible || researchVisible || awardVisible || journalVisible || conferenceVisible || bookVisible || patentsVisible
             || activitiesAdvisorVisible || activitiesConferenceVisible || activitiesPeerReviewVisible || projectsPiVisible;
 
         if (emptyEl) {
@@ -247,7 +247,7 @@ async function loadMemberDetail() {
 
         renderToc([
             { anchor: "section-education", label: "Education", visible: educationVisible },
-            { anchor: "section-working-experience", label: "Working Experience", visible: workVisible },
+            { anchor: "section-research-experience", label: "Research Experience", visible: researchVisible },
             { anchor: "section-awards-grants", label: "Awards & Grants", visible: awardVisible },
             { anchor: "section-journal-publications", label: "Journal Publications", visible: journalVisible },
             { anchor: "section-conference-proceedings", label: "Conference Proceedings", visible: conferenceVisible },

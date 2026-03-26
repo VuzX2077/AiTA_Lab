@@ -50,6 +50,48 @@ async function findPublished(limit = 6, db = pool) {
     return result.rows;
 }
 
+async function findPublishedPaged(page = 1, limit = 10, db = pool) {
+    const safePage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const safeLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 10;
+    const offset = (safePage - 1) * safeLimit;
+
+    const countResult = await db.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM home_news
+        WHERE is_published = TRUE
+        `
+    );
+
+    const total = Number(countResult.rows[0] && countResult.rows[0].total) || 0;
+
+    const rowsResult = await db.query(
+        `
+         SELECT n.id, n.title, n.summary, n.content, n.image_asset_id, n.summary_image_asset_id,
+             n.left_news_id, n.right_news_id,
+               n.link, n.tag, n.cta_label, n.published_at, n.authors,
+               n.is_published, n.created_by, n.created_at, n.updated_at,
+               a.public_url AS image_url,
+               sa.public_url AS summary_image_url
+        FROM home_news n
+        INNER JOIN image_assets a ON a.id = n.image_asset_id
+        LEFT JOIN image_assets sa ON sa.id = n.summary_image_asset_id
+        WHERE n.is_published = TRUE
+        ORDER BY n.published_at DESC, n.created_at DESC
+        LIMIT $1 OFFSET $2
+        `,
+        [safeLimit, offset]
+    );
+
+    return {
+        items: rowsResult.rows,
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: total > 0 ? Math.ceil(total / safeLimit) : 1
+    };
+}
+
 async function findPublishedById(id, db = pool) {
     const result = await db.query(
         `
@@ -295,6 +337,7 @@ async function deleteNews(id, db = pool) {
 
 module.exports = {
     findPublished,
+    findPublishedPaged,
     findPublishedById,
     findPublishedBySlug,
     findPublishedConnections,

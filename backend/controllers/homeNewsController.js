@@ -212,6 +212,22 @@ async function getPublicHomeNews(req, res) {
     }
 }
 
+async function getPublicHomeNewsPaged(req, res) {
+    const parsedPage = Number(req.query.page);
+    const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+    const parsedLimit = Number(req.query.limit);
+    const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 20) : 10;
+
+    try {
+        const result = await homeNewsService.getPublicHomeNewsPaged(page, limit);
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load home news" });
+    }
+}
+
 async function getHomeNewsForAdmin(req, res) {
     try {
         const rows = await homeNewsService.getHomeNewsForAdmin();
@@ -299,6 +315,7 @@ async function deleteHomeNews(req, res) {
 
 module.exports = {
     getPublicHomeNews,
+    getPublicHomeNewsPaged,
     getPublicHomeNewsById,
     getPublicHomeNewsBySlug,
     getPublicHomeNewsConnections,

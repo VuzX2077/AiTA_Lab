@@ -134,6 +134,27 @@
     letter-spacing: 0.08em;
 }
 
+.home-latest h2 a {
+    color: #111827;
+    text-decoration: none;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 4px 10px;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.home-latest h2 a:hover {
+    color: #ff9800;
+    background: rgba(255, 152, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.home-latest h2 a:focus-visible {
+    outline: 2px solid #ff9800;
+    outline-offset: 2px;
+}
+
 .home-latest-line {
     height: 1px;
     background: #d7dade;

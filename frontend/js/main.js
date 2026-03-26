@@ -51,6 +51,7 @@ if (authActions && token) {
 	});
 }
 
+
 function stripHtml(value) {
 	return String(value || "").replace(/<[^>]*>/g, "").trim();
 }
@@ -169,7 +170,7 @@ async function initHomeLatestPosts() {
 	};
 
 	try {
-		const response = await fetch("/api/home-news/public?limit=6");
+		const response = await fetch("/api/home-news/public?limit=5");
 		const rows = await response.json();
 
 		if (!response.ok) {
