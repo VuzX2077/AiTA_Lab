@@ -162,7 +162,7 @@ async function loadMemberDetail() {
     }
 
     try {
-        const response = await fetch(apiUrl(`/api/members/public/${memberId}`));
+        const response = await fetch(getApiUrl(`/api/members/public/${memberId}`));
         const payload = await response.json().catch(() => ({}));
 
         if (!response.ok) {

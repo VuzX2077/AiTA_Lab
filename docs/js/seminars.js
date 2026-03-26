@@ -268,7 +268,7 @@ async function loadSeminars() {
 	const timeline = document.getElementById("seminarTimeline");
 
 	try {
-		const response = await fetch("/api/seminars/public");
+		const response = await fetch(getApiUrl("/api/seminars/public"));
 		const data = await response.json();
 
 		if (!response.ok) {

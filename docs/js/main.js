@@ -170,7 +170,7 @@ async function initHomeLatestPosts() {
 	};
 
 	try {
-		const response = await fetch("/api/home-news/public?limit=5");
+		const response = await fetch(getApiUrl("/api/home-news/public?limit=5"));
 		const rows = await response.json();
 
 		if (!response.ok) {
@@ -404,10 +404,10 @@ async function initPublicationSearch() {
 	};
 
 	try {
-		const [publicationResult, newsResult] = await Promise.allSettled([
-			fetch(getApiUrl("/api/publications/public")),
-			fetch(getApiUrl("/api/home-news/public?limit=12"))
-		]);
+		       const [publicationResult, newsResult] = await Promise.allSettled([
+			       fetch(getApiUrl("/api/publications/public")),
+			       fetch(getApiUrl("/api/home-news/public?limit=12"))
+		       ]);
 		let hasAnySource = false;
 
 		if (publicationResult.status === "fulfilled") {

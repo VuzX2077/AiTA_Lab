@@ -995,7 +995,7 @@ async function uploadHomeNewsImage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -1284,7 +1284,7 @@ async function uploadPublicPageHeroPhoto() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -1405,7 +1405,7 @@ async function uploadProfileAvatar() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token

@@ -74,7 +74,7 @@ async function loadApprovedPublications() {
     const listManuscript = document.getElementById("publicationListManuscript");
 
     try {
-        const response = await fetch("/api/publications/public");
+        const response = await fetch(getApiUrl("/api/publications/public"));
         const data = await response.json();
 
         if (!response.ok) {
