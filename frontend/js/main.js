@@ -235,12 +235,13 @@ async function initPublicationSearch() {
 	const SEARCH_ACTIVE_STORAGE_KEY = "siteSearchActive";
 
 	let publicationRows = [];
+	let newsRows = [];
 
 	const shell = document.createElement("div");
 	shell.className = "site-search-shell";
 	shell.innerHTML = `
 		<div class="site-search-inner">
-			<input id="globalPublicationSearch" type="text" placeholder="Search publications..." aria-label="Search publications" autocomplete="off">
+			<input id="globalPublicationSearch" type="text" placeholder="Search publications and news..." aria-label="Search publications and news" autocomplete="off">
 			<button id="globalSearchClear" type="button" aria-label="Clear search" hidden>×</button>
 		</div>
 	`;
@@ -325,14 +326,14 @@ async function initPublicationSearch() {
 	const renderResults = (query) => {
 		const trimmed = query.trim().toLowerCase();
 		if (!trimmed) {
-			renderMessage("Type to search publications.");
+			renderMessage("Type to search publications and news.");
 			clearBtn.hidden = true;
 			return;
 		}
 
 		clearBtn.hidden = false;
 
-		const filtered = publicationRows.filter((pub) => {
+		const publicationMatches = publicationRows.filter((pub) => {
 			const text = [
 				stripHtml(pub.title),
 				pub.authors,
@@ -343,21 +344,49 @@ async function initPublicationSearch() {
 			].join(" ").toLowerCase();
 
 			return text.includes(trimmed);
-		}).slice(0, 8);
+		}).map((pub) => ({ kind: "publication", data: pub }));
+
+		const newsMatches = newsRows.filter((news) => {
+			const text = [
+				stripHtml(news.title),
+				stripHtml(news.summary),
+				stripHtml(news.tag),
+				stripHtml(news.content)
+			].join(" ").toLowerCase();
+
+			return text.includes(trimmed);
+		}).map((news) => ({ kind: "news", data: news }));
+
+		const filtered = publicationMatches.concat(newsMatches).slice(0, 8);
 
 		if (!filtered.length) {
-			renderMessage("No publication matches your search.");
+			renderMessage("No publication or news matches your search.");
 			return;
 		}
 
-		resultBox.innerHTML = filtered.map((pub) => {
+		resultBox.innerHTML = filtered.map((item) => {
+			if (item.kind === "news") {
+				const news = item.data;
+				const title = escapeHtml(stripHtml(news.title) || "Untitled news");
+				const meta = escapeHtml(["News", stripHtml(news.tag || "NEWS"), formatHomeNewsDate(news.published_at || "")].join(" | "));
+				const href = escapeHtml(getNewsDetailHref(news));
+
+				return `
+					<a class="site-search-item" href="${href}">
+						<strong>${title}</strong>
+						<span>${meta}</span>
+					</a>
+				`;
+			}
+
+			const pub = item.data;
 			const title = escapeHtml(stripHtml(pub.title) || "Untitled publication");
-			const meta = escapeHtml([pub.authors || "Unknown authors", pub.journal || "Unknown journal", pub.year || "N/A"].join(" | "));
+			const meta = escapeHtml(["Publication", pub.authors || "Unknown authors", pub.journal || "Unknown journal", pub.year || "N/A"].join(" | "));
 			const link = getSafePublicationLink(pub);
 
 			if (link) {
 				return `
-					<a class="site-search-item" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+					<a class="site-search-item" href="${escapeHtml(link)}">
 						<strong>${title}</strong>
 						<span>${meta}</span>
 					</a>
@@ -374,15 +403,33 @@ async function initPublicationSearch() {
 	};
 
 	try {
-		const response = await fetch("/api/publications/public");
-		const data = await response.json();
+		const [publicationResult, newsResult] = await Promise.allSettled([
+			fetch("/api/publications/public"),
+			fetch("/api/home-news/public?limit=12")
+		]);
+		let hasAnySource = false;
 
-		if (!response.ok) {
-			throw new Error(data.message || "Failed to load publication search index");
+		if (publicationResult.status === "fulfilled") {
+			const publicationData = await publicationResult.value.json();
+			if (publicationResult.value.ok) {
+				publicationRows = Array.isArray(publicationData) ? publicationData : [];
+				hasAnySource = true;
+			}
 		}
 
-		publicationRows = Array.isArray(data) ? data : [];
-		renderMessage("Type to search publications.");
+		if (newsResult.status === "fulfilled") {
+			const newsData = await newsResult.value.json();
+			if (newsResult.value.ok) {
+				newsRows = Array.isArray(newsData) ? newsData : [];
+				hasAnySource = true;
+			}
+		}
+
+		if (!hasAnySource) {
+			throw new Error("Search is temporarily unavailable.");
+		}
+
+		renderMessage("Type to search publications and news.");
 	} catch (error) {
 		renderMessage(error.message || "Search is temporarily unavailable.");
 	}
@@ -409,6 +456,15 @@ async function initPublicationSearch() {
 		if (event.target === overlay) {
 			closeOverlay();
 		}
+	});
+
+	resultBox.addEventListener("click", (event) => {
+		const clickedItem = event.target.closest(".site-search-item");
+		if (!clickedItem) {
+			return;
+		}
+
+		closeOverlay();
 	});
 
 	floatingNavShell.addEventListener("click", (event) => {
