@@ -36,7 +36,7 @@ const role = session ? session.role : null;
 const authActions = document.getElementById("authActions");
 
 if (authActions && token) {
-	const dashboardPath = role === "admin" ? "/adminDashboard" : "/memberDashboard";
+	const dashboardPath = role === "admin" ? getPageUrl("adminDashboard.html") : getPageUrl("memberDashboard.html");
 
 	authActions.innerHTML = `
 		<a href="${dashboardPath}">Dashboard</a>
@@ -228,7 +228,7 @@ async function initPublicationSearch() {
 	}
 
 	const path = window.location.pathname.toLowerCase();
-	if (path.includes("login") || path.includes("register") || path.includes("dashboard")) {
+	if (path.includes("login") || path.includes("dashboard")) {
 		return;
 	}
 

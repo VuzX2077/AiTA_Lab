@@ -23,7 +23,7 @@
         }
 
         if (!path.startsWith("/docs")) {
-            return `/docs/${normalizedPage}`;
+            return `/${normalizedPage}`;
         }
 
         return `/docs/${normalizedPage}`;
