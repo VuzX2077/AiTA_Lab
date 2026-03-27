@@ -16,7 +16,17 @@
 
     window.getPageUrl = function (page) {
         const normalizedPage = page.replace(/^\.\//, "");
-        const isNestedPage = window.location.pathname.includes("/pages/");
-        return isNestedPage ? `../../${normalizedPage}` : `./${normalizedPage}`;
+        const path = window.location.pathname;
+
+        if (isLocalhost) {
+            return `/${normalizedPage}`;
+        }
+
+        if (!path.startsWith("/docs")) {
+            return `/docs/${normalizedPage}`;
+        }
+
+        return `/docs/${normalizedPage}`;
     };
+
 })();
