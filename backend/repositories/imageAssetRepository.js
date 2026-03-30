@@ -31,6 +31,14 @@ async function createImageAsset({
     return result.rows[0];
 }
 
+async function deleteByStorageKey(storageKey) {
+    return db.query(
+        "DELETE FROM image_assets WHERE storage_key = $1",
+        [storageKey]
+    );
+}
+
 module.exports = {
-    createImageAsset
+    createImageAsset,
+    deleteByStorageKey
 };

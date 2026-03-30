@@ -64,6 +64,22 @@ async function processAndStoreImage(file, uploadedBy) {
     };
 }
 
+async function deleteImage(storageKey) {
+    if (!storageKey) return;
+
+    const { error } = await supabase.storage
+        .from(BUCKET)
+        .remove([storageKey]);
+
+    if (error) {
+        console.error("Supabase delete error:", error);
+        throw new Error("Failed to delete image from storage");
+    }
+
+    await imageAssetRepository.deleteByStorageKey(storageKey);
+}
+
 module.exports = {
-    processAndStoreImage
+    processAndStoreImage,
+    deleteImage
 };
