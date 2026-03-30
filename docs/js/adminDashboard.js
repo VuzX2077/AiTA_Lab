@@ -180,7 +180,7 @@ async function request(path, options = {}) {
     let response;
 
     try {
-        response = await fetch(getApiUrl(path), {  // 👈 FIX Ở ĐÂY
+        response = await fetch(getApiUrl(path), { 
             ...options,
             headers: {
                 "Content-Type": "application/json",

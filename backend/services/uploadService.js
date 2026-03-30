@@ -1,11 +1,10 @@
-const fs = require("fs/promises");
-const path = require("path");
 const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const imageAssetRepository = require("../repositories/imageAssetRepository");
+const supabase = require("../config/supabaseClient");
 
-const LOCAL_STORAGE_PROVIDER = "local";
-const UPLOAD_ROOT = path.join(__dirname, "..", "uploads");
+const STORAGE_PROVIDER = "supabase";
+const BUCKET = "images";
 
 async function processAndStoreImage(file, uploadedBy) {
     if (!file || !file.buffer) {
@@ -16,8 +15,8 @@ async function processAndStoreImage(file, uploadedBy) {
     const year = String(now.getFullYear());
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const filename = `${uuidv4()}.webp`;
-    const relativeKey = `images/${year}/${month}/${filename}`;
-    const absolutePath = path.join(UPLOAD_ROOT, relativeKey);
+
+    const storageKey = `images/${year}/${month}/${filename}`;
 
     const output = await sharp(file.buffer)
         .rotate()
@@ -25,15 +24,27 @@ async function processAndStoreImage(file, uploadedBy) {
         .webp({ quality: 82 })
         .toBuffer({ resolveWithObject: true });
 
-    await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-    await fs.writeFile(absolutePath, output.data);
+    const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(storageKey, output.data, {
+            contentType: "image/webp",
+            upsert: false
+        });
 
-    const normalizedKey = relativeKey.replace(/\\/g, "/");
-    const publicUrl = `/uploads/${normalizedKey}`;
+    if (error) {
+        console.error("Supabase upload error:", error);
+        throw new Error(error.message);
+    }
+
+    const { data } = supabase.storage
+        .from(BUCKET)
+        .getPublicUrl(storageKey);
+
+    const publicUrl = data.publicUrl;
 
     const record = await imageAssetRepository.createImageAsset({
-        storageProvider: LOCAL_STORAGE_PROVIDER,
-        storageKey: normalizedKey,
+        storageProvider: STORAGE_PROVIDER,
+        storageKey,
         publicUrl,
         mimeType: "image/webp",
         sizeBytes: output.info.size,

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/VuzX2077/AiTA_Lab#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.101.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
