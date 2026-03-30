@@ -1,7 +1,7 @@
 const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const imageAssetRepository = require("../repositories/imageAssetRepository");
-const supabase = require("../config/supabaseClient");
+const supabase = require("../supabaseClient");
 
 const STORAGE_PROVIDER = "supabase";
 const BUCKET = "images";
