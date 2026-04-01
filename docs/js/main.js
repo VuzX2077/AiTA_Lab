@@ -149,11 +149,15 @@ function getNewsDetailHref(news) {
 	}
 
 	if (slug) {
-		return `${String(basePath).replace(/\/$/, "")}/${encodeURIComponent(slug)}`;
+		const normalizedBase = String(basePath).replace(/\/$/, "");
+		const separator = normalizedBase.includes("?") ? "&" : "?";
+		return `${normalizedBase}${separator}slug=${encodeURIComponent(slug)}`;
 	}
 
 	if (Number.isInteger(id) && id > 0) {
-		return `${basePath}?id=${id}`;
+		const normalizedBase = String(basePath).replace(/\/$/, "");
+		const separator = normalizedBase.includes("?") ? "&" : "?";
+		return `${normalizedBase}${separator}id=${id}`;
 	}
 
 	return basePath;

@@ -98,7 +98,7 @@ function getNewsDetailHref(news) {
     const slug = toNewsSlug(title);
 
     if (slug) {
-        return `/newsDetail/${encodeURIComponent(slug)}`;
+        return `/newsDetail?slug=${encodeURIComponent(slug)}`;
     }
 
     if (Number.isInteger(id) && id > 0) {

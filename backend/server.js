@@ -52,7 +52,7 @@ app.get("/newsDetail/:slug", (req, res) => {
 });
 
 app.get("/news/:slug", (req, res) => {
-  res.redirect(301, `/newsDetail/${encodeURIComponent(req.params.slug)}`);
+  res.redirect(301, `/newsDetail?slug=${encodeURIComponent(req.params.slug)}`);
 });
 
 app.get("/member/:id", (req, res) => {
