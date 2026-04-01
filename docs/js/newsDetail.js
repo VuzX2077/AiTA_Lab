@@ -69,10 +69,68 @@ function normalizeNewsSlug(value) {
     return toNewsSlug(decoded);
 }
 
+function parseNewsSlugToken(value) {
+    const normalized = normalizeNewsSlug(value);
+    if (!normalized) {
+        return { id: null, slug: "" };
+    }
+
+    const match = normalized.match(/^(.*?)-(\d+)$/);
+    if (!match) {
+        return { id: null, slug: normalized };
+    }
+
+    const parsedId = Number(match[2]);
+    const baseSlug = String(match[1] || "").replace(/-+$/, "");
+    if (!Number.isInteger(parsedId) || parsedId <= 0 || !baseSlug) {
+        return { id: null, slug: normalized };
+    }
+
+    return { id: parsedId, slug: baseSlug };
+}
+
 function getNewsSlugFromPath() {
-    const path = String(window.location.pathname || "");
-    const match = path.match(/^\/(?:newsDetail|news)\/([^/?#]+)/i);
-    return match ? normalizeNewsSlug(match[1]) : "";
+    const path = String(window.location.pathname || "").replace(/\/+$/, "");
+    const nestedMatch = path.match(/^\/(?:newsDetail|news)\/([^/?#]+)/i);
+    if (nestedMatch) {
+        return nestedMatch[1];
+    }
+
+    const singleMatch = path.match(/^\/([^/?#]+)$/);
+    if (!singleMatch) {
+        return "";
+    }
+
+    const reservedPaths = new Set([
+        "",
+        "news",
+        "newsdetail",
+        "members",
+        "publications",
+        "researches",
+        "lectures",
+        "seminars",
+        "archives",
+        "contact",
+        "memberdetail",
+        "login",
+        "register",
+        "admindashboard",
+        "memberdashboard",
+        "api",
+        "css",
+        "js",
+        "assets",
+        "uploads",
+        "favicon.ico"
+    ]);
+
+    const candidate = String(singleMatch[1] || "").toLowerCase();
+    if (reservedPaths.has(candidate)) {
+        return "";
+    }
+
+    return singleMatch[1];
 }
 
 function getNewsLookupFromUrl() {
@@ -82,13 +140,13 @@ function getNewsLookupFromUrl() {
         return { id, slug: "" };
     }
 
-    const querySlug = normalizeNewsSlug(params.get("slug"));
-    if (querySlug) {
-        return { id: null, slug: querySlug };
+    const queryToken = parseNewsSlugToken(params.get("slug"));
+    if (queryToken.id || queryToken.slug) {
+        return { id: queryToken.id, slug: queryToken.slug };
     }
 
-    const pathSlug = getNewsSlugFromPath();
-    return { id: null, slug: pathSlug };
+    const pathToken = parseNewsSlugToken(getNewsSlugFromPath());
+    return { id: pathToken.id, slug: pathToken.slug };
 }
 
 function getNewsListPageFromUrl() {
@@ -120,30 +178,22 @@ function getNewsDetailHref(news) {
     const title = news && typeof news === "object" ? news.title : "";
     const slug = toNewsSlug(title);
     const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("newsDetail.html") : "/newsDetail";
+    const safeBasePath = String(basePath).replace(/\/$/, "");
 
-    if (basePath.toLowerCase().endsWith(".html")) {
-        if (slug) {
-            return `${basePath}?slug=${encodeURIComponent(slug)}`;
-        }
-        if (Number.isInteger(id) && id > 0) {
-            return `${basePath}?id=${id}`;
-        }
-        return basePath;
+    if (slug && Number.isInteger(id) && id > 0) {
+        return `/${encodeURIComponent(`${slug}-${id}`)}`;
     }
 
     if (slug) {
-        const normalizedBase = String(basePath).replace(/\/$/, "");
-        const separator = normalizedBase.includes("?") ? "&" : "?";
-        return `${normalizedBase}${separator}slug=${encodeURIComponent(slug)}`;
+        return `/${encodeURIComponent(slug)}`;
     }
 
     if (Number.isInteger(id) && id > 0) {
-        const normalizedBase = String(basePath).replace(/\/$/, "");
-        const separator = normalizedBase.includes("?") ? "&" : "?";
-        return `${normalizedBase}${separator}id=${id}`;
+        const separator = safeBasePath.includes("?") ? "&" : "?";
+        return `${safeBasePath}${separator}id=${id}`;
     }
 
-    return basePath;
+    return safeBasePath;
 }
 
 function parseJwt(token) {
@@ -1084,6 +1134,9 @@ async function loadNewsDetail() {
         let response;
         if (lookup.id) {
             response = await fetch(apiUrl(`/api/home-news/public/${lookup.id}`));
+            if (!response.ok && lookup.slug) {
+                response = await fetch(apiUrl(`/api/home-news/public/slug/${encodeURIComponent(lookup.slug)}`));
+            }
         } else {
             response = await fetch(apiUrl(`/api/home-news/public/slug/${encodeURIComponent(lookup.slug)}`));
         }

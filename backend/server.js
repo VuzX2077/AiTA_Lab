@@ -100,6 +100,40 @@ app.use("/api", seminarRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", homeNewsRoutes);
 
+const reservedTopLevelPaths = new Set([
+  "",
+  "news",
+  "newsdetail",
+  "members",
+  "publications",
+  "researches",
+  "lectures",
+  "seminars",
+  "archives",
+  "contact",
+  "memberdetail",
+  "member",
+  "login",
+  "register",
+  "admindashboard",
+  "memberdashboard",
+  "api",
+  "css",
+  "js",
+  "assets",
+  "uploads",
+  "favicon.ico"
+]);
+
+app.get("/:slug", (req, res, next) => {
+  const candidate = String(req.params.slug || "").toLowerCase();
+  if (!candidate || reservedTopLevelPaths.has(candidate)) {
+    return next();
+  }
+
+  return res.sendFile(path.join(frontendRoot, "pages/public/newsDetail.html"));
+});
+
 async function startServer() {
   try {
     await runMigrations();

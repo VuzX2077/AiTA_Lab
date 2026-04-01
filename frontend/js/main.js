@@ -137,30 +137,22 @@ function getNewsDetailHref(news) {
 	const title = news && typeof news === "object" ? news.title : "";
 	const slug = toNewsSlug(title);
 	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("newsDetail.html") : "/newsDetail";
+	const safeBasePath = String(basePath).replace(/\/$/, "");
 
-	if (basePath.toLowerCase().endsWith(".html")) {
-		if (slug) {
-			return `${basePath}?slug=${encodeURIComponent(slug)}`;
-		}
-		if (Number.isInteger(id) && id > 0) {
-			return `${basePath}?id=${id}`;
-		}
-		return basePath;
+	if (slug && Number.isInteger(id) && id > 0) {
+		return `/${encodeURIComponent(`${slug}-${id}`)}`;
 	}
 
 	if (slug) {
-		const normalizedBase = String(basePath).replace(/\/$/, "");
-		const separator = normalizedBase.includes("?") ? "&" : "?";
-		return `${normalizedBase}${separator}slug=${encodeURIComponent(slug)}`;
+		return `/${encodeURIComponent(slug)}`;
 	}
 
 	if (Number.isInteger(id) && id > 0) {
-		const normalizedBase = String(basePath).replace(/\/$/, "");
-		const separator = normalizedBase.includes("?") ? "&" : "?";
-		return `${normalizedBase}${separator}id=${id}`;
+		const separator = safeBasePath.includes("?") ? "&" : "?";
+		return `${safeBasePath}${separator}id=${id}`;
 	}
 
-	return basePath;
+	return safeBasePath;
 }
 
 async function initHomeLatestPosts() {

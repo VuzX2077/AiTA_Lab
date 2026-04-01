@@ -97,8 +97,12 @@ function getNewsDetailHref(news) {
     const title = news && typeof news === "object" ? news.title : "";
     const slug = toNewsSlug(title);
 
+    if (slug && Number.isInteger(id) && id > 0) {
+        return `/${encodeURIComponent(`${slug}-${id}`)}`;
+    }
+
     if (slug) {
-        return `/newsDetail?slug=${encodeURIComponent(slug)}`;
+        return `/${encodeURIComponent(slug)}`;
     }
 
     if (Number.isInteger(id) && id > 0) {

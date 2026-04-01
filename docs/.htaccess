@@ -5,6 +5,10 @@ RewriteBase /
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html(?:[\s?]|$) [NC]
 RewriteRule ^ %1 [R=301,L]
 
+# Support news detail slugs on static hosting.
+RewriteRule ^newsDetail/([^/?#]+)/?$ newsDetail.html?slug=$1 [L,QSA,NC]
+RewriteRule ^news/([^/?#]+)/?$ newsDetail.html?slug=$1 [L,QSA,NC]
+
 # Keep existing files and directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
@@ -13,5 +17,12 @@ RewriteRule ^ - [L]
 # Resolve clean URLs to .html files
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^(.+?)/?$ $1.html [L]
+
+# Pretty URL for news detail: /test-news
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html !-f
+RewriteCond %{REQUEST_URI} !^/(index|news|newsDetail|members|publications|researches|lectures|seminars|archives|contact|memberDetail|login|register|adminDashboard|memberDashboard)/?$ [NC]
+RewriteRule ^([a-z0-9-]+)/?$ newsDetail.html?slug=$1 [L,QSA,NC]
 
 DirectoryIndex index.html
