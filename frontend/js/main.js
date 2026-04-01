@@ -36,7 +36,7 @@ const role = session ? session.role : null;
 const authActions = document.getElementById("authActions");
 
 if (authActions && token) {
-	const dashboardPath = role === "admin" ? "/adminDashboard" : "/memberDashboard";
+	const dashboardPath = role === "admin" ? getPageUrl("adminDashboard.html") : getPageUrl("memberDashboard.html");
 
 	authActions.innerHTML = `
 		<a href="${dashboardPath}">Dashboard</a>
@@ -170,7 +170,7 @@ async function initHomeLatestPosts() {
 	};
 
 	try {
-		const response = await fetch("/api/home-news/public?limit=5");
+		const response = await fetch(getApiUrl("/api/home-news/public?limit=5"));
 		const rows = await response.json();
 
 		if (!response.ok) {
@@ -228,7 +228,7 @@ async function initPublicationSearch() {
 	}
 
 	const path = window.location.pathname.toLowerCase();
-	if (path.includes("login") || path.includes("register") || path.includes("dashboard")) {
+	if (path.includes("login") || path.includes("dashboard")) {
 		return;
 	}
 
@@ -395,7 +395,7 @@ async function initPublicationSearch() {
 			}
 
 			return `
-				<a class="site-search-item" href="/publications">
+				<a class="site-search-item" href="${getApiUrl("/publications")}">
 					<strong>${title}</strong>
 					<span>${meta}</span>
 				</a>
@@ -404,10 +404,10 @@ async function initPublicationSearch() {
 	};
 
 	try {
-		const [publicationResult, newsResult] = await Promise.allSettled([
-			fetch("/api/publications/public"),
-			fetch("/api/home-news/public?limit=12")
-		]);
+		       const [publicationResult, newsResult] = await Promise.allSettled([
+			       fetch(getApiUrl("/api/publications/public")),
+			       fetch(getApiUrl("/api/home-news/public?limit=12"))
+		       ]);
 		let hasAnySource = false;
 
 		if (publicationResult.status === "fulfilled") {

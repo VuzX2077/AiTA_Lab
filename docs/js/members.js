@@ -1,4 +1,4 @@
-// ─── constants ────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SECTIONS = [
     { id: "director",     label: "Director" },
     { id: "researchers",  label: "Researchers" },
@@ -16,7 +16,7 @@ const LINK_PRESETS = [
     { label: "ResearchGate", color: "#00b5a0" },
 ];
 
-// ─── auth helpers ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ auth helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getAdminToken() {
     const token = localStorage.getItem("token");
     const role  = localStorage.getItem("role");
@@ -49,7 +49,7 @@ function getMemberDetailHref(member) {
     if (isStaticHtml) {
         const base = typeof window.getPageUrl === "function"
             ? window.getPageUrl("memberDetail.html")
-            : "./memberDetail.html";
+            : "/memberDetail";
         return `${base}?id=${memberId}`;
     }
 
@@ -66,7 +66,7 @@ function findSuggestedMemberByName(name) {
     return memberSuggestionPool.find((member) => normalizeName(member?.name) === normalized) || null;
 }
 
-// ─── toast ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showToast(msg, type = "success") {
     let box = document.getElementById("toast-container");
     if (!box) {
@@ -85,7 +85,7 @@ function showToast(msg, type = "success") {
     }, 3500);
 }
 
-// ─── render helpers ───────────────────────────────────────────────────────────
+// â”€â”€â”€ render helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function safeArr(v) {
     if (Array.isArray(v)) return v;
     if (typeof v === "string") { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
@@ -135,7 +135,7 @@ function renderMemberCard(m) {
     const article = document.createElement("article");
     article.className = "member-card";
 
-    // ── name header ──────────────────────────────────────────────────────────
+    // â”€â”€ name header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const nameRow = document.createElement("div");
     nameRow.className = "member-name-row";
 
@@ -175,7 +175,7 @@ function renderMemberCard(m) {
 
     article.appendChild(nameRow);
 
-    // ── photo + bio row ───────────────────────────────────────────────────────
+    // â”€â”€ photo + bio row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const bodyRow = document.createElement("div");
     bodyRow.className = "member-body-row";
 
@@ -218,7 +218,7 @@ function renderMemberCard(m) {
         article.appendChild(p);
     });
 
-    // ── career list ───────────────────────────────────────────────────────────
+    // â”€â”€ career list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (career.length) {
         const ul = document.createElement("ul");
         ul.className = "member-career";
@@ -230,7 +230,7 @@ function renderMemberCard(m) {
         article.appendChild(ul);
     }
 
-    // ── social links ──────────────────────────────────────────────────────────
+    // â”€â”€ social links â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (links.length) {
         const linksDiv = document.createElement("div");
         linksDiv.className = "member-links";
@@ -251,7 +251,7 @@ function renderMemberCard(m) {
     return article;
 }
 
-// ─── load & render page ───────────────────────────────────────────────────────
+// â”€â”€â”€ load & render page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadMembers() {
     try {
         const res = await fetch(apiUrl("/api/members/public"));
@@ -344,7 +344,7 @@ function buildLinkRow(lk = {}) {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "mf-link-remove";
-    removeBtn.textContent = "✕";
+    removeBtn.textContent = "âœ•";
     removeBtn.addEventListener("click", () => row.remove());
 
     row.appendChild(labelInput);
@@ -605,7 +605,7 @@ async function confirmDelete(m) {
     }
 }
 
-// ─── init ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener("DOMContentLoaded", () => {
     loadMembers();
 
@@ -633,3 +633,4 @@ document.addEventListener("DOMContentLoaded", () => {
         nameInput.addEventListener("change", maybeAutofillFromNameSuggestion);
     }
 });
+

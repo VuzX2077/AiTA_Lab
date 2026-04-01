@@ -15,8 +15,12 @@
     };
 
     window.getPageUrl = function (page) {
-        const normalizedPage = page.replace(/^\.\//, "");
+        const normalizedPage = page.replace(/^\.\//, "").replace(/\.html$/i, "");
         const path = window.location.pathname;
+
+        if (!normalizedPage || normalizedPage === "index") {
+            return "/";
+        }
 
         if (isLocalhost) {
             return `/${normalizedPage}`;

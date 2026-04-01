@@ -1,4 +1,4 @@
-function clearAuth() {
+﻿function clearAuth() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
 }
@@ -17,7 +17,7 @@ function parseJwt(token) {
 function checkAuth() {
     if (!token) {
         clearAuth();
-        window.location.href = "/login.html";
+        window.location.href = "/login";
         return false;
     }
 
@@ -25,12 +25,12 @@ function checkAuth() {
 
     if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
         clearAuth();
-        window.location.href = "/login.html";
+        window.location.href = "/login";
         return false;
     }
 
     if (user.role !== "user") {
-        window.location.href = "/adminDashboard.html";
+        window.location.href = "/adminDashboard";
         return false;
     }
 
@@ -145,7 +145,7 @@ async function request(url, options = {}) {
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
-            window.location.href = "/login.html";
+            window.location.href = "/login";
         }
 
         throw new Error(data.message || response.statusText || "Request failed");
@@ -169,7 +169,7 @@ function renderSelectedAuthors() {
         .map((author) => `
             <button type="button" class="selected-author-chip" data-id="${author.user_id}">
                 ${author.name}
-                <span aria-hidden="true">×</span>
+                <span aria-hidden="true">Ã—</span>
             </button>
         `)
         .join("");

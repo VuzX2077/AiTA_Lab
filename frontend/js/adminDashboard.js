@@ -176,11 +176,11 @@ if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
     window.location.href = "/memberDashboard";
 }
 
-async function request(url, options = {}) {
+async function request(path, options = {}) {
     let response;
 
     try {
-        response = await fetch(url, {
+        response = await fetch(getApiUrl(path), { 
             ...options,
             headers: {
                 "Content-Type": "application/json",
@@ -189,7 +189,7 @@ async function request(url, options = {}) {
             }
         });
     } catch (error) {
-        throw new Error("Cannot connect to server. Make sure backend is running at http://localhost:3000.");
+        throw new Error("Cannot connect to server.");
     }
 
     const rawText = await response.text();
@@ -207,10 +207,6 @@ async function request(url, options = {}) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
             window.location.href = "/login";
-        }
-
-        if (response.status === 404 && url.includes("/members/") && url.includes("/role")) {
-            throw new Error("Role API is not available yet. Please restart the backend server and try again.");
         }
 
         throw new Error(data.message || response.statusText || "Request failed");
@@ -995,7 +991,7 @@ async function uploadHomeNewsImage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -1284,7 +1280,7 @@ async function uploadPublicPageHeroPhoto() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -1405,7 +1401,7 @@ async function uploadProfileAvatar() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token

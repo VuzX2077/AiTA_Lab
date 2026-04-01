@@ -1,35 +1,43 @@
-function clearAuth() {
+﻿function clearAuth() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
 }
 
 const token = localStorage.getItem("token");
-let isAuthValid = true;
 
-if (!token) {
-    isAuthValid = false;
-    window.location.href = "/login";
-}
-
-// Decode JWT
 function parseJwt(token) {
     try {
+        if (!token) return null;
         return JSON.parse(atob(token.split('.')[1]));
     } catch (error) {
         return null;
     }
 }
 
-const user = parseJwt(token);
+function checkAuth() {
+    if (!token) {
+        clearAuth();
+        window.location.href = "/login";
+        return false;
+    }
 
-if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
-    clearAuth();
-    isAuthValid = false;
-    window.location.href = "/login";
-} else if (user.role !== "user") {
-    isAuthValid = false;
-    window.location.href = "/adminDashboard";
+    const user = parseJwt(token);
+
+    if (!user || !user.exp || user.exp * 1000 <= Date.now()) {
+        clearAuth();
+        window.location.href = "/login";
+        return false;
+    }
+
+    if (user.role !== "user") {
+        window.location.href = "/adminDashboard";
+        return false;
+    }
+
+    return true;
 }
+
+const isAuthValid = checkAuth();
 
 let editingPublicationId = null;
 let myPublications = [];
@@ -108,23 +116,39 @@ sidebarLinks.forEach((link) => {
 });
 
 async function request(url, options = {}) {
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-            ...(options.headers || {})
-        }
-    });
+    let response;
 
-    const data = await response.json().catch(() => ({}));
+    try {
+        response = await fetch(getApiUrl(url), {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+                ...(options.headers || {})
+            }
+        });
+    } catch (error) {
+        throw new Error("Cannot connect to server.");
+    }
+
+    const rawText = await response.text();
+    let data = {};
+
+    if (rawText) {
+        try {
+            data = JSON.parse(rawText);
+        } catch (error) {
+            data = { message: rawText };
+        }
+    }
 
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             clearAuth();
             window.location.href = "/login";
         }
-        throw new Error(data.message || "Request failed");
+
+        throw new Error(data.message || response.statusText || "Request failed");
     }
 
     return data;
@@ -145,7 +169,7 @@ function renderSelectedAuthors() {
         .map((author) => `
             <button type="button" class="selected-author-chip" data-id="${author.user_id}">
                 ${author.name}
-                <span aria-hidden="true">×</span>
+                <span aria-hidden="true">Ã—</span>
             </button>
         `)
         .join("");
@@ -395,7 +419,7 @@ async function uploadPublicPageHeroPhoto() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -511,7 +535,7 @@ async function uploadProfileAvatar() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/uploads/images", {
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token

@@ -32,7 +32,7 @@ function getValidSession() {
 
 const session = getValidSession();
 if (session) {
-    window.location.href = session.role === "admin" ? "/adminDashboard" : "/memberDashboard";
+    window.location.href = session.role === "admin" ? getPageUrl("adminDashboard.html") : getPageUrl("memberDashboard.html");
 }
 
 function resolveApiUrl(path) {
@@ -40,7 +40,7 @@ function resolveApiUrl(path) {
         return window.getApiUrl(path);
     }
 
-    return path;
+    return "https://aita-lab.onrender.com" + path;
 }
 
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
@@ -50,7 +50,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     const password = document.getElementById("password").value;
 
     try {
-        const response = await fetch(resolveApiUrl("/api/login"), {
+        const response = await fetch(getApiUrl("/api/login"), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -69,11 +69,11 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         localStorage.setItem("role", data.role);
 
         if (data.role === "admin") {
-            window.location.href = "/adminDashboard";
+            window.location.href = getPageUrl("adminDashboard.html");
         } else if (data.role === "user") {
-            window.location.href = "/memberDashboard";
+            window.location.href = getPageUrl("memberDashboard.html");
         } else {
-            window.location.href = "/";
+            window.location.href = getPageUrl("/");
         }
 
     } catch (error) {
