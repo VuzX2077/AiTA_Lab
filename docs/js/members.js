@@ -39,11 +39,24 @@ function apiUrl(path) {
     return path;
 }
 
+function toMemberSlug(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
+}
+
 function getMemberDetailHref(member) {
     const memberId = Number(member && member.member_id);
     if (!Number.isInteger(memberId) || memberId <= 0) {
         return "#";
     }
+
+    const memberName = String(member && member.name ? member.name : "").trim();
+    const slug = toMemberSlug(memberName);
 
     const isStaticHtml = window.location.hostname.includes("github.io") || /\.html$/i.test(window.location.pathname);
     if (isStaticHtml) {
@@ -51,6 +64,10 @@ function getMemberDetailHref(member) {
             ? window.getPageUrl("memberDetail.html")
             : "/memberDetail";
         return `${base}?id=${memberId}`;
+    }
+
+    if (slug) {
+        return `/member/${encodeURIComponent(`${slug}-${memberId}`)}`;
     }
 
     return `/member/${memberId}`;

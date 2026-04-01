@@ -105,19 +105,26 @@ function ensureConfigJs() {
 
 function normalizeHtml(content) {
     let normalized = content
-        .replace(/href="\.\.\/\.\.\/css\//g, 'href="css/')
-        .replace(/src="\.\.\/\.\.\/js\//g, 'src="js/');
+        .replace(/href="\.\.\/\.\.\/css\//g, 'href="/css/')
+        .replace(/src="\.\.\/\.\.\/js\//g, 'src="/js/')
+        .replace(/href="css\//g, 'href="/css/')
+        .replace(/src="js\//g, 'src="/js/');
 
     for (const [from, to] of routeReplacements) {
         normalized = normalized.replaceAll(from, to);
     }
 
-    normalized = normalized.replace(/<script src="js\/config\.js"><\/script>\s*/g, "");
+    normalized = normalized.replace(/<script src="(?:\/)?js\/config\.js"><\/script>\s*/g, "");
 
-    if (normalized.includes('<script src="js/')) {
+    if (normalized.includes('<script src="/js/')) {
+        normalized = normalized.replace(
+            /<script src="\/js\//,
+            '<script src="/js/config.js"></script>\n<script src="/js/'
+        );
+    } else if (normalized.includes('<script src="js/')) {
         normalized = normalized.replace(
             /<script src="js\//,
-            '<script src="js/config.js"></script>\n<script src="js/'
+            '<script src="/js/config.js"></script>\n<script src="/js/'
         );
     }
 

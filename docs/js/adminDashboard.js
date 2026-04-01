@@ -1378,7 +1378,16 @@ function openOwnPublicPage() {
         return;
     }
 
-    window.open(`/member/${memberId}`, "_blank", "noopener");
+    const slug = String(currentPublicPage && currentPublicPage.name ? currentPublicPage.name : "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
+
+    const href = slug ? `/member/${encodeURIComponent(`${slug}-${memberId}`)}` : `/member/${memberId}`;
+    window.open(href, "_blank", "noopener");
 }
 
 async function uploadProfileAvatar() {

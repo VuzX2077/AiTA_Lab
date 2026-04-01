@@ -56,7 +56,8 @@ function getMemberIdFromUrl() {
         return queryId;
     }
 
-    const match = String(window.location.pathname || "").match(/\/member\/(\d+)$/i);
+    const normalizedPath = String(window.location.pathname || "").replace(/\/+$/, "");
+    const match = normalizedPath.match(/\/(?:member|memberDetail)\/(?:[a-z0-9-]*-)?(\d+)$/i);
     if (match) {
         const pathId = Number(match[1]);
         if (Number.isInteger(pathId) && pathId > 0) {
