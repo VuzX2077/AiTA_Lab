@@ -1,4 +1,10 @@
-.members-page, .publications-page, .researches-page, .lectures-page, .seminars-page, .archives-page, .contact-page {
+.members-page,
+.publications-page,
+.researches-page,
+.lectures-page,
+.seminars-page,
+.archives-page,
+.contact-page {
     max-width: 900px;
     margin: 25px 300px 25px;
     padding: 24px 24px 40px;
@@ -9,10 +15,9 @@
 }
 
 .content-hero {
-    padding-top: 36px;
     padding-bottom: 24px;
     max-width: 100%;
-    min-height: 200px;
+    min-height: 150px;
 }
 
 .content-hero h1 {
@@ -25,10 +30,6 @@
     margin: 0;
     color: #5a6270;
     font-size: 18px;
-}
-
-.researches-page .content-hero, .publications-page .content-hero {
-    margin-top: 100px;
 }
 
 .toc {
@@ -66,16 +67,17 @@
     text-decoration: underline;
 }
 
-.researches-page .container {
-    max-width: 100%;
-    padding: 0;
-}
-
-.publications-page .container {
+.publications-page .container,
+.researches-page .container,
+.seminars-page .container,
+.contact-page .container,
+.archives-page .container,
+.lectures-page .container,
+.members-page .container {
     max-width: 100%;
     margin-left: 0;
     margin-right: 0;
-    margin-top: 100px;
+    margin-top: 50px;
     padding: 0;
 }
 
@@ -87,7 +89,6 @@
     padding: 28px 0;
     margin: 0 0 28px;
     border-top: 1px solid #d9dfe6;
-    border-bottom: 1px solid #d9dfe6;
     min-height: auto;
     max-width: 100%;
 }
@@ -104,7 +105,6 @@
     padding: 18px 0;
     color: #2f3640;
     border-top: 1px solid #d9dfe6;
-    border-bottom: 1px solid #d9dfe6;
 }
 
 .publication-group p {
@@ -133,17 +133,6 @@
 
 a.publication-title {
     text-decoration: none;
-}
-
-.seminars-page .container {
-    max-width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    padding: 0;
-}
-
-.seminars-page .content-hero{
-    margin-top: 100px;
 }
 
 .seminar-group {
@@ -335,7 +324,6 @@ body.seminar-modal-open {
     padding: 28px 0;
     margin: 0 0 28px;
     border-top: 1px solid #d9dfe6;
-    border-bottom: 1px solid #d9dfe6;
     min-height: auto;
     max-width: 100%;
 }
@@ -365,23 +353,18 @@ body.seminar-modal-open {
     line-height: 1.55;
 }
 
-.contact-page .container {
-    max-width: 100%;
-    padding: 0;
-}
-
-.contact-page .content-hero {
-    margin-top: 100px;
-}
-
 .contact-section {
     padding: 28px 0;
     border-top: 1px solid #d9dfe6;
     margin-bottom: 50px;
 }
 
-.contact-section h3 {
+.contact-page .content-hero {
     margin-top: 50px;
+    min-height: 100px;
+}
+
+.contact-section h3 {
     margin: 0 0 16px;
     color: #2f3640;
     line-height: 1.25;
