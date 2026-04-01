@@ -258,6 +258,98 @@
     cursor: not-allowed;
 }
 
+#publicPageLinksContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+#publicPageLinksContainer .mf-link-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 32px 28px;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+#publicPageLinksContainer .mf-link-label,
+#publicPageLinksContainer .mf-link-url {
+    margin: 0 !important;
+    height: 32px !important;
+    padding: 7px 9px !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+}
+
+#publicPageLinksContainer .mf-link-color {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 2px !important;
+    margin: 0 !important;
+    border-radius: 5px !important;
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box !important;
+    overflow: hidden;
+}
+
+#publicPageLinksContainer .mf-link-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+#publicPageLinksContainer .mf-link-color::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+#publicPageLinksContainer .mf-link-color::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+#publicPageLinksContainer .mf-link-remove {
+    width: 28px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 5px;
+    background: #f6d9dc;
+    color: #dc2626;
+    font-size: 20px !important;
+    font-weight: 700;
+    line-height: 1 !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box !important;
+}
+
+#publicPageLinksContainer .mf-link-remove:hover {
+    background: #fca5a5;
+}
+
+#settingsPublicPageSection .mf-add-link-btn {
+    margin-top: 6px;
+    border: 1px dashed #1e4ea8;
+    border-radius: 6px;
+    color: #1e4ea8;
+    background: #f0f4ff;
+    padding: 6px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#settingsPublicPageSection .mf-add-link-btn:hover {
+    background: #dde8ff;
+}
+
 #pendingPublicationList .pub-action-btn {
 border: none;
 color: #fff;

@@ -361,7 +361,7 @@ function buildLinkRow(lk = {}) {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "mf-link-remove";
-    removeBtn.textContent = "âœ•";
+    removeBtn.textContent = "x";
     removeBtn.addEventListener("click", () => row.remove());
 
     row.appendChild(labelInput);

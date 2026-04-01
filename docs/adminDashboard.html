@@ -381,8 +381,17 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Links (one per line: Label|URL|Color)</label>
-                        <textarea id="publicPageLinks" rows="5" placeholder="Google Scholar|https://scholar.google.com/...|#4285f4"></textarea>
+                        <label>Social / profile links</label>
+                        <datalist id="publicPageLinkPresetList">
+                            <option value="Personal Page"></option>
+                            <option value="ORCID"></option>
+                            <option value="Google Scholar"></option>
+                            <option value="Scopus Author ID"></option>
+                            <option value="Web of Science"></option>
+                            <option value="ResearchGate"></option>
+                        </datalist>
+                        <div id="publicPageLinksContainer"></div>
+                        <button type="button" id="addPublicPageLinkBtn" class="mf-add-link-btn">+ Add link</button>
                     </div>
 
                     <div class="form-group" id="publicPageEducationGroup">

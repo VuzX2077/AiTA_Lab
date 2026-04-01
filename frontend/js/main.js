@@ -30,6 +30,42 @@ function getValidSession() {
 	return { token, role };
 }
 
+function normalizeNavigationLinks() {
+	if (typeof window.getPageUrl !== "function") {
+		return;
+	}
+
+	const navAnchors = document.querySelectorAll("header .nav-container a");
+	navAnchors.forEach((anchor) => {
+		const href = anchor.getAttribute("href");
+		if (!href) {
+			return;
+		}
+
+		const trimmedHref = href.trim();
+		if (!trimmedHref) {
+			return;
+		}
+
+		if (
+			trimmedHref.startsWith("/") ||
+			trimmedHref.startsWith("#") ||
+			/^(?:https?:|mailto:|tel:|javascript:)/i.test(trimmedHref)
+		) {
+			return;
+		}
+
+		const match = trimmedHref.match(/^\.?\/?([a-z0-9_-]+)\.html(?:[?#].*)?$/i);
+		if (!match) {
+			return;
+		}
+
+		anchor.setAttribute("href", window.getPageUrl(`${match[1]}.html`));
+	});
+}
+
+normalizeNavigationLinks();
+
 const session = getValidSession();
 const token = session ? session.token : null;
 const role = session ? session.role : null;

@@ -34,6 +34,14 @@ let memberSearchEventsBound = false;
 let homeNewsItemsCache = [];
 let currentProfile = null;
 let currentPublicPage = null;
+const PUBLIC_PAGE_LINK_PRESETS = [
+    { label: "Personal Page", color: "#1565c0" },
+    { label: "ORCID", color: "#a6ce39" },
+    { label: "Google Scholar", color: "#4285f4" },
+    { label: "Scopus Author ID", color: "#e07b34" },
+    { label: "Web of Science", color: "#193e7c" },
+    { label: "ResearchGate", color: "#00b5a0" }
+];
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -1187,6 +1195,78 @@ function formatPublicPageLinks(value) {
         .join("\n");
 }
 
+function buildPublicPageLinkRow(link = {}) {
+    const container = document.getElementById("publicPageLinksContainer");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = "mf-link-row";
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.className = "mf-link-label";
+    labelInput.placeholder = "Label";
+    labelInput.value = String(link.label || "");
+    labelInput.setAttribute("list", "publicPageLinkPresetList");
+
+    const urlInput = document.createElement("input");
+    urlInput.type = "url";
+    urlInput.className = "mf-link-url";
+    urlInput.placeholder = "https://...";
+    urlInput.value = String(link.url || "");
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.className = "mf-link-color";
+    colorInput.value = String(link.color || "#1565c0");
+
+    labelInput.addEventListener("change", () => {
+        const preset = PUBLIC_PAGE_LINK_PRESETS.find((item) => item.label.toLowerCase() === labelInput.value.toLowerCase());
+        if (preset) colorInput.value = preset.color;
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "mf-link-remove";
+    removeBtn.textContent = "x";
+    removeBtn.addEventListener("click", () => row.remove());
+
+    row.appendChild(labelInput);
+    row.appendChild(urlInput);
+    row.appendChild(colorInput);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+}
+
+function readPublicPageLinksFromRows() {
+    const rows = document.querySelectorAll("#publicPageLinksContainer .mf-link-row");
+    const result = [];
+
+    rows.forEach((row) => {
+        const labelValue = (row.querySelector(".mf-link-label")?.value || "").trim();
+        const urlValue = (row.querySelector(".mf-link-url")?.value || "").trim();
+        const colorValue = row.querySelector(".mf-link-color")?.value || "#1565c0";
+        if (labelValue && urlValue) {
+            result.push({ label: labelValue, url: urlValue, color: colorValue });
+        }
+    });
+
+    return result;
+}
+
+function populatePublicPageLinkRows(links) {
+    const container = document.getElementById("publicPageLinksContainer");
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (Array.isArray(links) && links.length) {
+        links.forEach((item) => buildPublicPageLinkRow(item || {}));
+        return;
+    }
+
+    buildPublicPageLinkRow();
+}
+
 function showHidePublicPageFieldsBySection(data) {
     const normalizedSection = String(data.section || "").trim().toLowerCase();
     const isAdminSection = ["director", "researcher", "researchers"].includes(normalizedSection);
@@ -1225,7 +1305,7 @@ function fillPublicPageForm(data) {
     setValue("publicPageName", data.name || "");
     setValue("publicPageQuote", data.quote || "");
     setValue("publicPageHeroPhotoAssetId", data.hero_photo_asset_id || "");
-    setValue("publicPageLinks", formatPublicPageLinks(data.links));
+    populatePublicPageLinkRows(data.links);
     setValue("publicPageEducation", (data.education || []).join("\n"));
     setValue("publicPageResearchExperience", (data.research_experience || []).join("\n"));
     setValue("publicPageAwardsGrants", (data.awards_grants || []).join("\n"));
@@ -1343,7 +1423,7 @@ async function saveOwnPublicPage(event) {
         hero_photo_asset_id: document.getElementById("publicPageHeroPhotoAssetId") && document.getElementById("publicPageHeroPhotoAssetId").value
             ? Number(document.getElementById("publicPageHeroPhotoAssetId").value)
             : null,
-        links: parsePublicPageLinksText(document.getElementById("publicPageLinks") ? document.getElementById("publicPageLinks").value : ""),
+        links: readPublicPageLinksFromRows(),
         education: parseMultilineEntries(document.getElementById("publicPageEducation") ? document.getElementById("publicPageEducation").value : ""),
         research_experience: parseMultilineEntries(document.getElementById("publicPageResearchExperience") ? document.getElementById("publicPageResearchExperience").value : ""),
         awards_grants: parseMultilineEntries(document.getElementById("publicPageAwardsGrants") ? document.getElementById("publicPageAwardsGrants").value : ""),
@@ -1623,6 +1703,11 @@ if (isAuthValid) {
                 showToast(error.message, "error");
             }
         });
+    }
+
+    const addPublicPageLinkBtn = document.getElementById("addPublicPageLinkBtn");
+    if (addPublicPageLinkBtn) {
+        addPublicPageLinkBtn.addEventListener("click", () => buildPublicPageLinkRow());
     }
 
     const uploadPublicPageHeroPhotoBtn = document.getElementById("uploadPublicPageHeroPhotoBtn");
