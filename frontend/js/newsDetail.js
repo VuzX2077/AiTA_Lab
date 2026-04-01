@@ -71,7 +71,7 @@ function normalizeNewsSlug(value) {
 
 function getNewsSlugFromPath() {
     const path = String(window.location.pathname || "");
-    const match = path.match(/^\/news\/([^/?#]+)/i);
+    const match = path.match(/^\/(?:newsDetail|news)\/([^/?#]+)/i);
     return match ? normalizeNewsSlug(match[1]) : "";
 }
 
@@ -119,7 +119,7 @@ function getNewsDetailHref(news) {
     const id = Number(news && typeof news === "object" ? news.id : news);
     const title = news && typeof news === "object" ? news.title : "";
     const slug = toNewsSlug(title);
-    const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+    const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("newsDetail.html") : "/newsDetail";
 
     if (basePath.toLowerCase().endsWith(".html")) {
         if (slug) {
@@ -1067,6 +1067,11 @@ async function loadNewsDetail() {
 
     const lookup = getNewsLookupFromUrl();
     if (!lookup.id && !lookup.slug) {
+        if (String(window.location.pathname || "").toLowerCase().includes("newsdetail")) {
+            status.textContent = "News not found.";
+            return;
+        }
+
         loadNewsListPage(getNewsListPageFromUrl());
         return;
     }

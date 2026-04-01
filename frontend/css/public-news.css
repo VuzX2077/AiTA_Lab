@@ -8,6 +8,16 @@
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
+.news-list-page {
+    max-width: 900px;
+    margin: 25px auto;
+    padding: 24px 24px 40px;
+    background-color: white;
+    border-radius: 20px;
+    border: 1px solid #eeeeee;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
 .news-detail-status {
     color: #4b5563;
     font-size: 16px;

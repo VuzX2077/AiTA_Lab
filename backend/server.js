@@ -26,6 +26,7 @@ app.use(express.static(frontendRoot));
 const cleanPageRoutes = {
   "/": "pages/public/index.html",
   "/news": "pages/public/news.html",
+  "/newsDetail": "pages/public/newsDetail.html",
   "/publications": "pages/public/publications.html",
   "/researches": "pages/public/researches.html",
   "/members": "pages/public/members.html",
@@ -46,8 +47,12 @@ Object.entries(cleanPageRoutes).forEach(([routePath, relativeFilePath]) => {
   });
 });
 
+app.get("/newsDetail/:slug", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "pages/public/newsDetail.html"));
+});
+
 app.get("/news/:slug", (req, res) => {
-  res.sendFile(path.join(frontendRoot, "pages/public/news.html"));
+  res.redirect(301, `/newsDetail/${encodeURIComponent(req.params.slug)}`);
 });
 
 app.get("/member/:id", (req, res) => {
@@ -57,6 +62,7 @@ app.get("/member/:id", (req, res) => {
 const legacyRedirectRoutes = {
   "/index.html": "/",
   "/news.html": "/news",
+  "/newsDetail.html": "/newsDetail",
   "/publications.html": "/publications",
   "/researches.html": "/researches",
   "/members.html": "/members",

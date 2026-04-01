@@ -98,14 +98,14 @@ function getNewsDetailHref(news) {
     const slug = toNewsSlug(title);
 
     if (slug) {
-        return `/news/${encodeURIComponent(slug)}`;
+        return `/newsDetail/${encodeURIComponent(slug)}`;
     }
 
     if (Number.isInteger(id) && id > 0) {
-        return `/news?id=${id}`;
+        return `/newsDetail?id=${id}`;
     }
 
-    return "/news";
+    return "/newsDetail";
 }
 
 function setBar(id, labelId, value, total) {

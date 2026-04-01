@@ -136,7 +136,7 @@ function getNewsDetailHref(news) {
 	const id = Number(news && typeof news === "object" ? news.id : news);
 	const title = news && typeof news === "object" ? news.title : "";
 	const slug = toNewsSlug(title);
-	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+	const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("newsDetail.html") : "/newsDetail";
 
 	if (basePath.toLowerCase().endsWith(".html")) {
 		if (slug) {
