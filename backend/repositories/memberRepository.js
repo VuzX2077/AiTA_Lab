@@ -170,7 +170,8 @@ async function deleteByMemberId(memberId, db = pool) {
     const result = await db.query(
         `
         UPDATE members
-        SET section = 'hidden'
+        SET section = 'hidden',
+            photo_asset_id = NULL
         WHERE id = $1
         RETURNING id
         `,

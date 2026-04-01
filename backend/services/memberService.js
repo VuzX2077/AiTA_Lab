@@ -3,6 +3,7 @@ const memberRepository = require("../repositories/memberRepository");
 const memberProfileDetailRepository = require("../repositories/memberProfileDetailRepository");
 const adminProfileDetailRepository = require("../repositories/adminProfileDetailRepository");
 const userRepository = require("../repositories/userRepository");
+const uploadService = require("./uploadService");
 const { withTransaction } = require("../utils/withTransaction");
 
 function asArray(value) {
@@ -92,13 +93,28 @@ function buildAdminDetailResponse(detail, member) {
     };
 }
 
-async function ensureOwnedMemberByUserId(userId) {
-    let member = await memberRepository.findByUserId(userId);
+async function cleanupReplacedImageAsset(previousAssetId, nextAssetId, db) {
+    const previousId = Number(previousAssetId);
+    const nextId = Number(nextAssetId);
+
+    if (!Number.isInteger(previousId) || previousId <= 0) {
+        return;
+    }
+
+    if (previousId === nextId) {
+        return;
+    }
+
+    await uploadService.deleteImageAssetIfUnused(previousId, db);
+}
+
+async function ensureOwnedMemberByUserId(userId, db) {
+    let member = await memberRepository.findByUserId(userId, db);
     if (member && Number.isInteger(Number(member.member_id))) {
         return member;
     }
 
-    const user = await userRepository.findByIdFull(userId);
+    const user = await userRepository.findByIdFull(userId, db);
     if (!user) {
         return null;
     }
@@ -114,9 +130,9 @@ async function ensureOwnedMemberByUserId(userId) {
         career: [],
         links: [],
         userId
-    });
+    }, db);
 
-    member = await memberRepository.findByUserId(userId);
+    member = await memberRepository.findByUserId(userId, db);
     return member && Number.isInteger(Number(member.member_id)) ? member : null;
 }
 
@@ -178,17 +194,22 @@ async function getOwnPublicPageByUserId(userId) {
 }
 
 async function updateOwnPublicPageByUserId(userId, fields) {
-    const member = await ensureOwnedMemberByUserId(userId);
-    if (!member) {
-        return null;
-    }
+    return withTransaction(async (client) => {
+        const member = await ensureOwnedMemberByUserId(userId, client);
+        if (!member) {
+            return null;
+        }
 
-    const updatedDetail = await memberProfileDetailRepository.upsertByMemberId(member.member_id, fields);
-    if (!updatedDetail) {
-        return null;
-    }
+        const previousDetail = await memberProfileDetailRepository.findByMemberId(member.member_id, client);
+        const updatedDetail = await memberProfileDetailRepository.upsertByMemberId(member.member_id, fields, client);
+        if (!updatedDetail) {
+            return null;
+        }
 
-    return buildDetailResponse(updatedDetail, member);
+        await cleanupReplacedImageAsset(previousDetail && previousDetail.hero_photo_asset_id, updatedDetail.hero_photo_asset_id, client);
+
+        return buildDetailResponse(updatedDetail, member);
+    });
 }
 
 async function getOwnAdminPublicPageByUserId(userId) {
@@ -210,20 +231,25 @@ async function getOwnAdminPublicPageByUserId(userId) {
 }
 
 async function updateOwnAdminPublicPageByUserId(userId, fields) {
-    const member = await ensureOwnedMemberByUserId(userId);
-    if (!member) {
-        return null;
-    }
+    return withTransaction(async (client) => {
+        const member = await ensureOwnedMemberByUserId(userId, client);
+        if (!member) {
+            return null;
+        }
 
-    const updatedDetail = await adminProfileDetailRepository.upsertByMemberId(member.member_id, {
-        ...fields,
-        working_experience: asArray(fields.research_experience)
+        const previousDetail = await adminProfileDetailRepository.findByMemberId(member.member_id, client);
+        const updatedDetail = await adminProfileDetailRepository.upsertByMemberId(member.member_id, {
+            ...fields,
+            working_experience: asArray(fields.research_experience)
+        }, client);
+        if (!updatedDetail) {
+            return null;
+        }
+
+        await cleanupReplacedImageAsset(previousDetail && previousDetail.hero_photo_asset_id, updatedDetail.hero_photo_asset_id, client);
+
+        return buildAdminDetailResponse(updatedDetail, member);
     });
-    if (!updatedDetail) {
-        return null;
-    }
-
-    return buildAdminDetailResponse(updatedDetail, member);
 }
 
 async function createMemberWithUser({ email, password, role, name, position, bio, section, photo_asset_id, career, links }) {
@@ -246,9 +272,19 @@ async function createMemberWithUser({ email, password, role, name, position, bio
 }
 
 async function updateMemberProfile(userId, fields) {
-    return memberRepository.updateMemberProfile(userId, {
-        ...fields,
-        photoAssetId: fields.photo_asset_id
+    return withTransaction(async (client) => {
+        const previousMember = await memberRepository.findByUserId(userId, client);
+        const updatedMember = await memberRepository.updateMemberProfile(userId, {
+            ...fields,
+            photoAssetId: fields.photo_asset_id
+        }, client);
+
+        if (!updatedMember) {
+            return null;
+        }
+
+        await cleanupReplacedImageAsset(previousMember && previousMember.photo_asset_id, updatedMember.photo_asset_id, client);
+        return updatedMember;
     });
 }
 
@@ -260,20 +296,78 @@ async function createStandaloneMemberProfile(fields) {
 }
 
 async function updateStandaloneMemberProfile(memberId, fields) {
-    return memberRepository.updateByMemberId(memberId, {
-        ...fields,
-        photoAssetId: fields.photo_asset_id
+    return withTransaction(async (client) => {
+        const previousMember = await memberRepository.findByMemberId(memberId, client);
+        const updatedMember = await memberRepository.updateByMemberId(memberId, {
+            ...fields,
+            photoAssetId: fields.photo_asset_id
+        }, client);
+
+        if (!updatedMember) {
+            return null;
+        }
+
+        await cleanupReplacedImageAsset(previousMember && previousMember.photo_asset_id, updatedMember.photo_asset_id, client);
+        return updatedMember;
     });
 }
 
 async function deleteMemberProfileById(memberId) {
-    return memberRepository.deleteByMemberId(memberId);
+    return withTransaction(async (client) => {
+        const existingMember = await memberRepository.findByMemberId(memberId, client);
+        if (!existingMember) {
+            return false;
+        }
+
+        const deleted = await memberRepository.deleteByMemberId(memberId, client);
+        if (!deleted) {
+            return false;
+        }
+
+        await uploadService.deleteImageAssetIfUnused(existingMember.photo_asset_id, client);
+        return true;
+    });
 }
 
 async function deleteMemberByUserId(userId) {
     return withTransaction(async (client) => {
+        const existingMember = await memberRepository.findByUserId(userId, client);
+        if (!existingMember || !Number.isInteger(Number(existingMember.member_id))) {
+            return false;
+        }
+
+        const memberId = Number(existingMember.member_id);
+        const memberDetail = await memberProfileDetailRepository.findByMemberId(memberId, client);
+        const adminDetail = await adminProfileDetailRepository.findByMemberId(memberId, client);
+
         await memberRepository.deleteByUserId(userId, client);
-        return userRepository.deleteById(userId, client);
+        const deletedUser = await userRepository.deleteById(userId, client);
+        if (!deletedUser) {
+            return false;
+        }
+
+        const assetIds = new Set();
+        const memberPhotoAssetId = Number(existingMember.photo_asset_id);
+        const memberHeroAssetId = Number(memberDetail && memberDetail.hero_photo_asset_id);
+        const adminHeroAssetId = Number(adminDetail && adminDetail.hero_photo_asset_id);
+
+        if (Number.isInteger(memberPhotoAssetId) && memberPhotoAssetId > 0) {
+            assetIds.add(memberPhotoAssetId);
+        }
+
+        if (Number.isInteger(memberHeroAssetId) && memberHeroAssetId > 0) {
+            assetIds.add(memberHeroAssetId);
+        }
+
+        if (Number.isInteger(adminHeroAssetId) && adminHeroAssetId > 0) {
+            assetIds.add(adminHeroAssetId);
+        }
+
+        for (const assetId of assetIds) {
+            await uploadService.deleteImageAssetIfUnused(assetId, client);
+        }
+
+        return true;
     });
 }
 
@@ -282,11 +376,23 @@ async function getProfileByUserId(userId) {
 }
 
 async function updateOwnProfile(userId, fields) {
-    return memberRepository.upsertProfileByUserId(userId, {
-        name: fields.name,
-        bio: fields.bio,
-        photoAssetId: fields.photo_asset_id,
-        career: fields.career
+    return withTransaction(async (client) => {
+        const previousMember = await memberRepository.findByUserId(userId, client);
+
+        const updatedMember = await memberRepository.upsertProfileByUserId(userId, {
+            name: fields.name,
+            bio: fields.bio,
+            photoAssetId: fields.photo_asset_id,
+            career: fields.career
+        }, client);
+
+        if (!updatedMember) {
+            return null;
+        }
+
+        await cleanupReplacedImageAsset(previousMember && previousMember.photo_asset_id, updatedMember.photo_asset_id, client);
+
+        return updatedMember;
     });
 }
 

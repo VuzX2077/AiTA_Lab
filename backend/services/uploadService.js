@@ -79,7 +79,47 @@ async function deleteImage(storageKey) {
     await imageAssetRepository.deleteByStorageKey(storageKey);
 }
 
+async function deleteImageAssetIfUnused(imageAssetId, db) {
+    const normalizedId = Number(imageAssetId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+        return false;
+    }
+
+    const asset = await imageAssetRepository.findById(normalizedId, db);
+    if (!asset) {
+        return false;
+    }
+
+    const references = await imageAssetRepository.countReferences(normalizedId, db);
+    if (references > 0) {
+        return false;
+    }
+
+    if (asset.storage_key) {
+        const { error } = await supabase.storage
+            .from(BUCKET)
+            .remove([asset.storage_key]);
+
+        if (error) {
+            console.error("Supabase delete error:", error);
+            throw new Error("Failed to delete image from storage");
+        }
+    }
+
+    try {
+        await imageAssetRepository.deleteById(normalizedId, db);
+    } catch (error) {
+        if (error && error.code === "23503") {
+            return false;
+        }
+        throw error;
+    }
+
+    return true;
+}
+
 module.exports = {
     processAndStoreImage,
-    deleteImage
+    deleteImage,
+    deleteImageAssetIfUnused
 };
