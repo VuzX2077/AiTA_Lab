@@ -93,6 +93,15 @@
     max-width: 100%;
 }
 
+.publications-page.publication-detail-mode .content-hero {
+    min-height: auto;
+    padding-bottom: 8px;
+}
+
+.publications-page.publication-detail-mode .publication-group.container {
+    margin-top: 50px;
+}
+
 .publication-group {
     padding-top: 24px;
     padding-bottom: 24px;
@@ -110,7 +119,6 @@
 .publication-group p {
     margin: 0;
     color: #4d5561;
-    font-size: 20px;
     line-height: 1.55;
 }
 
@@ -124,6 +132,52 @@
     color: #4d5561;
     font-size: 15px;
     line-height: 1.5;
+}
+
+.publication-read-more {
+    padding-left: 25px;;
+}
+
+.publication-read-more,
+.publication-back-link {
+    font-size: 15px;
+    color: #e68900;
+    font-weight: 200;
+    text-decoration: none;
+}
+
+.publication-read-more:hover,
+.publication-back-link:hover {
+    color: #ff9800;
+}
+
+.publication-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.publication-page-btn {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #1f2937;
+    border-radius: 999px;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.publication-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.publication-page-text {
+    font-weight: 700;
+    color: #1f2937;
 }
 
 .publication-title {

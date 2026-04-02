@@ -177,7 +177,7 @@ function renderSelectedAuthors() {
         .map((author) => `
             <button type="button" class="selected-author-chip" data-id="${author.user_id}">
                 ${author.name}
-                <span aria-hidden="true">Ã—</span>
+                <span aria-hidden="true">x</span>
             </button>
         `)
         .join("");

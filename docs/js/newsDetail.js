@@ -479,6 +479,31 @@ function closeAuthorsModal() {
     }
 }
 
+function getMemberDetailHref(author) {
+    const memberId = Number(author && author.id);
+    if (!Number.isInteger(memberId) || memberId <= 0) {
+        return "";
+    }
+
+    const authorName = typeof author.name === "string" ? author.name.trim() : "";
+    const slug = toNewsSlug(authorName);
+    const isStaticHtml = window.location.hostname.includes("github.io") || /\.html$/i.test(window.location.pathname);
+
+    if (isStaticHtml) {
+        const base = typeof window.getPageUrl === "function"
+            ? window.getPageUrl("memberDetail.html")
+            : "/memberDetail";
+        const separator = base.includes("?") ? "&" : "?";
+        return `${base}${separator}id=${memberId}`;
+    }
+
+    if (slug) {
+        return `/member/${encodeURIComponent(`${slug}-${memberId}`)}`;
+    }
+
+    return `/member/${memberId}`;
+}
+
 function buildAuthorHighlightHtml(author) {
     const authorName = typeof author.name === "string" ? author.name.trim() : "";
     if (!authorName) {
@@ -486,7 +511,12 @@ function buildAuthorHighlightHtml(author) {
     }
 
     const safeName = escapeHtml(authorName);
+    const memberHref = getMemberDetailHref(author);
     const safeLink = getSafeHttpUrl(author.link);
+
+    if (memberHref) {
+        return `<a href="${escapeHtml(memberHref)}" class="news-inline-author">${safeName}</a>`;
+    }
 
     if (safeLink) {
         return `<a href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer" class="news-inline-author">${safeName}</a>`;
