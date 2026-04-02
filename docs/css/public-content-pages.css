@@ -1,7 +1,6 @@
 .members-page,
 .publications-page,
 .researches-page,
-.lectures-page,
 .lecturers-page,
 .seminars-page,
 .archives-page,
@@ -73,7 +72,6 @@
 .seminars-page .container,
 .contact-page .container,
 .archives-page .container,
-.lectures-page .container,
 .lecturers-page .container,
 .members-page .container {
     max-width: 100%;

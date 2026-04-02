@@ -31,7 +31,7 @@ RewriteRule ^(.+?)/?$ $1.html [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.html !-f
-RewriteCond %{REQUEST_URI} !^/(index|news|newsDetail|member|members|publications|researches|lectures|seminars|archives|contact|memberDetail|login|register|adminDashboard|memberDashboard)/?$ [NC]
+RewriteCond %{REQUEST_URI} !^/(index|news|newsDetail|member|members|publications|researches|lecturers|seminars|archives|contact|memberDetail|login|register|adminDashboard|memberDashboard)/?$ [NC]
 RewriteRule ^([a-z0-9-]+)/?$ newsDetail.html?slug=$1 [L,QSA,NC]
 
 DirectoryIndex index.html

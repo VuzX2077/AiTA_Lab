@@ -61,7 +61,7 @@ This project follows a layered structure:
 The app uses clean routes and maps them to files in `frontend/pages`:
 
 - `/` -> public index
-- `/publications`, `/researches`, `/members`, `/lectures`, `/seminars`, `/archives`, `/contact`
+- `/publications`, `/researches`, `/members`, `/lecturers`, `/seminars`, `/archives`, `/contact`
 - `/login`, `/register`
 - `/adminDashboard`, `/memberDashboard`
 
@@ -155,7 +155,7 @@ AiTA_Lab/
 |           |-- publications.html
 |           |-- researches.html
 |           |-- members.html
-|           |-- lectures.html
+|           |-- lecturers.html
 |           |-- seminars.html
 |           |-- archives.html
 |           |-- contact.html

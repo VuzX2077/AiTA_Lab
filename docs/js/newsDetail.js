@@ -108,7 +108,6 @@ function getNewsSlugFromPath() {
         "members",
         "publications",
         "researches",
-        "lectures",
         "lecturers",
         "seminars",
         "archives",

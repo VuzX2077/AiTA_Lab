@@ -8,23 +8,6 @@ const docsCssDir = path.join(docsDir, "css");
 const docsJsDir = path.join(docsDir, "js");
 const docsPagesDir = path.join(docsDir, "pages");
 
-const pageMappings = [
-    { source: ["public", "index.html"], target: "index.html" },
-    { source: ["public", "news.html"], target: "news.html" },
-    { source: ["public", "newsDetail.html"], target: "newsDetail.html" },
-    { source: ["public", "members.html"], target: "members.html" },
-    { source: ["public", "publications.html"], target: "publications.html" },
-    { source: ["public", "researches.html"], target: "researches.html" },
-    { source: ["public", "lectures.html"], target: "lectures.html" },
-    { source: ["public", "seminars.html"], target: "seminars.html" },
-    { source: ["public", "archives.html"], target: "archives.html" },
-    { source: ["public", "contact.html"], target: "contact.html" },
-    { source: ["public", "memberDetail.html"], target: "memberDetail.html" },
-    { source: ["auth", "login.html"], target: "login.html" },
-    { source: ["member", "memberDashboard.html"], target: "memberDashboard.html" },
-    { source: ["admin", "adminDashboard.html"], target: "adminDashboard.html" }
-];
-
 const routeReplacements = [
     ["href=\"/\"", "href=\"./index.html\""],
     ["href=\"/news\"", "href=\"./news.html\""],
@@ -32,7 +15,7 @@ const routeReplacements = [
     ["href=\"/members\"", "href=\"./members.html\""],
     ["href=\"/publications\"", "href=\"./publications.html\""],
     ["href=\"/researches\"", "href=\"./researches.html\""],
-    ["href=\"/lectures\"", "href=\"./lectures.html\""],
+    ["href=\"/lecturers\"", "href=\"./lecturers.html\""],
     ["href=\"/seminars\"", "href=\"./seminars.html\""],
     ["href=\"/archives\"", "href=\"./archives.html\""],
     ["href=\"/contact\"", "href=\"./contact.html\""],
@@ -73,6 +56,42 @@ const defaultConfigJs = `(function () {
 
 function ensureDir(dirPath) {
     fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function getHtmlFileNames(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+        return [];
+    }
+
+    return fs.readdirSync(dirPath, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".html"))
+        .map((entry) => entry.name)
+        .sort((a, b) => a.localeCompare(b));
+}
+
+function buildPageMappings() {
+    const mappings = [];
+    const publicPagesDir = path.join(frontendDir, "pages", "public");
+
+    for (const fileName of getHtmlFileNames(publicPagesDir)) {
+        mappings.push({ source: ["public", fileName], target: fileName });
+    }
+
+    const fixedPages = [
+        { source: ["auth", "login.html"], target: "login.html" },
+        { source: ["auth", "register.html"], target: "register.html" },
+        { source: ["member", "memberDashboard.html"], target: "memberDashboard.html" },
+        { source: ["admin", "adminDashboard.html"], target: "adminDashboard.html" }
+    ];
+
+    for (const mapping of fixedPages) {
+        const sourcePath = path.join(frontendDir, "pages", ...mapping.source);
+        if (fs.existsSync(sourcePath)) {
+            mappings.push(mapping);
+        }
+    }
+
+    return mappings;
 }
 
 function copyDirectory(sourceDir, targetDir) {
@@ -132,9 +151,26 @@ function normalizeHtml(content) {
 }
 
 function writeRootPages() {
+    const pageMappings = buildPageMappings();
+    const expectedRootFiles = new Set(pageMappings.map((mapping) => mapping.target));
+    expectedRootFiles.add("register.html");
+    expectedRootFiles.add("index.html");
+
+    for (const fileName of getHtmlFileNames(docsDir)) {
+        if (!expectedRootFiles.has(fileName)) {
+            fs.rmSync(path.join(docsDir, fileName), { force: true });
+        }
+    }
+
     for (const mapping of pageMappings) {
         const sourcePath = path.join(frontendDir, "pages", ...mapping.source);
         const targetPath = path.join(docsDir, mapping.target);
+
+        if (!fs.existsSync(sourcePath)) {
+            fs.rmSync(targetPath, { force: true });
+            continue;
+        }
+
         const html = fs.readFileSync(sourcePath, "utf8");
         fs.writeFileSync(targetPath, normalizeHtml(html));
     }
@@ -177,6 +213,7 @@ function writeRootPages() {
 </html>
 `
     );
+
 }
 
 function writePageRedirect(relativeDir, fileName, targetFile) {
@@ -204,12 +241,12 @@ function writePageRedirect(relativeDir, fileName, targetFile) {
 function writeRedirectPages() {
     fs.rmSync(docsPagesDir, { recursive: true, force: true });
 
+    const pageMappings = buildPageMappings();
+
     for (const mapping of pageMappings) {
         const [section, fileName] = mapping.source;
         writePageRedirect(section, fileName, mapping.target);
     }
-
-    writePageRedirect("auth", "register.html", "register.html");
 }
 
 function syncDocs() {
