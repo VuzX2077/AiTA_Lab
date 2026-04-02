@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -21,7 +21,7 @@
                 <li><a href="./members.html" data-text="Member">Member</a></li>
                 <li><a href="./publications.html" data-text="Publication">Publication</a></li>
                 <li><a href="./researches.html" data-text="Research">Research</a></li>
-                <li><a href="./lectures.html" data-text="Lecture">Lecture</a></li>
+                <li><a href="/lecturers" data-text="Lecturers">Lecturers</a></li>
                 <li><a href="./seminars.html" data-text="Seminar">Seminar</a></li>
                 <li><a href="./archives.html" data-text="Archive">Archive</a></li>
                 <li><a href="./contact.html" data-text="Contact">Contact</a></li>
@@ -49,6 +49,9 @@
 
             <li class="sidebar-group-title">Seminars</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="seminarManagementSection">Seminar Management</button></li>
+
+            <li class="sidebar-group-title">Lecturers</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="lecturerManagementSection">Lecturer Management</button></li>
 
             <li class="sidebar-group-title">Members</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="allMembersSection">All Members</button></li>
@@ -270,6 +273,67 @@
             </div>
 
             <div id="seminarList" class="seminar-admin-list"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="lecturerManagementSection">
+            <h2>Lecturer Management</h2>
+
+            <form id="lecturerForm" class="home-news-form-grid">
+                <input type="hidden" id="lecturerEditId">
+                <input type="hidden" id="lecturerPhotoAssetId">
+
+                <label class="home-news-span-2">
+                    Lecturer Name
+                    <input type="text" id="lecturerName" placeholder="Dr. Nguyen Van A" required>
+                </label>
+
+                <label class="home-news-span-2">
+                    Linked Member Profile (optional)
+                    <select id="lecturerMemberId">
+                        <option value="">Not linked</option>
+                    </select>
+                </label>
+
+                <label class="home-news-span-2">
+                    Specialization
+                    <input type="text" id="lecturerSpecialization" placeholder="Artificial Intelligence" required>
+                </label>
+
+                <label class="home-news-span-2">
+                    Teaching Subjects (one per line)
+                    <textarea id="lecturerSubjects" rows="4" placeholder="Machine Learning&#10;Deep Learning&#10;Natural Language Processing"></textarea>
+                </label>
+
+                <label class="home-news-span-2">
+                    Bio
+                    <textarea id="lecturerBio" rows="4" placeholder="Short lecturer biography"></textarea>
+                </label>
+
+                <label>
+                    Display Order
+                    <input type="number" id="lecturerDisplayOrder" min="0" step="1" value="0">
+                </label>
+
+                <label class="home-news-checkbox">
+                    <input type="checkbox" id="lecturerIsPublished" checked>
+                    Published on public page
+                </label>
+
+                <label class="home-news-span-2">
+                    Photo (optional)
+                    <input type="file" id="lecturerPhotoFile" accept="image/jpeg,image/png,image/webp">
+                    <button type="button" id="uploadLecturerPhotoBtn" class="btn-primary">Upload Photo</button>
+                    <p id="lecturerPhotoUploadStatus" class="settings-note"></p>
+                    <img id="lecturerPhotoPreview" alt="Lecturer photo preview" class="home-news-image-preview" hidden>
+                </label>
+
+                <div class="home-news-form-actions home-news-span-2">
+                    <button type="submit" id="lecturerSaveBtn">Save Lecturer</button>
+                    <button type="button" id="lecturerCancelEditBtn" class="seminar-cancel-btn" hidden>Cancel Edit</button>
+                </div>
+            </form>
+
+            <div id="lecturerList" class="home-news-admin-list"></div>
         </div>
 
         <div class="dashboard-section admin-panel" id="allMembersSection">

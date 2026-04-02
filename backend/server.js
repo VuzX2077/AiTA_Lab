@@ -30,6 +30,7 @@ const cleanPageRoutes = {
   "/publications": "pages/public/publications.html",
   "/researches": "pages/public/researches.html",
   "/members": "pages/public/members.html",
+  "/lecturers": "pages/public/lecturers.html",
   "/lectures": "pages/public/lectures.html",
   "/seminars": "pages/public/seminars.html",
   "/archives": "pages/public/archives.html",
@@ -66,7 +67,8 @@ const legacyRedirectRoutes = {
   "/publications.html": "/publications",
   "/researches.html": "/researches",
   "/members.html": "/members",
-  "/lectures.html": "/lectures",
+  "/lectures.html": "/lecturers",
+  "/lecturers.html": "/lecturers",
   "/seminars.html": "/seminars",
   "/archives.html": "/archives",
   "/contact.html": "/contact",
@@ -91,6 +93,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const seminarRoutes = require("./routes/seminarRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const homeNewsRoutes = require("./routes/homeNewsRoutes");
+const lecturerRoutes = require("./routes/lecturerRoutes");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
@@ -99,6 +102,7 @@ app.use("/api", adminRoutes);
 app.use("/api", seminarRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", homeNewsRoutes);
+app.use("/api", lecturerRoutes);
 
 const reservedTopLevelPaths = new Set([
   "",
@@ -107,6 +111,7 @@ const reservedTopLevelPaths = new Set([
   "members",
   "publications",
   "researches",
+  "lecturers",
   "lectures",
   "seminars",
   "archives",

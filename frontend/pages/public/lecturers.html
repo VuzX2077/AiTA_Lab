@@ -2,11 +2,11 @@
 <html>
 
 <head>
-    <title>News - AiTA Lab</title>
-    <link rel="stylesheet" href="/css/base.css">
-    <link rel="stylesheet" href="/css/layout.css">
-    <link rel="stylesheet" href="/css/components.css">
-    <link rel="stylesheet" href="/css/public-news.css">
+    <title>Lecturers - AiTA Lab</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/public-content-pages.css">
 </head>
 
 <body>
@@ -33,19 +33,25 @@
     </nav>
 </header>
 
-<main class="news-list-page">
-    <div id="newsDetailStatus" class="news-detail-status">Loading news...</div>
-
-    <section id="newsListSection" class="news-list-section" hidden>
-        <h1 class="news-list-title">Latest News</h1>
-        <div id="newsListItems" class="news-list-items"></div>
-        <div id="newsListPagination" class="news-list-pagination" hidden>
-            <button id="newsListPrev" type="button" class="news-list-page-btn" aria-label="Previous page">&larr;</button>
-            <span id="newsListPageText" class="news-list-page-text">1/1</span>
-            <button id="newsListNext" type="button" class="news-list-page-btn" aria-label="Next page">&rarr;</button>
-        </div>
+<main class="lecturers-page">
+    <section class="content-hero container">
+        <h1>Lecturers</h1>
     </section>
 
+    <section class="seminar-filters container" aria-label="Search lecturers">
+        <input
+            type="text"
+            id="lecturerSearchInput"
+            class="seminar-filter-input"
+            placeholder="Search by name, specialization, or teaching subject"
+            aria-label="Search lecturers"
+        >
+        <button type="button" id="lecturerSearchResetBtn" class="seminar-filter-reset">Reset</button>
+    </section>
+
+    <section class="lecturers-list container" id="lecturersList" aria-live="polite">
+        <p>Loading lecturers...</p>
+    </section>
 </main>
 
 <footer>
@@ -55,9 +61,9 @@
 </footer>
 
 <script src="/js/config.js"></script>
-<script src="/js/main.js"></script>
-<script src="/js/newsDetail.js"></script>
+<script src="js/main.js"></script>
+<script src="js/lecturers.js"></script>
+
 </body>
 
 </html>
-

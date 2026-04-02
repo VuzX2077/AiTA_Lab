@@ -2,6 +2,7 @@
 .publications-page,
 .researches-page,
 .lectures-page,
+.lecturers-page,
 .seminars-page,
 .archives-page,
 .contact-page {
@@ -73,6 +74,7 @@
 .contact-page .container,
 .archives-page .container,
 .lectures-page .container,
+.lecturers-page .container,
 .members-page .container {
     max-width: 100%;
     margin-left: 0;
@@ -141,14 +143,14 @@
 .publication-read-more,
 .publication-back-link {
     font-size: 15px;
-    color: #e68900;
+    color: #ff9800;
     font-weight: 200;
     text-decoration: none;
 }
 
 .publication-read-more:hover,
 .publication-back-link:hover {
-    color: #ff9800;
+    color: #e68900;
 }
 
 .publication-pagination {
@@ -183,6 +185,100 @@
 .publication-title {
     color: #e69a1f;
     font-weight: 600;
+}
+
+.lecturers-list {
+    display: grid;
+    gap: 16px;
+}
+
+.lecturers-page .seminar-filters {
+    grid-template-columns: minmax(260px, 1fr) auto;
+}
+
+.lecturer-card {
+    border: 1px solid #d8e0ea;
+    border-radius: 14px;
+    background: #fbfdff;
+    padding: 16px;
+}
+
+.lecturer-card-head {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 14px;
+    align-items: center;
+}
+
+.lecturer-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid #d8e0ea;
+    background: #f1f5f9;
+}
+
+.lecturer-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.lecturer-name {
+    margin: 0;
+    color: #ff9800;
+    font-size: 24px;
+}
+
+.lecturer-name-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lecturer-name-link:hover {
+    color: #e68900;
+    text-decoration: none;
+}
+
+.lecturer-specialization {
+    margin: 6px 0 0;
+    color: #334155;
+    font-size: 14px;
+}
+
+.lecturer-bio {
+    margin: 12px 0 0;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.lecturer-courses {
+    margin-top: 14px;
+}
+
+.lecturer-courses h3 {
+    margin: 0 0 8px;
+    color: #1f2937;
+    font-size: 16px;
+}
+
+.lecturer-course-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.lecturer-course-empty {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
 }
 
 a.publication-title {
@@ -515,6 +611,19 @@ body.seminar-modal-open {
     .publication-bullet-list li {
         font-size: 17px;
         margin-bottom: 14px;
+    }
+
+    .lecturer-card-head {
+        grid-template-columns: 1fr;
+    }
+
+    .lecturer-avatar {
+        width: 88px;
+        height: 88px;
+    }
+
+    .lecturer-name {
+        font-size: 22px;
     }
 
     .research-item p {

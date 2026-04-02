@@ -52,6 +52,7 @@ async function countReferences(imageAssetId, db = pool) {
             (SELECT COUNT(*) FROM members WHERE photo_asset_id = $1) +
             (SELECT COUNT(*) FROM member_profile_details WHERE hero_photo_asset_id = $1) +
             (SELECT COUNT(*) FROM admin_profile_details WHERE hero_photo_asset_id = $1) +
+            (SELECT COUNT(*) FROM lecturers WHERE photo_asset_id = $1) +
             (SELECT COUNT(*) FROM home_news WHERE image_asset_id = $1) +
             (SELECT COUNT(*) FROM home_news WHERE summary_image_asset_id = $1)
         )::int AS total

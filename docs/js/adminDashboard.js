@@ -32,6 +32,7 @@ let publicationSearchEventsBound = false;
 let memberItemsCache = [];
 let memberSearchEventsBound = false;
 let homeNewsItemsCache = [];
+let lecturerItemsCache = [];
 let currentProfile = null;
 let currentPublicPage = null;
 const PUBLIC_PAGE_LINK_PRESETS = [
@@ -784,6 +785,357 @@ async function deleteSeminarEntry(id) {
     }
 }
 
+function parseSubjectEntries(value) {
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item || "").trim()).filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+        return value
+            .split(/\r?\n/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+}
+
+function getLecturerMemberOptionsMarkup(selectedMemberId) {
+    const selectedValue = Number.isInteger(Number(selectedMemberId)) ? Number(selectedMemberId) : null;
+    const baseOption = '<option value="">Not linked</option>';
+
+    const memberOptions = memberItemsCache
+        .filter((member) => Number.isInteger(Number(member && member.member_id)))
+        .map((member) => {
+            const memberId = Number(member.member_id);
+            const labelName = escapeHtml(member.name || member.email || `Member #${memberId}`);
+            const labelEmail = member.email ? ` (${escapeHtml(member.email)})` : "";
+            const selected = selectedValue === memberId ? " selected" : "";
+            return `<option value="${memberId}"${selected}>${labelName}${labelEmail}</option>`;
+        })
+        .join("");
+
+    return `${baseOption}${memberOptions}`;
+}
+
+function refreshLecturerMemberOptions(selectedMemberId) {
+    const select = document.getElementById("lecturerMemberId");
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = getLecturerMemberOptionsMarkup(selectedMemberId);
+}
+
+function resetLecturerForm() {
+    const form = document.getElementById("lecturerForm");
+    const editId = document.getElementById("lecturerEditId");
+    const photoAssetId = document.getElementById("lecturerPhotoAssetId");
+    const preview = document.getElementById("lecturerPhotoPreview");
+    const status = document.getElementById("lecturerPhotoUploadStatus");
+    const saveBtn = document.getElementById("lecturerSaveBtn");
+    const cancelBtn = document.getElementById("lecturerCancelEditBtn");
+    const displayOrderInput = document.getElementById("lecturerDisplayOrder");
+    const isPublishedInput = document.getElementById("lecturerIsPublished");
+    const memberIdSelect = document.getElementById("lecturerMemberId");
+
+    if (form) {
+        form.reset();
+    }
+
+    if (editId) {
+        editId.value = "";
+    }
+
+    if (photoAssetId) {
+        photoAssetId.value = "";
+    }
+
+    if (preview) {
+        preview.hidden = true;
+        preview.removeAttribute("src");
+    }
+
+    if (status) {
+        status.textContent = "";
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = "Save Lecturer";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = true;
+    }
+
+    if (displayOrderInput) {
+        displayOrderInput.value = "0";
+    }
+
+    if (isPublishedInput) {
+        isPublishedInput.checked = true;
+    }
+
+    if (memberIdSelect) {
+        refreshLecturerMemberOptions(null);
+    }
+}
+
+function startEditLecturer(item) {
+    const editId = document.getElementById("lecturerEditId");
+    const photoAssetId = document.getElementById("lecturerPhotoAssetId");
+    const nameInput = document.getElementById("lecturerName");
+    const specializationInput = document.getElementById("lecturerSpecialization");
+    const subjectsInput = document.getElementById("lecturerSubjects");
+    const bioInput = document.getElementById("lecturerBio");
+    const displayOrderInput = document.getElementById("lecturerDisplayOrder");
+    const isPublishedInput = document.getElementById("lecturerIsPublished");
+    const memberIdSelect = document.getElementById("lecturerMemberId");
+    const preview = document.getElementById("lecturerPhotoPreview");
+    const status = document.getElementById("lecturerPhotoUploadStatus");
+    const saveBtn = document.getElementById("lecturerSaveBtn");
+    const cancelBtn = document.getElementById("lecturerCancelEditBtn");
+
+    if (!editId || !nameInput || !specializationInput || !subjectsInput || !bioInput || !displayOrderInput || !isPublishedInput) {
+        return;
+    }
+
+    refreshLecturerMemberOptions(item.member_id);
+
+    editId.value = String(item.id);
+    if (photoAssetId) {
+        photoAssetId.value = item.photo_asset_id ? String(item.photo_asset_id) : "";
+    }
+    nameInput.value = item.name || "";
+    specializationInput.value = item.specialization || "";
+    subjectsInput.value = Array.isArray(item.teaching_subjects) ? item.teaching_subjects.join("\n") : "";
+    bioInput.value = item.bio || "";
+    displayOrderInput.value = Number.isInteger(Number(item.display_order)) ? String(item.display_order) : "0";
+    isPublishedInput.checked = Boolean(item.is_published);
+    if (memberIdSelect) {
+        memberIdSelect.value = item.member_id ? String(item.member_id) : "";
+    }
+
+    if (preview) {
+        if (item.photo_url) {
+            preview.src = item.photo_url;
+            preview.hidden = false;
+        } else {
+            preview.hidden = true;
+            preview.removeAttribute("src");
+        }
+    }
+
+    if (status) {
+        status.textContent = "";
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = "Update Lecturer";
+    }
+
+    if (cancelBtn) {
+        cancelBtn.hidden = false;
+    }
+
+    showSection("lecturerManagementSection");
+}
+
+function renderLecturersAdmin(rows) {
+    const list = document.getElementById("lecturerList");
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = "<p class=\"admin-note\">No lecturers available.</p>";
+        return;
+    }
+
+    list.innerHTML = rows.map((item) => {
+        const subjects = Array.isArray(item.teaching_subjects) ? item.teaching_subjects : [];
+
+        return `
+            <div class="home-news-admin-item lecturer-admin-item">
+                <img class="home-news-admin-thumb" src="${escapeHtml(item.photo_url || "")}" alt="${escapeHtml(item.name || "Lecturer")}" ${item.photo_url ? "" : "hidden"}>
+                <div>
+                    <p><strong>${escapeHtml(item.name || "Unknown")}</strong></p>
+                    <p><small>Specialization: ${escapeHtml(item.specialization || "N/A")}</small></p>
+                    <p><small>Linked member id: ${item.member_id ? escapeHtml(item.member_id) : "Not linked"}</small></p>
+                    <p><small>Display order: ${escapeHtml(item.display_order || 0)}</small></p>
+                    <p><small>Published: ${item.is_published ? "Yes" : "No"}</small></p>
+                    <p><small>Subjects: ${subjects.length ? escapeHtml(subjects.join(", ")) : "N/A"}</small></p>
+                    <p>${escapeHtml(item.bio || "")}</p>
+                </div>
+                <div class="home-news-admin-actions">
+                    <button class="home-news-edit-btn lecturer-edit-btn" data-id="${item.id}">Edit</button>
+                    <button class="home-news-delete-btn lecturer-delete-btn" data-id="${item.id}">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    list.querySelectorAll(".lecturer-edit-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            const selected = lecturerItemsCache.find((row) => Number(row.id) === id);
+            if (selected) {
+                startEditLecturer(selected);
+            }
+        });
+    });
+
+    list.querySelectorAll(".lecturer-delete-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            if (Number.isInteger(id)) {
+                deleteLecturerEntry(id);
+            }
+        });
+    });
+}
+
+async function loadLecturersAdmin() {
+    const list = document.getElementById("lecturerList");
+    if (!list) {
+        return;
+    }
+
+    try {
+        const rows = await request("/api/admin/lecturers", { method: "GET" });
+        lecturerItemsCache = Array.isArray(rows) ? rows : [];
+        renderLecturersAdmin(lecturerItemsCache);
+    } catch (error) {
+        list.innerHTML = `<p class="admin-note">${escapeHtml(error.message || "Failed to load lecturers")}</p>`;
+    }
+}
+
+async function uploadLecturerPhoto() {
+    const fileInput = document.getElementById("lecturerPhotoFile");
+    const photoAssetIdInput = document.getElementById("lecturerPhotoAssetId");
+    const status = document.getElementById("lecturerPhotoUploadStatus");
+    const preview = document.getElementById("lecturerPhotoPreview");
+    const button = document.getElementById("uploadLecturerPhotoBtn");
+
+    if (!fileInput || !photoAssetIdInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) {
+        status.textContent = "Uploading...";
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        photoAssetIdInput.value = data.id;
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+        if (status) {
+            status.textContent = "Upload successful";
+        }
+        showToast("Lecturer photo uploaded", "success");
+    } catch (error) {
+        if (status) {
+            status.textContent = "Upload failed";
+        }
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveLecturer(event) {
+    event.preventDefault();
+
+    const editId = document.getElementById("lecturerEditId");
+    const photoAssetIdInput = document.getElementById("lecturerPhotoAssetId");
+    const nameInput = document.getElementById("lecturerName");
+    const specializationInput = document.getElementById("lecturerSpecialization");
+    const subjectsInput = document.getElementById("lecturerSubjects");
+    const bioInput = document.getElementById("lecturerBio");
+    const displayOrderInput = document.getElementById("lecturerDisplayOrder");
+    const isPublishedInput = document.getElementById("lecturerIsPublished");
+    const memberIdSelect = document.getElementById("lecturerMemberId");
+
+    if (!nameInput || !specializationInput || !subjectsInput || !bioInput || !displayOrderInput || !isPublishedInput) {
+        return;
+    }
+
+    const payload = {
+        name: nameInput.value.trim(),
+        specialization: specializationInput.value.trim(),
+        teaching_subjects: parseSubjectEntries(subjectsInput.value),
+        bio: bioInput.value.trim(),
+        member_id: memberIdSelect && memberIdSelect.value ? Number(memberIdSelect.value) : null,
+        photo_asset_id: photoAssetIdInput && photoAssetIdInput.value ? Number(photoAssetIdInput.value) : null,
+        display_order: Number(displayOrderInput.value || 0),
+        is_published: Boolean(isPublishedInput.checked)
+    };
+
+    if (!payload.name) {
+        showToast("Lecturer name is required", "error");
+        return;
+    }
+
+    if (!payload.specialization) {
+        showToast("Specialization is required", "error");
+        return;
+    }
+
+    const isEdit = Boolean(editId && editId.value);
+    const method = isEdit ? "PATCH" : "POST";
+    const path = isEdit ? `/api/admin/lecturers/${editId.value}` : "/api/admin/lecturers";
+
+    try {
+        await request(path, {
+            method,
+            body: JSON.stringify(payload)
+        });
+
+        resetLecturerForm();
+        await loadLecturersAdmin();
+        addActivityLog(`${isEdit ? "Updated" : "Created"} lecturer ${payload.name}`);
+        showToast(`Lecturer ${isEdit ? "updated" : "created"} successfully`, "success");
+    } catch (error) {
+        showToast(`Could not save lecturer: ${error.message}`, "error");
+    }
+}
+
+async function deleteLecturerEntry(id) {
+    try {
+        await request(`/api/admin/lecturers/${id}`, { method: "DELETE" });
+        await loadLecturersAdmin();
+        addActivityLog(`Deleted lecturer #${id}`);
+        showToast("Lecturer deleted successfully", "success");
+    } catch (error) {
+        showToast(`Could not delete lecturer: ${error.message}`, "error");
+    }
+}
+
 function resetHomeNewsForm() {
     const form = document.getElementById("homeNewsForm");
     const editId = document.getElementById("homeNewsEditId");
@@ -1096,6 +1448,7 @@ async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
         memberItemsCache = data;
+        refreshLecturerMemberOptions();
         bindMemberSearchEvents();
         renderMemberSections();
 
@@ -1645,6 +1998,7 @@ if (isAuthValid) {
     loadAllPublications();
     loadMembers();
     loadSeminarsAdmin();
+    loadLecturersAdmin();
     loadHomeNewsAdmin();
     showSection("profileSection");
     addActivityLog("Admin dashboard opened");
@@ -1657,6 +2011,23 @@ if (isAuthValid) {
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener("click", resetSeminarForm);
     }
+
+    const lecturerForm = document.getElementById("lecturerForm");
+    if (lecturerForm) {
+        lecturerForm.addEventListener("submit", saveLecturer);
+    }
+
+    const uploadLecturerPhotoBtn = document.getElementById("uploadLecturerPhotoBtn");
+    if (uploadLecturerPhotoBtn) {
+        uploadLecturerPhotoBtn.addEventListener("click", uploadLecturerPhoto);
+    }
+
+    const lecturerCancelEditBtn = document.getElementById("lecturerCancelEditBtn");
+    if (lecturerCancelEditBtn) {
+        lecturerCancelEditBtn.addEventListener("click", resetLecturerForm);
+    }
+
+    resetLecturerForm();
 
     const homeNewsForm = document.getElementById("homeNewsForm");
     if (homeNewsForm) {
