@@ -146,6 +146,11 @@
     text-decoration: none;
 }
 
+.publication-back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+}
+
 .publication-read-more:hover,
 .publication-back-link:hover {
     color: #e68900;
@@ -181,7 +186,7 @@
 }
 
 .publication-title {
-    color: #e69a1f;
+    color: #ff9800;
     font-weight: 600;
 }
 

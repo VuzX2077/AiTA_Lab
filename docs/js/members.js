@@ -196,20 +196,34 @@ function renderMemberCard(m) {
     const bodyRow = document.createElement("div");
     bodyRow.className = "member-body-row";
 
-    // avatar: render only when a valid photo URL exists
+    // avatar: always render a fixed frame; use placeholder when photo is missing
+    const avatar = document.createElement("div");
+    avatar.className = "member-avatar";
+
+    const noPhoto = document.createElement("span");
+    noPhoto.className = "member-avatar-placeholder";
+    noPhoto.textContent = "No Photo";
+
     const photoUrl = String(m.photo_url || "").trim();
     if (photoUrl) {
-        const avatar = document.createElement("div");
-        avatar.className = "member-avatar";
-
         const img = document.createElement("img");
         img.src = photoUrl;
         img.alt = m.name || "";
-        img.onerror = () => avatar.remove();
+        img.onerror = () => {
+            img.remove();
+            avatar.classList.add("no-photo");
+            if (!avatar.contains(noPhoto)) {
+                avatar.appendChild(noPhoto);
+            }
+        };
 
         avatar.appendChild(img);
-        bodyRow.appendChild(avatar);
+    } else {
+        avatar.classList.add("no-photo");
+        avatar.appendChild(noPhoto);
     }
+
+    bodyRow.appendChild(avatar);
 
     // info (position + bio)
     const info = document.createElement("div");

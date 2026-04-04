@@ -954,11 +954,16 @@ function renderLecturersAdmin(rows) {
 
     list.innerHTML = rows.map((item) => {
         const subjects = Array.isArray(item.teaching_subjects) ? item.teaching_subjects : [];
+        const hasPhoto = Boolean(item.photo_url);
 
         return `
             <div class="home-news-admin-item lecturer-admin-item">
-                <img class="home-news-admin-thumb" src="${escapeHtml(item.photo_url || "")}" alt="${escapeHtml(item.name || "Lecturer")}" ${item.photo_url ? "" : "hidden"}>
-                <div>
+                <div class="lecturer-admin-media ${hasPhoto ? "has-photo" : "no-photo"}">
+                    ${hasPhoto
+                        ? `<img class="home-news-admin-thumb lecturer-admin-thumb" src="${escapeHtml(item.photo_url || "")}" alt="${escapeHtml(item.name || "Lecturer")}">`
+                        : `<span class="lecturer-admin-no-photo" aria-hidden="true">No Photo</span>`}
+                </div>
+                <div class="lecturer-admin-content">
                     <p><strong>${escapeHtml(item.name || "Unknown")}</strong></p>
                     <p><small>Specialization: ${escapeHtml(item.specialization || "N/A")}</small></p>
                     <p><small>Linked member id: ${item.member_id ? escapeHtml(item.member_id) : "Not linked"}</small></p>

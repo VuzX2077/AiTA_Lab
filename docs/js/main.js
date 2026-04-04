@@ -340,8 +340,8 @@ async function initPublicationSearch() {
 		}
 
 		const headerRect = header.getBoundingClientRect();
-		const hideAtMenuTop = headerRect.top >= 2;
-		const showAtMenuTop = headerRect.top <= -2;
+		const hideAtMenuTop = headerRect.top >= 1;
+		const showAtMenuTop = headerRect.top <= -1;
 
 		if (hideAtMenuTop) {
 			isFloatingNavVisible = false;

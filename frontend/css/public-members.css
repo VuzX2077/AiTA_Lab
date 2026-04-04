@@ -181,6 +181,19 @@
     display: block;
 }
 
+.member-avatar.no-photo {
+    background: #edf2f7;
+    border: 1px solid #d2dbe6;
+    color: #4d6480;
+}
+
+.member-avatar-placeholder {
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
 .member-info {
     margin-left: 22px;
 }
@@ -516,6 +529,10 @@
         font-size: 20px;
     }
 
+    .member-avatar-placeholder {
+        font-size: 12px;
+    }
+
     .member-info h3 {
         font-size: 24px;
     }
@@ -545,6 +562,10 @@
         width: 90px;
         height: 90px;
         font-size: 22px;
+    }
+
+    .member-avatar-placeholder {
+        font-size: 13px;
     }
 
     .mf-link-row {
