@@ -6,11 +6,12 @@
     const router = express.Router();
 
     const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
     const upload = multer({
         storage: multer.memoryStorage(),
         limits: {
-            fileSize: 5 * 1024 * 1024
+            fileSize: MAX_IMAGE_SIZE_BYTES
         },
         fileFilter: (req, file, cb) => {
             if (!allowedMimeTypes.has(file.mimetype)) {
@@ -31,7 +32,7 @@
                 }
 
                 if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-                    return res.status(400).json({ message: "Image too large. Max size is 5MB" });
+                    return res.status(400).json({ message: "Image too large. Max size is 10MB" });
                 }
 
                 return res.status(400).json({ message: err.message || "Invalid upload request" });

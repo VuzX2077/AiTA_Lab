@@ -190,11 +190,16 @@ function applyOptionalImage(imageElement, value) {
 	const safeUrl = getSafeHttpUrl(value);
 	if (safeUrl) {
 		imageElement.src = safeUrl;
+		imageElement.hidden = false;
+		return;
 	}
+
+	imageElement.removeAttribute("src");
+	imageElement.hidden = true;
 }
 
 const DEFAULT_HOME_CONTENT = {
-	hero_title: "AI Technology and Application Research Lab",
+	hero_title: "",
 	intro_paragraph_1: "",
 	intro_paragraph_2: "",
 	github_url: "",
@@ -202,7 +207,7 @@ const DEFAULT_HOME_CONTENT = {
 	hero_image_url_1: "",
 	hero_image_url_2: "",
 	hero_image_url_3: "",
-	footer_text: "Copyright © 2025 AI Technology and Application Research Lab @ FPTU - HCMC - All right Reserved."
+	footer_text: ""
 };
 
 
@@ -246,18 +251,31 @@ async function initHomePageContent() {
 			throw new Error((data && data.message) || "Failed to load homepage content");
 		}
 
-		heroTitle.textContent = String(data.hero_title || heroTitle.textContent || "").trim();
-		introParagraph1.textContent = String(data.intro_paragraph_1 || introParagraph1.textContent || "").trim();
-		introParagraph2.textContent = String(data.intro_paragraph_2 || introParagraph2.textContent || "").trim();
-		footerText.textContent = String(data.footer_text || footerText.textContent || "").trim();
+		homePageContentState = {
+			...DEFAULT_HOME_CONTENT,
+			...(data && typeof data === "object" ? data : {})
+		};
 
-		applyOptionalHttpLink(githubLink, data.github_url || "");
-		applyOptionalHttpLink(facebookLink, data.facebook_url || "");
-		applyOptionalImage(heroImage1, data.hero_image_url_1 || "");
-		applyOptionalImage(heroImage2, data.hero_image_url_2 || "");
-		applyOptionalImage(heroImage3, data.hero_image_url_3 || "");
+		heroTitle.textContent = String(homePageContentState.hero_title || "").trim();
+		introParagraph1.textContent = String(homePageContentState.intro_paragraph_1 || "").trim();
+		introParagraph2.textContent = String(homePageContentState.intro_paragraph_2 || "").trim();
+		footerText.textContent = String(homePageContentState.footer_text || "").trim();
+
+		applyOptionalHttpLink(githubLink, homePageContentState.github_url || "");
+		applyOptionalHttpLink(facebookLink, homePageContentState.facebook_url || "");
+		applyOptionalImage(heroImage1, homePageContentState.hero_image_url_1 || "");
+		applyOptionalImage(heroImage2, homePageContentState.hero_image_url_2 || "");
+		applyOptionalImage(heroImage3, homePageContentState.hero_image_url_3 || "");
 	} catch (error) {
-		// Keep static fallback content when homepage content API is unavailable.
+		heroTitle.textContent = String(DEFAULT_HOME_CONTENT.hero_title);
+		introParagraph1.textContent = String(DEFAULT_HOME_CONTENT.intro_paragraph_1);
+		introParagraph2.textContent = String(DEFAULT_HOME_CONTENT.intro_paragraph_2);
+		footerText.textContent = String(DEFAULT_HOME_CONTENT.footer_text);
+		applyOptionalHttpLink(githubLink, DEFAULT_HOME_CONTENT.github_url);
+		applyOptionalHttpLink(facebookLink, DEFAULT_HOME_CONTENT.facebook_url);
+		applyOptionalImage(heroImage1, DEFAULT_HOME_CONTENT.hero_image_url_1);
+		applyOptionalImage(heroImage2, DEFAULT_HOME_CONTENT.hero_image_url_2);
+		applyOptionalImage(heroImage3, DEFAULT_HOME_CONTENT.hero_image_url_3);
 	}
 }
 
@@ -331,7 +349,7 @@ async function initHomeLatestPosts() {
 			const ctaLabelRaw = stripHtml(item.cta_label || "KEEP READING");
 			const ctaLabel = escapeHtml(ctaLabelRaw || "KEEP READING");
 
-			const readMore = `<a class="home-latest-link" href="${detailHref}">${ctaLabel} ›</a>`;
+			const readMore = `<a class="home-latest-link" href="${detailHref}">${ctaLabel} &rsaquo;</a>`;
 
 			return `
 				<article class="home-latest-item">
