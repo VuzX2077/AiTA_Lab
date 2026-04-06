@@ -158,6 +158,109 @@ function getSafeHttpUrl(value) {
 	return "";
 }
 
+function applyOptionalHttpLink(anchor, value) {
+	if (!anchor) {
+		return;
+	}
+
+	const safeUrl = getSafeHttpUrl(value);
+	if (safeUrl) {
+		anchor.href = safeUrl;
+		anchor.target = "_blank";
+		anchor.rel = "noopener noreferrer";
+		anchor.removeAttribute("aria-disabled");
+		anchor.style.pointerEvents = "";
+		anchor.style.opacity = "";
+		return;
+	}
+
+	anchor.href = "#";
+	anchor.removeAttribute("target");
+	anchor.removeAttribute("rel");
+	anchor.setAttribute("aria-disabled", "true");
+	anchor.style.pointerEvents = "none";
+	anchor.style.opacity = "0.6";
+}
+
+function applyOptionalImage(imageElement, value) {
+	if (!imageElement) {
+		return;
+	}
+
+	const safeUrl = getSafeHttpUrl(value);
+	if (safeUrl) {
+		imageElement.src = safeUrl;
+	}
+}
+
+const DEFAULT_HOME_CONTENT = {
+	hero_title: "AI Technology and Application Research Lab",
+	intro_paragraph_1: "",
+	intro_paragraph_2: "",
+	github_url: "",
+	facebook_url: "",
+	hero_image_url_1: "",
+	hero_image_url_2: "",
+	hero_image_url_3: "",
+	footer_text: "Copyright © 2025 AI Technology and Application Research Lab @ FPTU - HCMC - All right Reserved."
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function initHomePageContent() {
+	const heroTitle = document.getElementById("homeHeroTitle");
+	const introParagraph1 = document.getElementById("homeIntroParagraph1");
+	const introParagraph2 = document.getElementById("homeIntroParagraph2");
+	const githubLink = document.getElementById("homeFollowGithub");
+	const facebookLink = document.getElementById("homeFollowFacebook");
+	const heroImage1 = document.getElementById("homeHeroImage1");
+	const heroImage2 = document.getElementById("homeHeroImage2");
+	const heroImage3 = document.getElementById("homeHeroImage3");
+	const footerText = document.getElementById("homeFooterText");
+
+	if (!heroTitle || !introParagraph1 || !introParagraph2 || !footerText) {
+		return;
+	}
+
+	try {
+		const response = await fetch(getApiUrl("/api/homepage-content/public"));
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error((data && data.message) || "Failed to load homepage content");
+		}
+
+		heroTitle.textContent = String(data.hero_title || heroTitle.textContent || "").trim();
+		introParagraph1.textContent = String(data.intro_paragraph_1 || introParagraph1.textContent || "").trim();
+		introParagraph2.textContent = String(data.intro_paragraph_2 || introParagraph2.textContent || "").trim();
+		footerText.textContent = String(data.footer_text || footerText.textContent || "").trim();
+
+		applyOptionalHttpLink(githubLink, data.github_url || "");
+		applyOptionalHttpLink(facebookLink, data.facebook_url || "");
+		applyOptionalImage(heroImage1, data.hero_image_url_1 || "");
+		applyOptionalImage(heroImage2, data.hero_image_url_2 || "");
+		applyOptionalImage(heroImage3, data.hero_image_url_3 || "");
+	} catch (error) {
+		// Keep static fallback content when homepage content API is unavailable.
+	}
+}
+
 function toNewsSlug(value) {
 	return String(value || "")
 		.normalize("NFD")
@@ -536,4 +639,5 @@ async function initPublicationSearch() {
 }
 
 initPublicationSearch();
+initHomePageContent();
 initHomeLatestPosts();

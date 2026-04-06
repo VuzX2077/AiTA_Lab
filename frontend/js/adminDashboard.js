@@ -33,6 +33,7 @@ let memberItemsCache = [];
 let memberSearchEventsBound = false;
 let homeNewsItemsCache = [];
 let lecturerItemsCache = [];
+let homepageContentState = null;
 let currentProfile = null;
 let currentPublicPage = null;
 const PUBLIC_PAGE_LINK_PRESETS = [
@@ -89,6 +90,19 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
+}
+
+function isValidHttpUrl(value) {
+    if (!value || typeof value !== "string") {
+        return false;
+    }
+
+    try {
+        const parsed = new URL(value.trim());
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch (error) {
+        return false;
+    }
 }
 
 function toNewsSlug(value) {
@@ -1449,6 +1463,220 @@ async function saveHomeNews(event) {
     }
 }
 
+async function loadHomePageContentAdmin() {
+    const heroTitleInput = document.getElementById("homePageHeroTitle");
+    const introParagraph1Input = document.getElementById("homePageIntroParagraph1");
+    const introParagraph2Input = document.getElementById("homePageIntroParagraph2");
+    const githubUrlInput = document.getElementById("homePageGithubUrl");
+    const facebookUrlInput = document.getElementById("homePageFacebookUrl");
+    const heroImageUrl1Input = document.getElementById("homePageHeroImageUrl1");
+    const heroImageUrl2Input = document.getElementById("homePageHeroImageUrl2");
+    const heroImageUrl3Input = document.getElementById("homePageHeroImageUrl3");
+    const footerTextInput = document.getElementById("homePageFooterText");
+
+    if (!heroTitleInput || !introParagraph1Input || !introParagraph2Input || !footerTextInput) {
+        return;
+    }
+
+    try {
+        const data = await request("/api/admin/homepage-content", { method: "GET" });
+        homepageContentState = data || null;
+
+        heroTitleInput.value = data.hero_title || "";
+        introParagraph1Input.value = data.intro_paragraph_1 || "";
+        introParagraph2Input.value = data.intro_paragraph_2 || "";
+
+        if (githubUrlInput) {
+            githubUrlInput.value = data.github_url || "";
+        }
+
+        if (facebookUrlInput) {
+            facebookUrlInput.value = data.facebook_url || "";
+        }
+
+        if (heroImageUrl1Input) {
+            heroImageUrl1Input.value = data.hero_image_url_1 || "";
+            setHomePageHeroImagePreview(1, data.hero_image_url_1 || "");
+        }
+
+        if (heroImageUrl2Input) {
+            heroImageUrl2Input.value = data.hero_image_url_2 || "";
+            setHomePageHeroImagePreview(2, data.hero_image_url_2 || "");
+        }
+
+        if (heroImageUrl3Input) {
+            heroImageUrl3Input.value = data.hero_image_url_3 || "";
+            setHomePageHeroImagePreview(3, data.hero_image_url_3 || "");
+        }
+
+        footerTextInput.value = data.footer_text || "";
+    } catch (error) {
+        showToast(`Could not load homepage content: ${error.message}`, "error");
+    }
+}
+
+function setHomePageHeroImagePreview(slot, imageUrl) {
+    const preview = document.getElementById(`homePageHeroImagePreview${slot}`);
+    const status = document.getElementById(`homePageHeroImageUploadStatus${slot}`);
+
+    if (preview) {
+        if (imageUrl) {
+            preview.src = imageUrl;
+            preview.hidden = false;
+        } else {
+            preview.hidden = true;
+            preview.removeAttribute("src");
+        }
+    }
+
+    if (status) {
+        status.textContent = imageUrl ? "Image loaded from saved homepage content" : "";
+    }
+}
+
+async function uploadHomePageHeroImage(slot) {
+    const fileInput = document.getElementById(`homePageHeroImageFile${slot}`);
+    const imageUrlInput = document.getElementById(`homePageHeroImageUrl${slot}`);
+    const status = document.getElementById(`homePageHeroImageUploadStatus${slot}`);
+    const preview = document.getElementById(`homePageHeroImagePreview${slot}`);
+    const button = document.getElementById(`uploadHomePageHeroImageBtn${slot}`);
+
+    if (!fileInput || !imageUrlInput || !button) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+        showToast("Please choose an image first", "error");
+        return;
+    }
+
+    button.disabled = true;
+    if (status) {
+        status.textContent = "Uploading...";
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(getApiUrl("/api/uploads/images"), {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+        }
+
+        imageUrlInput.value = data.url || "";
+
+        if (preview && data.url) {
+            preview.src = data.url;
+            preview.hidden = false;
+        }
+
+        if (status) {
+            status.textContent = "Upload successful";
+        }
+
+        showToast(`Hero image ${slot} uploaded successfully`, "success");
+    } catch (error) {
+        if (status) {
+            status.textContent = "Upload failed";
+        }
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function saveHomePageContent(event) {
+    event.preventDefault();
+
+    const heroTitleInput = document.getElementById("homePageHeroTitle");
+    const introParagraph1Input = document.getElementById("homePageIntroParagraph1");
+    const introParagraph2Input = document.getElementById("homePageIntroParagraph2");
+    const githubUrlInput = document.getElementById("homePageGithubUrl");
+    const facebookUrlInput = document.getElementById("homePageFacebookUrl");
+    const heroImageUrl1Input = document.getElementById("homePageHeroImageUrl1");
+    const heroImageUrl2Input = document.getElementById("homePageHeroImageUrl2");
+    const heroImageUrl3Input = document.getElementById("homePageHeroImageUrl3");
+    const footerTextInput = document.getElementById("homePageFooterText");
+    const saveBtn = document.getElementById("homePageContentSaveBtn");
+
+    if (!heroTitleInput || !introParagraph1Input || !introParagraph2Input || !footerTextInput) {
+        return;
+    }
+
+    const payload = {
+        hero_title: heroTitleInput.value.trim(),
+        intro_paragraph_1: introParagraph1Input.value.trim(),
+        intro_paragraph_2: introParagraph2Input.value.trim(),
+        github_url: githubUrlInput ? githubUrlInput.value.trim() : "",
+        facebook_url: facebookUrlInput ? facebookUrlInput.value.trim() : "",
+        hero_image_url_1: heroImageUrl1Input ? heroImageUrl1Input.value.trim() : "",
+        hero_image_url_2: heroImageUrl2Input ? heroImageUrl2Input.value.trim() : "",
+        hero_image_url_3: heroImageUrl3Input ? heroImageUrl3Input.value.trim() : "",
+        footer_text: footerTextInput.value.trim()
+    };
+
+    if (!payload.hero_title || !payload.intro_paragraph_1 || !payload.intro_paragraph_2 || !payload.footer_text) {
+        showToast("Please fill all required homepage content fields", "error");
+        return;
+    }
+
+    if (payload.github_url && !isValidHttpUrl(payload.github_url)) {
+        showToast("GitHub URL must start with http:// or https://", "error");
+        return;
+    }
+
+    if (payload.facebook_url && !isValidHttpUrl(payload.facebook_url)) {
+        showToast("Facebook URL must start with http:// or https://", "error");
+        return;
+    }
+
+    if (payload.hero_image_url_1 && !isValidHttpUrl(payload.hero_image_url_1)) {
+        showToast("Hero image 1 is invalid. Please upload again.", "error");
+        return;
+    }
+
+    if (payload.hero_image_url_2 && !isValidHttpUrl(payload.hero_image_url_2)) {
+        showToast("Hero image 2 is invalid. Please upload again.", "error");
+        return;
+    }
+
+    if (payload.hero_image_url_3 && !isValidHttpUrl(payload.hero_image_url_3)) {
+        showToast("Hero image 3 is invalid. Please upload again.", "error");
+        return;
+    }
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+    }
+
+    try {
+        const saved = await request("/api/admin/homepage-content", {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
+
+        homepageContentState = saved || payload;
+        addActivityLog("Updated homepage content");
+        showToast("Homepage content updated successfully", "success");
+    } catch (error) {
+        showToast(`Could not save homepage content: ${error.message}`, "error");
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+        }
+    }
+}
+
 async function loadMembers() {
     try {
         const data = await request("/api/members", { method: "GET" });
@@ -2005,6 +2233,7 @@ if (isAuthValid) {
     loadSeminarsAdmin();
     loadLecturersAdmin();
     loadHomeNewsAdmin();
+    loadHomePageContentAdmin();
     showSection("profileSection");
     addActivityLog("Admin dashboard opened");
 
@@ -2050,6 +2279,26 @@ if (isAuthValid) {
     }
 
     resetHomeNewsForm();
+
+    const homePageContentForm = document.getElementById("homePageContentForm");
+    if (homePageContentForm) {
+        homePageContentForm.addEventListener("submit", saveHomePageContent);
+    }
+
+    const uploadHomePageHeroImageBtn1 = document.getElementById("uploadHomePageHeroImageBtn1");
+    if (uploadHomePageHeroImageBtn1) {
+        uploadHomePageHeroImageBtn1.addEventListener("click", () => uploadHomePageHeroImage(1));
+    }
+
+    const uploadHomePageHeroImageBtn2 = document.getElementById("uploadHomePageHeroImageBtn2");
+    if (uploadHomePageHeroImageBtn2) {
+        uploadHomePageHeroImageBtn2.addEventListener("click", () => uploadHomePageHeroImage(2));
+    }
+
+    const uploadHomePageHeroImageBtn3 = document.getElementById("uploadHomePageHeroImageBtn3");
+    if (uploadHomePageHeroImageBtn3) {
+        uploadHomePageHeroImageBtn3.addEventListener("click", () => uploadHomePageHeroImage(3));
+    }
 
     // Change password
     const editProfileForm = document.getElementById("editProfileForm");

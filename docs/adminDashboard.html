@@ -47,6 +47,9 @@
             <li class="sidebar-group-title">News</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="homeNewsSection">Latest Posts</button></li>
 
+            <li class="sidebar-group-title">Site</li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="homePageContentSection">Homepage Content</button></li>
+
             <li class="sidebar-group-title">Seminars</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="seminarManagementSection">Seminar Management</button></li>
 
@@ -218,6 +221,73 @@
             </form>
 
             <div id="homeNewsList" class="home-news-admin-list"></div>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="homePageContentSection">
+            <h2>Homepage Content</h2>
+
+            <form id="homePageContentForm" class="home-news-form-grid">
+                <label class="home-news-span-2">
+                    Hero Title
+                    <input type="text" id="homePageHeroTitle" required>
+                </label>
+
+                <label class="home-news-span-2">
+                    Intro Paragraph 1
+                    <textarea id="homePageIntroParagraph1" rows="4" required></textarea>
+                </label>
+
+                <label class="home-news-span-2">
+                    Intro Paragraph 2
+                    <textarea id="homePageIntroParagraph2" rows="4" required></textarea>
+                </label>
+
+                <label>
+                    GitHub URL (optional)
+                    <input type="url" id="homePageGithubUrl" placeholder="https://github.com/...">
+                </label>
+
+                <label>
+                    Facebook URL (optional)
+                    <input type="url" id="homePageFacebookUrl" placeholder="https://facebook.com/...">
+                </label>
+
+                <label class="home-news-span-2">
+                    Hero Image 1
+                    <input type="hidden" id="homePageHeroImageUrl1">
+                    <input type="file" id="homePageHeroImageFile1" accept="image/jpeg,image/png,image/webp">
+                    <button type="button" id="uploadHomePageHeroImageBtn1" class="btn-primary">Upload Image</button>
+                    <p id="homePageHeroImageUploadStatus1" class="settings-note"></p>
+                    <img id="homePageHeroImagePreview1" alt="Homepage hero image 1 preview" class="home-news-image-preview" hidden>
+                </label>
+
+                <label class="home-news-span-2">
+                    Hero Image 2
+                    <input type="hidden" id="homePageHeroImageUrl2">
+                    <input type="file" id="homePageHeroImageFile2" accept="image/jpeg,image/png,image/webp">
+                    <button type="button" id="uploadHomePageHeroImageBtn2" class="btn-primary">Upload Image</button>
+                    <p id="homePageHeroImageUploadStatus2" class="settings-note"></p>
+                    <img id="homePageHeroImagePreview2" alt="Homepage hero image 2 preview" class="home-news-image-preview" hidden>
+                </label>
+
+                <label class="home-news-span-2">
+                    Hero Image 3
+                    <input type="hidden" id="homePageHeroImageUrl3">
+                    <input type="file" id="homePageHeroImageFile3" accept="image/jpeg,image/png,image/webp">
+                    <button type="button" id="uploadHomePageHeroImageBtn3" class="btn-primary">Upload Image</button>
+                    <p id="homePageHeroImageUploadStatus3" class="settings-note"></p>
+                    <img id="homePageHeroImagePreview3" alt="Homepage hero image 3 preview" class="home-news-image-preview" hidden>
+                </label>
+
+                <label class="home-news-span-2">
+                    Footer Text
+                    <textarea id="homePageFooterText" rows="3" required></textarea>
+                </label>
+
+                <div class="home-news-form-actions home-news-span-2">
+                    <button type="submit" id="homePageContentSaveBtn">Save Homepage Content</button>
+                </div>
+            </form>
         </div>
 
         <div class="dashboard-section admin-panel" id="seminarManagementSection">
