@@ -39,6 +39,59 @@ function apiUrl(path) {
     return path;
 }
 
+function getPendingUploadAssetId(inputElement) {
+    if (!inputElement || !inputElement.dataset) {
+        return null;
+    }
+
+    const parsed = Number(inputElement.dataset.pendingUploadAssetId || "");
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function setPendingUploadAssetId(inputElement, assetId) {
+    if (!inputElement || !inputElement.dataset) {
+        return;
+    }
+
+    const parsed = Number(assetId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+        inputElement.dataset.pendingUploadAssetId = String(parsed);
+    } else {
+        delete inputElement.dataset.pendingUploadAssetId;
+    }
+}
+
+async function deleteUploadedImageAssetById(assetId) {
+    const normalizedId = Number(assetId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0 || !adminToken) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(apiUrl(`/api/uploads/images/${normalizedId}`), {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${adminToken}`
+            }
+        });
+
+        return response.ok || response.status === 404 || response.status === 409;
+    } catch (error) {
+        console.error("Temporary image cleanup failed:", error);
+        return false;
+    }
+}
+
+async function cleanupPendingUploadAsset(inputElement) {
+    const pendingAssetId = getPendingUploadAssetId(inputElement);
+    if (!pendingAssetId) {
+        return;
+    }
+
+    await deleteUploadedImageAssetById(pendingAssetId);
+    setPendingUploadAssetId(inputElement, null);
+}
+
 function toMemberSlug(value) {
     return String(value || "")
         .normalize("NFD")
@@ -338,6 +391,12 @@ function openModal() {
 function closeModal() {
     const modal = document.getElementById("memberModal");
     if (modal) modal.style.display = "none";
+
+    const photoAssetIdInput = document.getElementById("mfPhotoAssetId");
+    if (photoAssetIdInput) {
+        void cleanupPendingUploadAsset(photoAssetIdInput);
+        setPendingUploadAssetId(photoAssetIdInput, null);
+    }
 }
 
 function buildLinkRow(lk = {}) {
@@ -431,7 +490,9 @@ async function uploadSelectedPhoto() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.message || "Failed to upload image");
 
+        await cleanupPendingUploadAsset(photoAssetIdInput);
         photoAssetIdInput.value = data.id || "";
+        setPendingUploadAssetId(photoAssetIdInput, data.id);
         if (status) status.textContent = "Upload successful";
         showToast("Photo uploaded successfully", "success");
     } catch (err) {
@@ -451,6 +512,7 @@ function populateForm(m, options = {}) {
     document.getElementById("mfPosition").value = m.position || "";
     document.getElementById("mfSection").value = preserveSection ? currentSection : (m.section || "researchers");
     document.getElementById("mfPhotoAssetId").value = m.photo_asset_id || "";
+    setPendingUploadAssetId(document.getElementById("mfPhotoAssetId"), null);
     const fileInput = document.getElementById("mfPhotoFile");
     if (fileInput) fileInput.value = "";
     const uploadStatus = document.getElementById("mfPhotoUploadStatus");
@@ -608,6 +670,8 @@ async function handleSubmit(e) {
             if (!res.ok) throw new Error(data.message || "Failed to update member");
             showToast("Member updated");
         }
+
+        setPendingUploadAssetId(document.getElementById("mfPhotoAssetId"), null);
 
         closeModal();
         loadMembers();

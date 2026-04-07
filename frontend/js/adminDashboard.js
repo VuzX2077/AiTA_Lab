@@ -242,6 +242,64 @@ async function request(path, options = {}) {
     return data;
 }
 
+function getPendingUploadAssetId(inputElement) {
+    if (!inputElement || !inputElement.dataset) {
+        return null;
+    }
+
+    const parsed = Number(inputElement.dataset.pendingUploadAssetId || "");
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function setPendingUploadAssetId(inputElement, assetId) {
+    if (!inputElement || !inputElement.dataset) {
+        return;
+    }
+
+    const parsed = Number(assetId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+        inputElement.dataset.pendingUploadAssetId = String(parsed);
+    } else {
+        delete inputElement.dataset.pendingUploadAssetId;
+    }
+}
+
+async function deleteUploadedImageAssetById(assetId) {
+    const normalizedId = Number(assetId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(getApiUrl(`/api/uploads/images/${normalizedId}`), {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (response.ok || response.status === 404 || response.status === 409) {
+            return true;
+        }
+
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to delete temporary image");
+    } catch (error) {
+        console.error("Temporary image cleanup failed:", error);
+        return false;
+    }
+}
+
+async function cleanupPendingUploadAsset(inputElement) {
+    const pendingAssetId = getPendingUploadAssetId(inputElement);
+    if (!pendingAssetId) {
+        return;
+    }
+
+    await deleteUploadedImageAssetById(pendingAssetId);
+    setPendingUploadAssetId(inputElement, null);
+}
+
 async function loadPendingPublications() {
     try {
         const data = await request("/api/publications/pending", { method: "GET" });
@@ -862,7 +920,9 @@ function resetLecturerForm() {
     }
 
     if (photoAssetId) {
+        void cleanupPendingUploadAsset(photoAssetId);
         photoAssetId.value = "";
+        setPendingUploadAssetId(photoAssetId, null);
     }
 
     if (preview) {
@@ -919,6 +979,7 @@ function startEditLecturer(item) {
     editId.value = String(item.id);
     if (photoAssetId) {
         photoAssetId.value = item.photo_asset_id ? String(item.photo_asset_id) : "";
+        setPendingUploadAssetId(photoAssetId, null);
     }
     nameInput.value = item.name || "";
     specializationInput.value = item.specialization || "";
@@ -1068,7 +1129,9 @@ async function uploadLecturerPhoto() {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(photoAssetIdInput);
         photoAssetIdInput.value = data.id;
+        setPendingUploadAssetId(photoAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -1135,6 +1198,10 @@ async function saveLecturer(event) {
             body: JSON.stringify(payload)
         });
 
+        if (photoAssetIdInput) {
+            setPendingUploadAssetId(photoAssetIdInput, null);
+        }
+
         resetLecturerForm();
         await loadLecturersAdmin();
         addActivityLog(`${isEdit ? "Updated" : "Created"} lecturer ${payload.name}`);
@@ -1176,7 +1243,9 @@ function resetHomeNewsForm() {
     }
 
     if (imageAssetId) {
+        void cleanupPendingUploadAsset(imageAssetId);
         imageAssetId.value = "";
+        setPendingUploadAssetId(imageAssetId, null);
     }
 
     if (preview) {
@@ -1229,6 +1298,7 @@ function startEditHomeNews(item) {
 
     editId.value = String(item.id);
     imageAssetId.value = String(item.image_asset_id || "");
+    setPendingUploadAssetId(imageAssetId, null);
     titleInput.value = item.title || "";
     summaryInput.value = item.summary || "";
     if (linkInput) {
@@ -1387,7 +1457,9 @@ async function uploadHomeNewsImage() {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(imageAssetIdInput);
         imageAssetIdInput.value = data.id;
+        setPendingUploadAssetId(imageAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -1454,6 +1526,10 @@ async function saveHomeNews(event) {
             body: JSON.stringify(payload)
         });
 
+        if (imageAssetIdInput) {
+            setPendingUploadAssetId(imageAssetIdInput, null);
+        }
+
         resetHomeNewsForm();
         await loadHomeNewsAdmin();
         addActivityLog(`${isEdit ? "Updated" : "Created"} homepage post`);
@@ -1496,16 +1572,19 @@ async function loadHomePageContentAdmin() {
 
         if (heroImageUrl1Input) {
             heroImageUrl1Input.value = data.hero_image_url_1 || "";
+            setPendingUploadAssetId(heroImageUrl1Input, null);
             setHomePageHeroImagePreview(1, data.hero_image_url_1 || "");
         }
 
         if (heroImageUrl2Input) {
             heroImageUrl2Input.value = data.hero_image_url_2 || "";
+            setPendingUploadAssetId(heroImageUrl2Input, null);
             setHomePageHeroImagePreview(2, data.hero_image_url_2 || "");
         }
 
         if (heroImageUrl3Input) {
             heroImageUrl3Input.value = data.hero_image_url_3 || "";
+            setPendingUploadAssetId(heroImageUrl3Input, null);
             setHomePageHeroImagePreview(3, data.hero_image_url_3 || "");
         }
 
@@ -1573,7 +1652,9 @@ async function uploadHomePageHeroImage(slot) {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(imageUrlInput);
         imageUrlInput.value = data.url || "";
+        setPendingUploadAssetId(imageUrlInput, data.id);
 
         if (preview && data.url) {
             preview.src = data.url;
@@ -1666,6 +1747,19 @@ async function saveHomePageContent(event) {
         });
 
         homepageContentState = saved || payload;
+
+        if (heroImageUrl1Input) {
+            setPendingUploadAssetId(heroImageUrl1Input, null);
+        }
+
+        if (heroImageUrl2Input) {
+            setPendingUploadAssetId(heroImageUrl2Input, null);
+        }
+
+        if (heroImageUrl3Input) {
+            setPendingUploadAssetId(heroImageUrl3Input, null);
+        }
+
         addActivityLog("Updated homepage content");
         showToast("Homepage content updated successfully", "success");
     } catch (error) {
@@ -1963,7 +2057,9 @@ async function uploadPublicPageHeroPhoto() {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(heroAssetIdInput);
         heroAssetIdInput.value = data.id;
+        setPendingUploadAssetId(heroAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -1984,7 +2080,11 @@ function clearPublicPageHeroSelection() {
     const heroFileInput = document.getElementById("publicPageHeroPhotoFile");
     const status = document.getElementById("publicPageHeroPhotoUploadStatus");
 
-    if (heroAssetIdInput) heroAssetIdInput.value = "";
+    if (heroAssetIdInput) {
+        void cleanupPendingUploadAsset(heroAssetIdInput);
+        heroAssetIdInput.value = "";
+        setPendingUploadAssetId(heroAssetIdInput, null);
+    }
     if (heroPreview) {
         heroPreview.hidden = true;
         heroPreview.removeAttribute("src");
@@ -2031,6 +2131,11 @@ async function saveOwnPublicPage(event) {
         method: "PATCH",
         body: JSON.stringify(payload)
     });
+
+    const heroAssetIdInput = document.getElementById("publicPageHeroPhotoAssetId");
+    if (heroAssetIdInput) {
+        setPendingUploadAssetId(heroAssetIdInput, null);
+    }
 
     await loadOwnPublicPage();
     addActivityLog("Updated own public page");
@@ -2093,7 +2198,9 @@ async function uploadProfileAvatar() {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(photoAssetIdInput);
         photoAssetIdInput.value = data.id;
+        setPendingUploadAssetId(photoAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -2134,6 +2241,10 @@ async function saveOwnProfile(event) {
                     : null
             })
         });
+
+        if (profilePhotoAssetIdInput) {
+            setPendingUploadAssetId(profilePhotoAssetIdInput, null);
+        }
 
         await loadAdminProfile();
         addActivityLog("Updated own profile");
@@ -2442,7 +2553,9 @@ function clearProfileAvatarSelection() {
     const status = document.getElementById("profilePhotoUploadStatus");
 
     if (profilePhotoAssetIdInput) {
+        void cleanupPendingUploadAsset(profilePhotoAssetIdInput);
         profilePhotoAssetIdInput.value = "";
+        setPendingUploadAssetId(profilePhotoAssetIdInput, null);
     }
 
     if (profilePhotoPreview) {

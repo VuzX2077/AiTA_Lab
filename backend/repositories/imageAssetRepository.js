@@ -45,6 +45,20 @@ async function findById(id, db = pool) {
     return result.rows[0] || null;
 }
 
+async function findByPublicUrl(publicUrl, db = pool) {
+    const result = await db.query(
+        `
+        SELECT id, storage_provider, storage_key, public_url, mime_type, size_bytes, width, height, uploaded_by, created_at
+        FROM image_assets
+        WHERE public_url = $1
+        LIMIT 1
+        `,
+        [publicUrl]
+    );
+
+    return result.rows[0] || null;
+}
+
 async function countReferences(imageAssetId, db = pool) {
     const result = await db.query(
         `
@@ -74,10 +88,30 @@ async function deleteByStorageKey(storageKey, db = pool) {
     );
 }
 
+async function findCandidatesCreatedBefore(cutoff, limit = 200, db = pool) {
+    const normalizedLimit = Number.isInteger(Number(limit)) ? Number(limit) : 200;
+    const safeLimit = Math.max(1, Math.min(normalizedLimit, 2000));
+
+    const result = await db.query(
+        `
+        SELECT id, storage_provider, storage_key, public_url, uploaded_by, created_at
+        FROM image_assets
+        WHERE created_at < $1
+        ORDER BY created_at ASC
+        LIMIT $2
+        `,
+        [cutoff, safeLimit]
+    );
+
+    return result.rows;
+}
+
 module.exports = {
     createImageAsset,
     findById,
+    findByPublicUrl,
     countReferences,
     deleteById,
-    deleteByStorageKey
+    deleteByStorageKey,
+    findCandidatesCreatedBefore
 };

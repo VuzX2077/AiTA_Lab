@@ -41,4 +41,11 @@
         uploadController.uploadImage
     );
 
+    router.delete(
+        "/uploads/images/:id",
+        verifyToken,
+        authorizeRole(["admin", "user"]),
+        uploadController.deleteUploadedImage
+    );
+
     module.exports = router;

@@ -219,6 +219,59 @@ function getAdminToken() {
     return token;
 }
 
+function getPendingUploadAssetId(inputElement) {
+    if (!inputElement || !inputElement.dataset) {
+        return null;
+    }
+
+    const parsed = Number(inputElement.dataset.pendingUploadAssetId || "");
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function setPendingUploadAssetId(inputElement, assetId) {
+    if (!inputElement || !inputElement.dataset) {
+        return;
+    }
+
+    const parsed = Number(assetId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+        inputElement.dataset.pendingUploadAssetId = String(parsed);
+    } else {
+        delete inputElement.dataset.pendingUploadAssetId;
+    }
+}
+
+async function deleteUploadedImageAssetById(assetId) {
+    const normalizedId = Number(assetId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0 || !adminToken) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(apiUrl(`/api/uploads/images/${normalizedId}`), {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + adminToken
+            }
+        });
+
+        return response.ok || response.status === 404 || response.status === 409;
+    } catch (error) {
+        console.error("Temporary image cleanup failed:", error);
+        return false;
+    }
+}
+
+async function cleanupPendingUploadAsset(inputElement) {
+    const pendingAssetId = getPendingUploadAssetId(inputElement);
+    if (!pendingAssetId) {
+        return;
+    }
+
+    await deleteUploadedImageAssetById(pendingAssetId);
+    setPendingUploadAssetId(inputElement, null);
+}
+
 function getSafeHttpUrl(value) {
     if (typeof value !== "string" || !value.trim()) {
         return "";
@@ -879,30 +932,36 @@ async function bindAdminForm(item) {
 
     // Set up modal controls
     if (editBtn && modal && closeBtn) {
+        const closeModalAndCleanup = () => {
+            modal.classList.remove("is-open");
+            void cleanupPendingUploadAsset(imageAssetIdInput);
+        };
+
         editBtn.addEventListener("click", () => {
             modal.classList.add("is-open");
         });
 
         closeBtn.addEventListener("click", () => {
-            modal.classList.remove("is-open");
+            closeModalAndCleanup();
         });
 
         modal.addEventListener("click", (e) => {
             if (e.target === modal) {
-                modal.classList.remove("is-open");
+                closeModalAndCleanup();
             }
         });
 
         // Close on Escape key
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && modal.classList.contains("is-open")) {
-                modal.classList.remove("is-open");
+                closeModalAndCleanup();
             }
         });
     }
 
     idInput.value = String(item.id || "");
     imageAssetIdInput.value = String(item.image_asset_id || "");
+    setPendingUploadAssetId(imageAssetIdInput, null);
     titleInput.value = item.title || "";
     contentInput.value = (item.content || "");
     tagInput.value = item.tag || "NEWS";
@@ -1011,7 +1070,9 @@ async function uploadNewsImageFromAdminForm() {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        await cleanupPendingUploadAsset(imageAssetIdInput);
         imageAssetIdInput.value = String(data.id || "");
+        setPendingUploadAssetId(imageAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -1131,6 +1192,8 @@ async function saveNewsFromAdminForm(event) {
         if (!response.ok) {
             throw new Error(data.message || "Failed to save news");
         }
+
+        setPendingUploadAssetId(imageAssetIdInput, null);
 
         currentNews = { ...currentNews, ...data };
         renderNewsDetail(currentNews);

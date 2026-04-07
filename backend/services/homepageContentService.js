@@ -1,4 +1,5 @@
 const homepageContentRepository = require("../repositories/homepageContentRepository");
+const uploadService = require("./uploadService");
 
 function normalizeText(value, fallback = "") {
     if (typeof value !== "string") {
@@ -40,6 +41,8 @@ async function getHomepageContentForAdmin() {
 }
 
 async function saveHomepageContent(payload, actorId) {
+    const previous = await homepageContentRepository.findForAdmin();
+
     const normalizedPayload = {
         hero_title: normalizeText(payload.hero_title, "AI Technology and Application Research Lab"),
         intro_paragraph_1: normalizeText(payload.intro_paragraph_1, ""),
@@ -52,7 +55,25 @@ async function saveHomepageContent(payload, actorId) {
         footer_text: normalizeText(payload.footer_text, "Copyright © 2025 AI Technology and Application Research Lab @ FPTU - HCMC — All right Reserved.")
     };
 
-    return homepageContentRepository.upsert(normalizedPayload, actorId);
+    const saved = await homepageContentRepository.upsert(normalizedPayload, actorId);
+
+    const replacedUrls = [
+        [previous && previous.hero_image_url_1, normalizedPayload.hero_image_url_1],
+        [previous && previous.hero_image_url_2, normalizedPayload.hero_image_url_2],
+        [previous && previous.hero_image_url_3, normalizedPayload.hero_image_url_3]
+    ]
+        .filter(([oldUrl, newUrl]) => oldUrl && oldUrl !== newUrl)
+        .map(([oldUrl]) => oldUrl);
+
+    for (const oldUrl of replacedUrls) {
+        try {
+            await uploadService.deleteImageAssetByPublicUrlIfUnused(oldUrl);
+        } catch (error) {
+            console.error("Failed to cleanup replaced homepage image:", oldUrl, error);
+        }
+    }
+
+    return saved;
 }
 
 module.exports = {

@@ -14,6 +14,42 @@ async function uploadImage(req, res) {
     }
 }
 
+async function deleteUploadedImage(req, res) {
+    const imageAssetId = Number(req.params.id);
+    if (!Number.isInteger(imageAssetId) || imageAssetId <= 0) {
+        return res.status(400).json({ message: "Invalid image asset id" });
+    }
+
+    try {
+        const result = await uploadService.deleteUploadedImageAsset({
+            imageAssetId,
+            actorId: req.user && req.user.id,
+            actorRole: req.user && req.user.role
+        });
+
+        if (result.status === "invalid_id") {
+            return res.status(400).json({ message: "Invalid image asset id" });
+        }
+
+        if (result.status === "not_found") {
+            return res.status(404).json({ message: "Image asset not found" });
+        }
+
+        if (result.status === "forbidden") {
+            return res.status(403).json({ message: "You are not allowed to delete this image" });
+        }
+
+        if (result.status === "in_use") {
+            return res.status(409).json({ message: "Image is still in use" });
+        }
+
+        return res.json({ message: "Image deleted" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to delete image" });
+    }
+}
+
 async function updateAvatar(req, res) {
     try {
         const userId = req.user.id;
@@ -41,6 +77,7 @@ async function updateAvatar(req, res) {
 
 module.exports = {
     uploadImage,
+    deleteUploadedImage,
     updateAvatar
 
 };

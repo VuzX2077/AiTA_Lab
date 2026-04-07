@@ -46,6 +46,31 @@ async function findForAdmin(db = pool) {
     return result.rows[0] || null;
 }
 
+async function isHeroImageUrlUsed(publicUrl, db = pool) {
+    const normalizedUrl = typeof publicUrl === "string" ? publicUrl.trim() : "";
+    if (!normalizedUrl) {
+        return false;
+    }
+
+    const result = await db.query(
+        `
+        SELECT EXISTS (
+            SELECT 1
+            FROM homepage_content
+            WHERE id = 1
+              AND (
+                  hero_image_url_1 = $1
+                  OR hero_image_url_2 = $1
+                  OR hero_image_url_3 = $1
+              )
+        ) AS is_used
+        `,
+        [normalizedUrl]
+    );
+
+    return Boolean(result.rows[0] && result.rows[0].is_used);
+}
+
 async function upsert(payload, actorId, db = pool) {
     const result = await db.query(
         `
@@ -103,5 +128,6 @@ async function upsert(payload, actorId, db = pool) {
 module.exports = {
     findPublic,
     findForAdmin,
+    isHeroImageUrlUsed,
     upsert
 };

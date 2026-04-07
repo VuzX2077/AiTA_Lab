@@ -1,6 +1,7 @@
 const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const imageAssetRepository = require("../repositories/imageAssetRepository");
+const homepageContentRepository = require("../repositories/homepageContentRepository");
 const supabase = require("../supabaseClient");
 
 const STORAGE_PROVIDER = "supabase";
@@ -79,7 +80,7 @@ async function deleteImage(storageKey) {
     await imageAssetRepository.deleteByStorageKey(storageKey);
 }
 
-async function deleteImageAssetIfUnused(imageAssetId, db) {
+async function deleteImageAssetIfUnused(imageAssetId, db = require("../db")) {
     const normalizedId = Number(imageAssetId);
     if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
         return false;
@@ -93,6 +94,13 @@ async function deleteImageAssetIfUnused(imageAssetId, db) {
     const references = await imageAssetRepository.countReferences(normalizedId, db);
     if (references > 0) {
         return false;
+    }
+
+    if (asset.public_url) {
+        const usedByHomepage = await homepageContentRepository.isHeroImageUrlUsed(asset.public_url, db);
+        if (usedByHomepage) {
+            return false;
+        }
     }
 
     if (asset.storage_key) {
@@ -118,8 +126,80 @@ async function deleteImageAssetIfUnused(imageAssetId, db) {
     return true;
 }
 
+async function deleteImageAssetByPublicUrlIfUnused(publicUrl, db = require("../db")) {
+    const normalizedUrl = typeof publicUrl === "string" ? publicUrl.trim() : "";
+    if (!normalizedUrl) {
+        return false;
+    }
+
+    const asset = await imageAssetRepository.findByPublicUrl(normalizedUrl, db);
+    if (!asset) {
+        return false;
+    }
+
+    return deleteImageAssetIfUnused(asset.id, db);
+}
+
+async function deleteUploadedImageAsset({ imageAssetId, actorId, actorRole }, db = require("../db")) {
+    const normalizedId = Number(imageAssetId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+        return { status: "invalid_id" };
+    }
+
+    const asset = await imageAssetRepository.findById(normalizedId, db);
+    if (!asset) {
+        return { status: "not_found" };
+    }
+
+    const isAdmin = String(actorRole || "") === "admin";
+    const ownerId = Number(asset.uploaded_by);
+    const requesterId = Number(actorId);
+    const isOwner = Number.isInteger(ownerId) && Number.isInteger(requesterId) && ownerId === requesterId;
+
+    if (!isAdmin && !isOwner) {
+        return { status: "forbidden" };
+    }
+
+    const deleted = await deleteImageAssetIfUnused(normalizedId, db);
+    return deleted ? { status: "deleted" } : { status: "in_use" };
+}
+
+async function cleanupOrphanedImages({ olderThanHours = 24, limit = 200 } = {}) {
+    const normalizedHours = Number.isFinite(Number(olderThanHours)) ? Number(olderThanHours) : 24;
+    const safeHours = Math.max(1, normalizedHours);
+    const cutoff = new Date(Date.now() - safeHours * 60 * 60 * 1000);
+
+    const candidates = await imageAssetRepository.findCandidatesCreatedBefore(cutoff.toISOString(), limit);
+    const result = {
+        olderThanHours: safeHours,
+        scanned: candidates.length,
+        deleted: 0,
+        skippedInUse: 0,
+        failed: 0
+    };
+
+    for (const candidate of candidates) {
+        try {
+            const deleted = await deleteImageAssetIfUnused(candidate.id);
+            if (deleted) {
+                result.deleted += 1;
+            } else {
+                result.skippedInUse += 1;
+            }
+        } catch (error) {
+            result.failed += 1;
+            console.error("Failed to cleanup orphan candidate:", candidate.id, error);
+        }
+    }
+
+    return result;
+}
+
 module.exports = {
     processAndStoreImage,
     deleteImage,
-    deleteImageAssetIfUnused
+    deleteImageAssetIfUnused,
+    deleteImageAssetByPublicUrlIfUnused,
+    deleteUploadedImageAsset,
+    cleanupOrphanedImages
 };
