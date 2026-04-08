@@ -293,11 +293,16 @@ async function deleteUploadedImageAssetById(assetId) {
 async function cleanupPendingUploadAsset(inputElement) {
     const pendingAssetId = getPendingUploadAssetId(inputElement);
     if (!pendingAssetId) {
-        return;
+        return true;
     }
 
-    await deleteUploadedImageAssetById(pendingAssetId);
-    setPendingUploadAssetId(inputElement, null);
+    const deleted = await deleteUploadedImageAssetById(pendingAssetId);
+    if (deleted) {
+        setPendingUploadAssetId(inputElement, null);
+        return true;
+    }
+
+    return false;
 }
 
 async function loadPendingPublications() {
@@ -1659,7 +1664,10 @@ async function uploadHomePageHeroImage(slot) {
             throw new Error("Upload response is missing image asset id");
         }
 
-        await cleanupPendingUploadAsset(imageUrlInput);
+        const cleanupOk = await cleanupPendingUploadAsset(imageUrlInput);
+        if (!cleanupOk && getPendingUploadAssetId(imageUrlInput)) {
+            throw new Error("Cannot remove previous temporary image. Please retry.");
+        }
 
         const saved = await request(`/api/admin/homepage-content/hero-image/${slot}`, {
             method: "PATCH",

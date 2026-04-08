@@ -10,7 +10,12 @@ async function uploadImage(req, res) {
         return res.status(201).json(result);
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Failed to upload image" });
+        const statusCode = Number.isInteger(error && error.statusCode) ? error.statusCode : 500;
+        const message = statusCode >= 400 && statusCode < 500
+            ? String(error && error.message ? error.message : "Invalid upload request")
+            : "Failed to upload image";
+
+        return res.status(statusCode).json({ message });
     }
 }
 

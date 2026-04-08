@@ -19,11 +19,22 @@ async function processAndStoreImage(file, uploadedBy) {
 
     const storageKey = `images/${year}/${month}/${filename}`;
 
-    const output = await sharp(file.buffer)
-        .rotate()
-        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
-        .webp({ quality: 82 })
-        .toBuffer({ resolveWithObject: true });
+    let output;
+    try {
+        output = await sharp(file.buffer)
+            .rotate()
+            .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 82 })
+            .toBuffer({ resolveWithObject: true });
+    } catch (error) {
+        const decodingMessage = String(error && error.message ? error.message : "").toLowerCase();
+        if (decodingMessage.includes("vipsjpeg") || decodingMessage.includes("invalid") || decodingMessage.includes("corrupt")) {
+            const badImageError = new Error("Invalid or corrupted image file. Please re-export the image and try again.");
+            badImageError.statusCode = 400;
+            throw badImageError;
+        }
+        throw error;
+    }
 
     const { error } = await supabase.storage
         .from(BUCKET)
