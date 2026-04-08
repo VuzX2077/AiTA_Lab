@@ -196,6 +196,19 @@ function getNewsDetailHref(news) {
     return safeBasePath;
 }
 
+function getLatestNewsHref() {
+    const basePath = typeof window.getPageUrl === "function" ? window.getPageUrl("news.html") : "/news";
+    const safeBasePath = String(basePath).replace(/\/$/, "") || "/news";
+    const currentListPage = getNewsListPageFromUrl();
+
+    if (currentListPage > 1) {
+        const separator = safeBasePath.includes("?") ? "&" : "?";
+        return `${safeBasePath}${separator}page=${currentListPage}`;
+    }
+
+    return safeBasePath;
+}
+
 function parseJwt(token) {
     try {
         return JSON.parse(atob(token.split(".")[1]));
@@ -695,6 +708,7 @@ function renderNewsDetail(item) {
     const safeTitle = escapeHtml(item.title || "Untitled");
     const safeSummary = escapeHtml(item.summary || "");
     const safeTag = escapeHtml(item.tag || "NEWS");
+    const latestNewsHref = escapeHtml(getLatestNewsHref());
     const safeDate = escapeHtml(formatDisplayDate(item.published_at));
     const imageUrl = typeof item.image_url === "string" ? item.image_url.trim() : "";
     const externalUrl = getSafeHttpUrl(item.link);
@@ -703,7 +717,7 @@ function renderNewsDetail(item) {
 
     dateEl.textContent = safeDate;
     titleEl.textContent = item.title || "Untitled";
-    metaEl.innerHTML = `By <span class="news-inline-author">AiTA@FPTU</span> &bull; <span class="news-detail-tag">${safeTag}</span>`;
+    metaEl.innerHTML = `By <span class="news-inline-author">AiTA@FPTU</span> &bull; <a class="news-detail-tag" href="${latestNewsHref}">${safeTag}</a>`;
     imageEl.src = imageUrl;
     imageEl.alt = item.title || "News cover image";
 

@@ -148,6 +148,11 @@
 .news-detail-tag {
     color: #f49d10;
     font-weight: 700;
+    text-decoration: none;
+}
+
+.news-detail-tag:hover {
+    color: #e68900;
 }
 
 .news-detail-image {

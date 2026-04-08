@@ -556,6 +556,81 @@ margin-right: 6px;
     box-sizing: border-box;
 }
 
+.settings-card {
+    margin-top: 18px;
+    padding: 24px;
+    border: 1px solid #e8ebf0;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.settings-card-header {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.settings-card-header h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #1f2937;
+}
+
+.settings-card-header p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.auth-settings-card {
+    max-width: 760px;
+}
+
+.change-password-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+    align-items: start;
+}
+
+.change-password-form .form-group {
+    margin: 0;
+}
+
+.change-password-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #344054;
+}
+
+.change-password-form .form-group input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.change-password-confirm {
+    grid-column: span 2;
+}
+
+.change-password-actions {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.change-password-actions .btn-primary {
+    min-width: 180px;
+}
+
+.change-password-actions .settings-note {
+    margin: 0;
+}
+
 .profile-avatar-preview {
     margin-top: 10px;
     width: 84px;
@@ -867,6 +942,15 @@ margin-right: 6px;
 
     .home-page-hero-row {
         grid-template-columns: 1fr;
+    }
+
+    .change-password-form {
+        grid-template-columns: 1fr;
+    }
+
+    .change-password-confirm,
+    .change-password-actions {
+        grid-column: auto;
     }
 
     .home-news-admin-actions {
