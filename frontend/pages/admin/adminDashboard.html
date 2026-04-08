@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <title>Admin Dashboard - AiTA Lab</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -252,32 +253,34 @@
                     <input type="url" id="homePageFacebookUrl" placeholder="https://facebook.com/...">
                 </label>
 
-                <label class="home-news-span-2">
-                    Hero Image 1
-                    <input type="hidden" id="homePageHeroImageUrl1">
-                    <input type="file" id="homePageHeroImageFile1" accept="image/jpeg,image/png,image/webp">
-                    <button type="button" id="uploadHomePageHeroImageBtn1" class="btn-primary">Upload Image</button>
-                    <p id="homePageHeroImageUploadStatus1" class="settings-note"></p>
-                    <img id="homePageHeroImagePreview1" alt="Homepage hero image 1 preview" class="home-news-image-preview" hidden>
-                </label>
+                <div class="home-news-span-2 home-page-hero-row">
+                    <label class="homepage-hero-upload">
+                        Hero Image 1
+                        <input type="hidden" id="homePageHeroImageUrl1">
+                        <input type="file" id="homePageHeroImageFile1" accept="image/jpeg,image/png,image/webp">
+                        <img id="homePageHeroImagePreview1" alt="Homepage hero image 1 preview" class="home-news-image-preview" hidden>
+                        <button type="button" id="uploadHomePageHeroImageBtn1" class="btn-primary">Upload Image</button>
+                        <p id="homePageHeroImageUploadStatus1" class="settings-note"></p>
+                    </label>
 
-                <label class="home-news-span-2">
-                    Hero Image 2
-                    <input type="hidden" id="homePageHeroImageUrl2">
-                    <input type="file" id="homePageHeroImageFile2" accept="image/jpeg,image/png,image/webp">
-                    <button type="button" id="uploadHomePageHeroImageBtn2" class="btn-primary">Upload Image</button>
-                    <p id="homePageHeroImageUploadStatus2" class="settings-note"></p>
-                    <img id="homePageHeroImagePreview2" alt="Homepage hero image 2 preview" class="home-news-image-preview" hidden>
-                </label>
+                    <label class="homepage-hero-upload">
+                        Hero Image 2
+                        <input type="hidden" id="homePageHeroImageUrl2">
+                        <input type="file" id="homePageHeroImageFile2" accept="image/jpeg,image/png,image/webp">
+                        <img id="homePageHeroImagePreview2" alt="Homepage hero image 2 preview" class="home-news-image-preview" hidden>
+                        <button type="button" id="uploadHomePageHeroImageBtn2" class="btn-primary">Upload Image</button>
+                        <p id="homePageHeroImageUploadStatus2" class="settings-note"></p>
+                    </label>
 
-                <label class="home-news-span-2">
-                    Hero Image 3
-                    <input type="hidden" id="homePageHeroImageUrl3">
-                    <input type="file" id="homePageHeroImageFile3" accept="image/jpeg,image/png,image/webp">
-                    <button type="button" id="uploadHomePageHeroImageBtn3" class="btn-primary">Upload Image</button>
-                    <p id="homePageHeroImageUploadStatus3" class="settings-note"></p>
-                    <img id="homePageHeroImagePreview3" alt="Homepage hero image 3 preview" class="home-news-image-preview" hidden>
-                </label>
+                    <label class="homepage-hero-upload">
+                        Hero Image 3
+                        <input type="hidden" id="homePageHeroImageUrl3">
+                        <input type="file" id="homePageHeroImageFile3" accept="image/jpeg,image/png,image/webp">
+                        <img id="homePageHeroImagePreview3" alt="Homepage hero image 3 preview" class="home-news-image-preview" hidden>
+                        <button type="button" id="uploadHomePageHeroImageBtn3" class="btn-primary">Upload Image</button>
+                        <p id="homePageHeroImageUploadStatus3" class="settings-note"></p>
+                    </label>
+                </div>
 
                 <label class="home-news-span-2">
                     Footer Text
@@ -625,3 +628,4 @@
 <script src="js/adminDashboard.js"></script>
 </body>
 </html>
+

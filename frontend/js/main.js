@@ -210,6 +210,51 @@ const DEFAULT_HOME_CONTENT = {
 	footer_text: ""
 };
 
+let homePageContentCachePromise = null;
+
+function getDefaultHomeContent() {
+	return { ...DEFAULT_HOME_CONTENT };
+}
+
+async function fetchHomePageContent() {
+	if (!homePageContentCachePromise) {
+		homePageContentCachePromise = (async () => {
+			const response = await fetch(getApiUrl("/api/homepage-content/public"));
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error((data && data.message) || "Failed to load homepage content");
+			}
+
+			return {
+				...DEFAULT_HOME_CONTENT,
+				...(data && typeof data === "object" ? data : {})
+			};
+		})();
+	}
+
+	try {
+		return await homePageContentCachePromise;
+	} catch (error) {
+		homePageContentCachePromise = null;
+		throw error;
+	}
+}
+
+async function initGlobalFooterText() {
+	const footerText = document.getElementById("homeFooterText");
+	if (!footerText) {
+		return;
+	}
+
+	try {
+		const data = await fetchHomePageContent();
+		footerText.textContent = String(data.footer_text || "").trim();
+	} catch (error) {
+		footerText.textContent = String(DEFAULT_HOME_CONTENT.footer_text || "");
+	}
+}
+
 
 
 
@@ -237,29 +282,17 @@ async function initHomePageContent() {
 	const heroImage1 = document.getElementById("homeHeroImage1");
 	const heroImage2 = document.getElementById("homeHeroImage2");
 	const heroImage3 = document.getElementById("homeHeroImage3");
-	const footerText = document.getElementById("homeFooterText");
 
-	if (!heroTitle || !introParagraph1 || !introParagraph2 || !footerText) {
+	if (!heroTitle || !introParagraph1 || !introParagraph2) {
 		return;
 	}
 
 	try {
-		const response = await fetch(getApiUrl("/api/homepage-content/public"));
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error((data && data.message) || "Failed to load homepage content");
-		}
-
-		homePageContentState = {
-			...DEFAULT_HOME_CONTENT,
-			...(data && typeof data === "object" ? data : {})
-		};
+		homePageContentState = await fetchHomePageContent();
 
 		heroTitle.textContent = String(homePageContentState.hero_title || "").trim();
 		introParagraph1.textContent = String(homePageContentState.intro_paragraph_1 || "").trim();
 		introParagraph2.textContent = String(homePageContentState.intro_paragraph_2 || "").trim();
-		footerText.textContent = String(homePageContentState.footer_text || "").trim();
 
 		applyOptionalHttpLink(githubLink, homePageContentState.github_url || "");
 		applyOptionalHttpLink(facebookLink, homePageContentState.facebook_url || "");
@@ -270,7 +303,6 @@ async function initHomePageContent() {
 		heroTitle.textContent = String(DEFAULT_HOME_CONTENT.hero_title);
 		introParagraph1.textContent = String(DEFAULT_HOME_CONTENT.intro_paragraph_1);
 		introParagraph2.textContent = String(DEFAULT_HOME_CONTENT.intro_paragraph_2);
-		footerText.textContent = String(DEFAULT_HOME_CONTENT.footer_text);
 		applyOptionalHttpLink(githubLink, DEFAULT_HOME_CONTENT.github_url);
 		applyOptionalHttpLink(facebookLink, DEFAULT_HOME_CONTENT.facebook_url);
 		applyOptionalImage(heroImage1, DEFAULT_HOME_CONTENT.hero_image_url_1);
@@ -657,5 +689,6 @@ async function initPublicationSearch() {
 }
 
 initPublicationSearch();
+initGlobalFooterText();
 initHomePageContent();
 initHomeLatestPosts();
