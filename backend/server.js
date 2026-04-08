@@ -93,7 +93,6 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const homeNewsRoutes = require("./routes/homeNewsRoutes");
 const lecturerRoutes = require("./routes/lecturerRoutes");
 const homepageContentRoutes = require("./routes/homepageContentRoutes");
-const uploadService = require("./services/uploadService");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
@@ -147,38 +146,8 @@ async function startServer() {
       console.log(`Server running at http://localhost:${PORT}`);
     });
 
-    // Start orphan image cleanup job (runs every 24 hours)
-    const cleanupIntervalMs = 24 * 60 * 60 * 1000; // 24 hours
-    const orphanCleanupJob = setInterval(async () => {
-      console.log("[CRON] Starting orphan image cleanup...");
-      try {
-        const olderThanHours = parseInt(process.env.ORPHAN_IMAGE_OLDER_THAN_HOURS || "24", 10);
-        const limit = parseInt(process.env.ORPHAN_IMAGE_CLEANUP_LIMIT || "300", 10);
-        
-        const result = await uploadService.cleanupOrphanedImages({
-          olderThanHours,
-          limit
-        });
-        
-        console.log(`[CRON] Cleanup completed - Scanned: ${result.scanned}, Deleted: ${result.deleted}, Skipped (in-use): ${result.skippedInUse}, Failed: ${result.failed}`);
-      } catch (error) {
-        console.error("[CRON] Orphan image cleanup failed:", error.message);
-      }
-    }, cleanupIntervalMs);
-
     server.on("error", (error) => {
       console.error("HTTP server error:", error);
-    });
-
-    // Clean up the interval on server shutdown
-    process.on("SIGTERM", () => {
-      console.log("[SHUTDOWN] Received SIGTERM, clearing cleanup job...");
-      clearInterval(orphanCleanupJob);
-    });
-
-    process.on("SIGINT", () => {
-      console.log("[SHUTDOWN] Received SIGINT, clearing cleanup job...");
-      clearInterval(orphanCleanupJob);
     });
   } catch (error) {
     console.error("Failed to start server", error);
