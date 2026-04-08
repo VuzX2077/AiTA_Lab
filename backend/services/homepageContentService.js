@@ -76,8 +76,36 @@ async function saveHomepageContent(payload, actorId) {
     return saved;
 }
 
+async function replaceHomepageHeroImage(slot, imageUrl, actorId) {
+    const normalizedSlot = Number(slot);
+    if (!Number.isInteger(normalizedSlot) || normalizedSlot < 1 || normalizedSlot > 3) {
+        throw new Error("Invalid hero image slot");
+    }
+
+    const previous = await homepageContentRepository.findForAdmin();
+    const current = previous || (await getPublicHomepageContent());
+    const slotKey = `hero_image_url_${normalizedSlot}`;
+
+    const payload = {
+        hero_title: current.hero_title || "AI Technology and Application Research Lab",
+        intro_paragraph_1: current.intro_paragraph_1 || "",
+        intro_paragraph_2: current.intro_paragraph_2 || "",
+        github_url: current.github_url || "",
+        facebook_url: current.facebook_url || "",
+        hero_image_url_1: current.hero_image_url_1 || "",
+        hero_image_url_2: current.hero_image_url_2 || "",
+        hero_image_url_3: current.hero_image_url_3 || "",
+        footer_text: current.footer_text || "Copyright © 2025 AI Technology and Application Research Lab @ FPTU - HCMC — All right Reserved."
+    };
+
+    payload[slotKey] = normalizeOptionalUrl(imageUrl);
+
+    return saveHomepageContent(payload, actorId);
+}
+
 module.exports = {
     getPublicHomepageContent,
     getHomepageContentForAdmin,
-    saveHomepageContent
+    saveHomepageContent,
+    replaceHomepageHeroImage
 };

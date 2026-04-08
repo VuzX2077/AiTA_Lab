@@ -99,8 +99,33 @@ async function saveHomepageContent(req, res) {
     }
 }
 
+async function replaceHomepageHeroImage(req, res) {
+    const slot = Number(req.params.slot);
+    if (!Number.isInteger(slot) || slot < 1 || slot > 3) {
+        return res.status(400).json({ message: "slot must be 1, 2, or 3" });
+    }
+
+    const imageUrl = String(req.body && req.body.image_url ? req.body.image_url : "").trim();
+    if (imageUrl && !isValidHttpUrl(imageUrl)) {
+        return res.status(400).json({ message: "image_url must be a valid http(s) URL" });
+    }
+
+    try {
+        const saved = await homepageContentService.replaceHomepageHeroImage(slot, imageUrl, req.user.id);
+        return res.json(saved);
+    } catch (error) {
+        if (error && error.message === "Invalid hero image slot") {
+            return res.status(400).json({ message: error.message });
+        }
+
+        console.error(error);
+        return res.status(500).json({ message: "Failed to replace homepage hero image" });
+    }
+}
+
 module.exports = {
     getPublicHomepageContent,
     getHomepageContentForAdmin,
-    saveHomepageContent
+    saveHomepageContent,
+    replaceHomepageHeroImage
 };

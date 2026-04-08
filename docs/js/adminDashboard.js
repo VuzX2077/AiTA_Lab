@@ -1635,6 +1635,8 @@ async function uploadHomePageHeroImage(slot) {
         status.textContent = "Uploading...";
     }
 
+    let uploadedAssetId = null;
+
     try {
         const formData = new FormData();
         formData.append("file", file);
@@ -1652,9 +1654,23 @@ async function uploadHomePageHeroImage(slot) {
             throw new Error(data.message || "Failed to upload image");
         }
 
+        uploadedAssetId = Number(data.id);
+        if (!Number.isInteger(uploadedAssetId) || uploadedAssetId <= 0) {
+            throw new Error("Upload response is missing image asset id");
+        }
+
         await cleanupPendingUploadAsset(imageUrlInput);
+
+        const saved = await request(`/api/admin/homepage-content/hero-image/${slot}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+                image_url: data.url || ""
+            })
+        });
+
+        homepageContentState = saved || homepageContentState;
         imageUrlInput.value = data.url || "";
-        setPendingUploadAssetId(imageUrlInput, data.id);
+        setPendingUploadAssetId(imageUrlInput, null);
 
         if (preview && data.url) {
             preview.src = data.url;
@@ -1662,11 +1678,15 @@ async function uploadHomePageHeroImage(slot) {
         }
 
         if (status) {
-            status.textContent = "Upload successful";
+            status.textContent = "Upload successful and saved";
         }
 
-        showToast(`Hero image ${slot} uploaded successfully`, "success");
+        showToast(`Hero image ${slot} updated successfully`, "success");
     } catch (error) {
+        if (uploadedAssetId) {
+            await deleteUploadedImageAssetById(uploadedAssetId);
+        }
+
         if (status) {
             status.textContent = "Upload failed";
         }
