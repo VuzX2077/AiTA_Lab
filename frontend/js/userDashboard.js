@@ -43,6 +43,7 @@ let editingPublicationId = null;
 let myPublications = [];
 let selectedAuthors = [];
 let authorSearchTimeout = null;
+let doiLookupSequence = 0;
 let currentProfile = null;
 let currentPublicPage = null;
 let socialPresetLoadPromise = Promise.resolve();
@@ -88,6 +89,138 @@ function normalizeOptionalHttpUrl(value) {
         return parsed.toString();
     } catch (error) {
         return null;
+    }
+}
+
+function extractDoiFromText(value) {
+    const source = String(value || "").trim();
+    if (!source) {
+        return "";
+    }
+
+    const variants = [source];
+    try {
+        variants.push(decodeURIComponent(source));
+    } catch (error) {
+        // Keep the raw variant if URL decoding fails.
+    }
+
+    const doiPattern = /\b10\.\d{4,9}\/[\-._;()/:A-Z0-9]+/i;
+
+    for (const variant of variants) {
+        const match = String(variant).match(doiPattern);
+        if (match && match[0]) {
+            return match[0].replace(/[\s),.;]+$/g, "");
+        }
+    }
+
+    return "";
+}
+
+function detectDoiFromLink(linkValue) {
+    const trimmed = String(linkValue || "").trim();
+    if (!trimmed) {
+        return "";
+    }
+
+    const direct = extractDoiFromText(trimmed);
+    if (direct) {
+        return direct;
+    }
+
+    try {
+        const parsed = new URL(trimmed);
+        const urlLevel = extractDoiFromText(`${parsed.pathname} ${parsed.search}`);
+        if (urlLevel) {
+            return urlLevel;
+        }
+
+        for (const value of parsed.searchParams.values()) {
+            const fromParam = extractDoiFromText(value);
+            if (fromParam) {
+                return fromParam;
+            }
+        }
+    } catch (error) {
+        return "";
+    }
+
+    return "";
+}
+
+function syncDoiFromLinkInput() {
+    const linkInput = document.getElementById("link");
+    const doiInput = document.getElementById("doi");
+    if (!linkInput || !doiInput) {
+        return;
+    }
+
+    const detectedDoi = detectDoiFromLink(linkInput.value);
+    const currentDoi = String(doiInput.value || "").trim();
+    const autoDoi = String(doiInput.dataset.autoDoi || "").trim();
+    const isAutoManaged = currentDoi && currentDoi === autoDoi;
+
+    if (detectedDoi) {
+        if (!currentDoi || isAutoManaged) {
+            doiInput.value = detectedDoi;
+            doiInput.dataset.autoDoi = detectedDoi;
+        }
+        return;
+    }
+
+    if (!detectedDoi && isAutoManaged) {
+        doiInput.value = "";
+        delete doiInput.dataset.autoDoi;
+    }
+}
+
+async function syncDoiFromLinkViaServer() {
+    const linkInput = document.getElementById("link");
+    const doiInput = document.getElementById("doi");
+    if (!linkInput || !doiInput) {
+        return;
+    }
+
+    const normalizedLink = normalizeOptionalHttpUrl(linkInput.value || "");
+    if (!normalizedLink) {
+        return;
+    }
+
+    const currentDoi = String(doiInput.value || "").trim();
+    const autoDoi = String(doiInput.dataset.autoDoi || "").trim();
+    const isAutoManaged = currentDoi && currentDoi === autoDoi;
+
+    if (currentDoi && !isAutoManaged) {
+        return;
+    }
+
+    const requestId = ++doiLookupSequence;
+
+    try {
+        const payload = await request("/api/publications/resolve-doi", {
+            method: "POST",
+            body: JSON.stringify({ link: normalizedLink })
+        });
+
+        if (requestId !== doiLookupSequence) {
+            return;
+        }
+
+        const resolvedDoi = String(payload && payload.doi ? payload.doi : "").trim();
+        if (!resolvedDoi) {
+            return;
+        }
+
+        const latestDoi = String(doiInput.value || "").trim();
+        const latestAutoDoi = String(doiInput.dataset.autoDoi || "").trim();
+        const stillAutoManaged = !latestDoi || latestDoi === latestAutoDoi;
+
+        if (stillAutoManaged) {
+            doiInput.value = resolvedDoi;
+            doiInput.dataset.autoDoi = resolvedDoi;
+        }
+    } catch (error) {
+        // Silent fallback: manual DOI entry remains available if remote lookup fails.
     }
 }
 
@@ -959,6 +1092,28 @@ function updateOverviewStats(publications) {
 
 if (isAuthValid) {
     socialPresetLoadPromise = loadSocialLinkIconPresetsForPublicForms();
+    const publicationLinkInput = document.getElementById("link");
+    const publicationDoiInput = document.getElementById("doi");
+
+    if (publicationLinkInput && publicationDoiInput) {
+        publicationLinkInput.addEventListener("input", syncDoiFromLinkInput);
+        publicationLinkInput.addEventListener("blur", async () => {
+            syncDoiFromLinkInput();
+            const hasLocalDetectedDoi = Boolean(extractDoiFromText(publicationLinkInput.value));
+            if (!hasLocalDetectedDoi) {
+                await syncDoiFromLinkViaServer();
+            }
+        });
+
+        publicationDoiInput.addEventListener("input", () => {
+            const current = String(publicationDoiInput.value || "").trim();
+            const autoDoi = String(publicationDoiInput.dataset.autoDoi || "").trim();
+            if (!current || current !== autoDoi) {
+                delete publicationDoiInput.dataset.autoDoi;
+            }
+        });
+    }
+
     document.getElementById("createPubForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -1004,6 +1159,11 @@ if (isAuthValid) {
             }
 
             document.getElementById("createPubForm").reset();
+            const doiField = document.getElementById("doi");
+            if (doiField) {
+                delete doiField.dataset.autoDoi;
+            }
+            doiLookupSequence += 1;
             selectedAuthors = [];
             renderSelectedAuthors();
             document.getElementById("authorSuggestions").innerHTML = "";
@@ -1024,6 +1184,8 @@ function startEditPublication(publication) {
     document.getElementById("year").value = publication.year || "";
     document.getElementById("description").value = publication.description;
     document.getElementById("doi").value = publication.doi || "";
+    delete document.getElementById("doi").dataset.autoDoi;
+    doiLookupSequence += 1;
     selectedAuthors = [];
     if (Array.isArray(publication.author_ids) && publication.author_ids.length > 0 && publication.authors) {
         const names = String(publication.authors).split(",").map((name) => name.trim());

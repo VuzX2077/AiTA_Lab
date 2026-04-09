@@ -170,11 +170,25 @@ async function deletePublication(req, res) {
     }
 }
 
+async function resolveDoi(req, res) {
+    const link = req.body && typeof req.body.link === "string" ? req.body.link : "";
+
+    try {
+        const result = await publicationService.resolveDoiFromLink(link);
+        return res.json(result);
+    } catch (err) {
+        const statusCode = Number.isInteger(Number(err && err.statusCode)) ? Number(err.statusCode) : 500;
+        const message = err && err.message ? err.message : "Failed to resolve DOI";
+        return res.status(statusCode).json({ message });
+    }
+}
+
 module.exports = {
     getPublicPublications,
     getPublications,
     getMyPublications,
     createPublication,
     updatePublication,
-    deletePublication
+    deletePublication,
+    resolveDoi
 };

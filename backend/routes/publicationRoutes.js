@@ -7,6 +7,7 @@ const router = express.Router();
 router.get("/publications/public", publicationController.getPublicPublications);
 router.get("/publications", verifyToken, authorizeRole(["user", "admin"]), publicationController.getPublications);
 router.get("/my-publications", verifyToken, authorizeRole(["user", "admin"]), publicationController.getMyPublications);
+router.post("/publications/resolve-doi", verifyToken, authorizeRole(["user", "admin"]), publicationController.resolveDoi);
 router.post("/publications", verifyToken, authorizeRole(["user", "admin"]), publicationController.createPublication);
 router.put("/publications/:id", verifyToken, authorizeRole(["user", "admin"]), publicationController.updatePublication);
 router.delete("/publications/:id", verifyToken, authorizeRole(["user", "admin"]), publicationController.deletePublication);

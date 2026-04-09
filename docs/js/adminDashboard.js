@@ -1291,7 +1291,7 @@ function resetHomeNewsForm() {
 
 function startEditHomeNews(item) {
     const editId = document.getElementById("homeNewsEditId");
-    const imageAssetId = document.getElementById("homeNewsImageAssetId");
+    const summaryImageAssetId = document.getElementById("homeNewsImageAssetId");
     const titleInput = document.getElementById("homeNewsTitle");
     const summaryInput = document.getElementById("homeNewsSummary");
     const linkInput = document.getElementById("homeNewsLink");
@@ -1303,13 +1303,13 @@ function startEditHomeNews(item) {
     const saveBtn = document.getElementById("homeNewsSaveBtn");
     const cancelBtn = document.getElementById("homeNewsCancelEditBtn");
 
-    if (!editId || !imageAssetId || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+    if (!editId || !summaryImageAssetId || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
         return;
     }
 
     editId.value = String(item.id);
-    imageAssetId.value = String(item.image_asset_id || "");
-    setPendingUploadAssetId(imageAssetId, null);
+    summaryImageAssetId.value = String(item.summary_image_asset_id || item.image_asset_id || "");
+    setPendingUploadAssetId(summaryImageAssetId, null);
     titleInput.value = item.title || "";
     summaryInput.value = item.summary || "";
     if (linkInput) {
@@ -1320,8 +1320,9 @@ function startEditHomeNews(item) {
     isPublishedInput.checked = Boolean(item.is_published);
 
     if (preview) {
-        if (item.image_url) {
-            preview.src = item.image_url;
+        const summaryPreviewUrl = item.summary_image_url || item.image_url || "";
+        if (summaryPreviewUrl) {
+            preview.src = summaryPreviewUrl;
             preview.hidden = false;
         } else {
             preview.hidden = true;
@@ -1330,7 +1331,7 @@ function startEditHomeNews(item) {
     }
 
     if (status) {
-        status.textContent = item.image_url ? "Image loaded from saved post" : "";
+        status.textContent = (item.summary_image_url || item.image_url) ? "Summary image loaded from saved post" : "";
     }
 
     if (saveBtn) {
@@ -1357,7 +1358,7 @@ function renderHomeNewsAdmin(rows) {
 
     list.innerHTML = rows.map((item) => `
         <div class="home-news-admin-item">
-            <img src="${escapeHtml(item.image_url || "")}" alt="${escapeHtml(item.title || "Home post image")}" class="home-news-admin-thumb">
+            <img src="${escapeHtml(item.summary_image_url || item.image_url || "")}" alt="${escapeHtml(item.title || "Home post image")}" class="home-news-admin-thumb">
             <div>
                 <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
                 <p><small>${escapeHtml(item.tag || "NEWS")} | ${escapeHtml(formatDateForDisplay(item.published_at))} | ${item.is_published ? "Visible" : "Hidden"}</small></p>
@@ -1431,12 +1432,12 @@ async function loadHomeNewsAdmin() {
 
 async function uploadHomeNewsImage() {
     const fileInput = document.getElementById("homeNewsImageFile");
-    const imageAssetIdInput = document.getElementById("homeNewsImageAssetId");
+    const summaryImageAssetIdInput = document.getElementById("homeNewsImageAssetId");
     const status = document.getElementById("homeNewsUploadStatus");
     const preview = document.getElementById("homeNewsImagePreview");
     const button = document.getElementById("uploadHomeNewsImageBtn");
 
-    if (!fileInput || !imageAssetIdInput || !button) {
+    if (!fileInput || !summaryImageAssetIdInput || !button) {
         return;
     }
 
@@ -1468,9 +1469,9 @@ async function uploadHomeNewsImage() {
             throw new Error(data.message || "Failed to upload image");
         }
 
-        await cleanupPendingUploadAsset(imageAssetIdInput);
-        imageAssetIdInput.value = data.id;
-        setPendingUploadAssetId(imageAssetIdInput, data.id);
+        await cleanupPendingUploadAsset(summaryImageAssetIdInput);
+        summaryImageAssetIdInput.value = data.id;
+        setPendingUploadAssetId(summaryImageAssetIdInput, data.id);
         if (preview && data.url) {
             preview.src = data.url;
             preview.hidden = false;
@@ -1493,7 +1494,7 @@ async function saveHomeNews(event) {
     event.preventDefault();
 
     const editId = document.getElementById("homeNewsEditId");
-    const imageAssetIdInput = document.getElementById("homeNewsImageAssetId");
+    const summaryImageAssetIdInput = document.getElementById("homeNewsImageAssetId");
     const titleInput = document.getElementById("homeNewsTitle");
     const summaryInput = document.getElementById("homeNewsSummary");
     const linkInput = document.getElementById("homeNewsLink");
@@ -1501,23 +1502,69 @@ async function saveHomeNews(event) {
     const publishedAtInput = document.getElementById("homeNewsPublishedAt");
     const isPublishedInput = document.getElementById("homeNewsIsPublished");
 
-    if (!imageAssetIdInput || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
+    if (!summaryImageAssetIdInput || !titleInput || !summaryInput || !publishedAtInput || !isPublishedInput || !tagInput) {
         return;
     }
 
-    const imageAssetId = Number(imageAssetIdInput.value);
-    if (!Number.isInteger(imageAssetId)) {
+    const summaryImageAssetId = Number(summaryImageAssetIdInput.value);
+    if (!Number.isInteger(summaryImageAssetId)) {
         showToast("Please upload image first", "error");
         return;
     }
 
+    const isEdit = Boolean(editId && editId.value);
+    const currentId = isEdit ? Number(editId.value) : null;
+    let currentHomeNews = isEdit
+        ? homeNewsItemsCache.find((row) => Number(row.id) === currentId) || null
+        : null;
+
+    if (isEdit && Number.isInteger(currentId) && currentId > 0) {
+        try {
+            const latest = await request(`/api/home-news/${currentId}`, { method: "GET" });
+            if (latest && typeof latest === "object") {
+                currentHomeNews = latest;
+            }
+        } catch (error) {
+            // Fallback to cache when detail lookup fails.
+        }
+    }
+
+    let imageAssetId = summaryImageAssetId;
+    if (isEdit) {
+        const currentImageAssetId = currentHomeNews ? Number(currentHomeNews.image_asset_id) : NaN;
+        if (Number.isInteger(currentImageAssetId) && currentImageAssetId > 0) {
+            imageAssetId = currentImageAssetId;
+        }
+    }
+
+    const preservedContent = isEdit && currentHomeNews && typeof currentHomeNews.content === "string"
+        ? currentHomeNews.content
+        : "";
+    const preservedLeftNewsId = isEdit && currentHomeNews && Number.isInteger(Number(currentHomeNews.left_news_id)) && Number(currentHomeNews.left_news_id) > 0
+        ? Number(currentHomeNews.left_news_id)
+        : null;
+    const preservedRightNewsId = isEdit && currentHomeNews && Number.isInteger(Number(currentHomeNews.right_news_id)) && Number(currentHomeNews.right_news_id) > 0
+        ? Number(currentHomeNews.right_news_id)
+        : null;
+    const preservedAuthors = isEdit && currentHomeNews && Array.isArray(currentHomeNews.authors)
+        ? currentHomeNews.authors
+        : [];
+    const preservedCtaLabel = isEdit && currentHomeNews && typeof currentHomeNews.cta_label === "string" && currentHomeNews.cta_label.trim()
+        ? currentHomeNews.cta_label.trim()
+        : "KEEP READING";
+
     const payload = {
         title: titleInput.value.trim(),
         summary: summaryInput.value.trim(),
-        content: "",
+        content: preservedContent,
         imageAssetId,
+        summaryImageAssetId,
+        leftNewsId: preservedLeftNewsId,
+        rightNewsId: preservedRightNewsId,
         link: linkInput ? linkInput.value.trim() : "",
         tag: tagInput.value.trim() || "NEWS",
+        ctaLabel: preservedCtaLabel,
+        authors: preservedAuthors,
         publishedAt: formatDateForInput(publishedAtInput.value) || new Date().toISOString().slice(0, 10),
         isPublished: Boolean(isPublishedInput.checked)
     };
@@ -1527,7 +1574,6 @@ async function saveHomeNews(event) {
         return;
     }
 
-    const isEdit = Boolean(editId && editId.value);
     const method = isEdit ? "PUT" : "POST";
     const url = isEdit ? `/api/home-news/${editId.value}` : "/api/home-news";
 
@@ -1537,8 +1583,8 @@ async function saveHomeNews(event) {
             body: JSON.stringify(payload)
         });
 
-        if (imageAssetIdInput) {
-            setPendingUploadAssetId(imageAssetIdInput, null);
+        if (summaryImageAssetIdInput) {
+            setPendingUploadAssetId(summaryImageAssetIdInput, null);
         }
 
         resetHomeNewsForm();

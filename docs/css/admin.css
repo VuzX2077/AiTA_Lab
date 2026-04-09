@@ -807,6 +807,44 @@ margin-right: 6px;
     border: 1px solid #e5e7eb;
 }
 
+/* Keep summary image controls aligned to preview width and stack preview between file picker and upload button. */
+#homeNewsImageFile,
+#uploadHomeNewsImageBtn,
+#homeNewsUploadStatus,
+#homeNewsImagePreview {
+    width: 220px;
+    max-width: 100%;
+}
+
+#homeNewsImageFile,
+#uploadHomeNewsImageBtn,
+#homeNewsImagePreview,
+#homeNewsUploadStatus {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#homeNewsImageFile {
+    order: 1;
+}
+
+#homeNewsImagePreview {
+    order: 2;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+#uploadHomeNewsImageBtn {
+    order: 3;
+    text-align: center;
+}
+
+#homeNewsUploadStatus {
+    order: 4;
+    text-align: center;
+    margin-top: 0;
+}
+
 .homepage-hero-upload {
     align-items: center;
 }

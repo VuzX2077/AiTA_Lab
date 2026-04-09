@@ -60,7 +60,7 @@
     margin-top: 30px;
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     justify-content: center;
 }
 
@@ -76,14 +76,16 @@
     box-shadow: none;
     color: transparent;
     font-size: 0;
+    outline: none;
 }
 
 .detail-links .tag-link:hover {
+    background: transparent;
     opacity: 0.9;
 }
 
 .detail-links .tag-link-icon {
-    height: 20px;
+    height: 18px;
     width: auto;
     display: block;
     object-fit: contain;
