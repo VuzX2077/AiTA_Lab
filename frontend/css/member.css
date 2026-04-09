@@ -340,7 +340,7 @@
 
 #publicPageLinksContainer .mf-link-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 32px 28px;
+     grid-template-columns: 1fr minmax(120px, 180px) 42px 28px;
     gap: 6px;
     align-items: center;
     margin-bottom: 0;
@@ -405,6 +405,23 @@
 
 #publicPageLinksContainer .mf-link-remove:hover {
     background: #fca5a5;
+}
+
+#publicPageLinksContainer .mf-link-icon-preview {
+    width: 42px;
+    height: 32px;
+    object-fit: contain;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+}
+
+#publicPageLinksContainer .mf-link-preset-select {
+    margin: 0 !important;
+    height: 32px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    box-sizing: border-box !important;
 }
 
 #settingsPublicPageSection .mf-add-link-btn {

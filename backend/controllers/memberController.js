@@ -102,13 +102,19 @@ function normalizeStringArray(value) {
 
 function normalizeLinks(value) {
     if (!Array.isArray(value)) return [];
+
     return value
         .filter((item) => item && typeof item === "object")
-        .map((item) => ({
-            label: String(item.label || "").trim(),
-            url: String(item.url || "").trim(),
-            color: String(item.color || "").trim()
-        }))
+        .map((item) => {
+            const parsedIconAssetId = Number(item.icon_asset_id);
+
+            return {
+                label: String(item.label || "").trim(),
+                url: String(item.url || "").trim(),
+                color: String(item.color || "").trim(),
+                icon_asset_id: Number.isInteger(parsedIconAssetId) && parsedIconAssetId > 0 ? parsedIconAssetId : null
+            };
+        })
         .filter((item) => item.label && item.url);
 }
 

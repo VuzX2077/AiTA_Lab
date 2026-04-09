@@ -9,6 +9,7 @@ const createAdminProfileDetailsTable = require("./007-create-admin-profile-detai
 const createMemberProfileDetailsTable = require("./008-create-member-profile-details-table");
 const createLecturersTable = require("./009-create-lecturers-table");
 const createHomepageContentTable = require("./010-create-homepage-content-table");
+const createSocialLinkIconPresetsTable = require("./011-create-social-link-icon-presets-table");
 
 const migrations = [
     createUsersTable,
@@ -20,7 +21,8 @@ const migrations = [
     createAdminProfileDetailsTable,
     createMemberProfileDetailsTable,
     createLecturersTable,
-    createHomepageContentTable
+    createHomepageContentTable,
+    createSocialLinkIconPresetsTable
 ];
 
 let didRunMigrations = false;

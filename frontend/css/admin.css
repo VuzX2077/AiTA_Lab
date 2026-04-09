@@ -267,7 +267,7 @@
 
 #publicPageLinksContainer .mf-link-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 32px 28px;
+     grid-template-columns: 1fr minmax(120px, 180px) 42px 28px;
     gap: 6px;
     align-items: center;
     margin-bottom: 0;
@@ -334,6 +334,23 @@
     background: #fca5a5;
 }
 
+#publicPageLinksContainer .mf-link-icon-preview {
+    width: 42px;
+    height: 32px;
+    object-fit: contain;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+}
+
+#publicPageLinksContainer .mf-link-preset-select {
+    margin: 0 !important;
+    height: 32px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    box-sizing: border-box !important;
+}
+
 #settingsPublicPageSection .mf-add-link-btn {
     margin-top: 6px;
     border: 1px dashed #1e4ea8;
@@ -348,6 +365,104 @@
 
 #settingsPublicPageSection .mf-add-link-btn:hover {
     background: #dde8ff;
+}
+
+.social-icon-preset-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.social-icon-preset-row {
+    display: grid;
+    grid-template-columns: minmax(240px, 1.2fr) 56px minmax(240px, 1fr) 150px 36px;
+    gap: 10px;
+    align-items: center;
+}
+
+.social-icon-preset-row > * {
+    min-width: 0;
+}
+
+.social-icon-preset-label,
+.social-icon-preset-file,
+.social-icon-preset-upload,
+.social-icon-preset-remove,
+.social-icon-preset-preview {
+    margin: 0 !important;
+}
+
+.social-icon-preset-label,
+.social-icon-preset-file,
+.social-icon-preset-upload,
+.social-icon-preset-remove {
+    height: 32px !important;
+}
+
+.social-icon-preset-file {
+    align-self: center;
+    padding: 4px 8px !important;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.social-icon-preset-label,
+.social-icon-preset-file,
+.social-icon-preset-upload,
+.social-icon-preset-status {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.social-icon-preset-preview {
+    width: 56px;
+    height: 32px;
+    display: block;
+    object-fit: contain;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+}
+
+.social-icon-preset-upload {
+    border: 1px solid #1e4ea8;
+    border-radius: 5px;
+    background: #f0f4ff;
+    color: #1e4ea8;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.social-icon-preset-upload:hover {
+    background: #dde8ff;
+}
+
+.social-icon-preset-remove {
+    width: 36px;
+    height: 32px !important;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: #f6d9dc;
+    color: #dc2626;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.social-icon-preset-remove:hover {
+    background: #fca5a5;
+}
+
+.social-icon-preset-status {
+    display: none;
 }
 
 #pendingPublicationList .pub-action-btn {

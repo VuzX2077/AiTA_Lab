@@ -60,20 +60,33 @@
     margin-top: 30px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
     justify-content: center;
 }
 
 .detail-links .tag-link {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     text-decoration: none;
-    padding: 6px 11px;
-    border-radius: 4px;
-    color: #fff;
-    background: #1e4ea8;
-    font-size: 13px;
-    font-weight: 600;
+    line-height: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: transparent;
+    font-size: 0;
+}
+
+.detail-links .tag-link:hover {
+    opacity: 0.9;
+}
+
+.detail-links .tag-link-icon {
+    height: 20px;
+    width: auto;
+    display: block;
+    object-fit: contain;
 }
 
 .detail-toc {

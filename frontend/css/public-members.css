@@ -225,14 +225,27 @@
 .member-links {
     margin-top: 20px;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .member-links .tag-link {
-    font-size: 13px;
-    padding: 5px 11px;
-    border-radius: 5px;
+    display: inline-block;
+    text-decoration: none;
+    line-height: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: transparent;
+    font-size: 0;
+}
+
+.member-links .tag-link:hover {
+    background: transparent;
+    opacity: 0.9;
 }
 
 .member-admin-btns {
@@ -397,7 +410,7 @@
 
 .mf-link-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 32px 28px;
+    grid-template-columns: 1fr minmax(140px, 180px) 42px 28px;
     gap: 6px;
     align-items: center;
     margin-bottom: 7px;
@@ -438,6 +451,35 @@
 
 .mf-link-remove:hover {
     background: #fca5a5;
+}
+
+.mf-link-icon-preview {
+    width: 42px;
+    height: 32px;
+    object-fit: contain;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+}
+
+.mf-link-preset-select {
+    height: 32px;
+    font-size: 12px;
+    padding: 5px 8px;
+}
+
+.member-links .tag-link {
+    display: inline-block;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+}
+
+.member-links .tag-link-icon {
+    height: 18px;
+    width: auto;
+    display: block;
+    object-fit: contain;
 }
 
 .mf-add-link-btn {
@@ -569,6 +611,6 @@
     }
 
     .mf-link-row {
-        grid-template-columns: 1fr 1fr 32px 28px;
+        grid-template-columns: 1fr;
     }
 }

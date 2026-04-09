@@ -3,6 +3,7 @@ const memberRepository = require("../repositories/memberRepository");
 const memberProfileDetailRepository = require("../repositories/memberProfileDetailRepository");
 const adminProfileDetailRepository = require("../repositories/adminProfileDetailRepository");
 const userRepository = require("../repositories/userRepository");
+const imageAssetRepository = require("../repositories/imageAssetRepository");
 const uploadService = require("./uploadService");
 const { withTransaction } = require("../utils/withTransaction");
 
@@ -47,8 +48,74 @@ function normalizeProjects(value) {
     };
 }
 
-function buildDetailResponse(detail, member) {
+function normalizeLinkObjects(links) {
+    return asArray(links)
+        .filter((item) => item && typeof item === "object")
+        .map((item) => {
+            const parsedIconAssetId = Number(item.icon_asset_id);
+
+            return {
+                label: String(item.label || "").trim(),
+                url: String(item.url || "").trim(),
+                color: String(item.color || "").trim(),
+                icon_asset_id: Number.isInteger(parsedIconAssetId) && parsedIconAssetId > 0 ? parsedIconAssetId : null,
+                icon_url: String(item.icon_url || "").trim()
+            };
+        })
+        .filter((item) => item.label && item.url);
+}
+
+function extractLinkIconAssetIds(links) {
+    const ids = new Set();
+
+    normalizeLinkObjects(links).forEach((item) => {
+        const iconAssetId = Number(item.icon_asset_id);
+        if (Number.isInteger(iconAssetId) && iconAssetId > 0) {
+            ids.add(iconAssetId);
+        }
+    });
+
+    return ids;
+}
+
+async function resolveLinksWithIconUrls(links, db) {
+    const normalizedLinks = normalizeLinkObjects(links);
+    const iconAssetIds = [...extractLinkIconAssetIds(normalizedLinks)];
+    const iconUrlByAssetId = new Map();
+
+    for (const iconAssetId of iconAssetIds) {
+        const asset = await imageAssetRepository.findById(iconAssetId, db);
+        iconUrlByAssetId.set(iconAssetId, asset && asset.public_url ? String(asset.public_url).trim() : "");
+    }
+
+    return normalizedLinks.map((item) => {
+        const iconAssetId = Number(item.icon_asset_id);
+        const resolvedUrl = Number.isInteger(iconAssetId) ? iconUrlByAssetId.get(iconAssetId) : "";
+
+        return {
+            label: item.label,
+            url: item.url,
+            color: item.color,
+            icon_asset_id: Number.isInteger(iconAssetId) && iconAssetId > 0 ? iconAssetId : null,
+            icon_url: String(resolvedUrl || item.icon_url || "").trim()
+        };
+    });
+}
+
+async function cleanupReplacedLinkIconAssets(previousLinks, nextLinks, db) {
+    const previousIds = extractLinkIconAssetIds(previousLinks);
+    const nextIds = extractLinkIconAssetIds(nextLinks);
+
+    for (const previousId of previousIds) {
+        if (!nextIds.has(previousId)) {
+            await uploadService.deleteImageAssetIfUnused(previousId, db);
+        }
+    }
+}
+
+async function buildDetailResponse(detail, member, db) {
     const normalizedResearchExperience = asArray(detail.research_experience);
+    const normalizedLinks = await resolveLinksWithIconUrls(detail.links, db);
 
     return {
         member_id: member.member_id,
@@ -57,7 +124,7 @@ function buildDetailResponse(detail, member) {
         hero_photo_asset_id: detail.hero_photo_asset_id || null,
         hero_photo_url: detail.hero_photo_url || "",
         quote: detail.quote || "",
-        links: asArray(detail.links),
+        links: normalizedLinks,
         education: asArray(detail.education),
         research_experience: normalizedResearchExperience,
         awards_grants: asArray(detail.awards_grants),
@@ -70,8 +137,9 @@ function buildDetailResponse(detail, member) {
     };
 }
 
-function buildAdminDetailResponse(detail, member) {
+async function buildAdminDetailResponse(detail, member, db) {
     const normalizedResearchExperience = asArray(detail.research_experience || detail.working_experience);
+    const normalizedLinks = await resolveLinksWithIconUrls(detail.links, db);
 
     return {
         member_id: member.member_id,
@@ -80,7 +148,7 @@ function buildAdminDetailResponse(detail, member) {
         hero_photo_asset_id: detail.hero_photo_asset_id || null,
         hero_photo_url: detail.hero_photo_url || "",
         quote: detail.quote || "",
-        links: asArray(detail.links),
+        links: normalizedLinks,
         education: asArray(detail.education),
         research_experience: normalizedResearchExperience,
         awards_grants: asArray(detail.awards_grants),
@@ -207,6 +275,7 @@ async function updateOwnPublicPageByUserId(userId, fields) {
         }
 
         await cleanupReplacedImageAsset(previousDetail && previousDetail.hero_photo_asset_id, updatedDetail.hero_photo_asset_id, client);
+        await cleanupReplacedLinkIconAssets(previousDetail && previousDetail.links, updatedDetail.links, client);
 
         return buildDetailResponse(updatedDetail, member);
     });
@@ -247,6 +316,7 @@ async function updateOwnAdminPublicPageByUserId(userId, fields) {
         }
 
         await cleanupReplacedImageAsset(previousDetail && previousDetail.hero_photo_asset_id, updatedDetail.hero_photo_asset_id, client);
+        await cleanupReplacedLinkIconAssets(previousDetail && previousDetail.links, updatedDetail.links, client);
 
         return buildAdminDetailResponse(updatedDetail, member);
     });
@@ -284,6 +354,7 @@ async function updateMemberProfile(userId, fields) {
         }
 
         await cleanupReplacedImageAsset(previousMember && previousMember.photo_asset_id, updatedMember.photo_asset_id, client);
+        await cleanupReplacedLinkIconAssets(previousMember && previousMember.links, updatedMember.links, client);
         return updatedMember;
     });
 }
@@ -308,6 +379,7 @@ async function updateStandaloneMemberProfile(memberId, fields) {
         }
 
         await cleanupReplacedImageAsset(previousMember && previousMember.photo_asset_id, updatedMember.photo_asset_id, client);
+        await cleanupReplacedLinkIconAssets(previousMember && previousMember.links, updatedMember.links, client);
         return updatedMember;
     });
 }
@@ -325,6 +397,12 @@ async function deleteMemberProfileById(memberId) {
         }
 
         await uploadService.deleteImageAssetIfUnused(existingMember.photo_asset_id, client);
+
+        const linkIconAssetIds = extractLinkIconAssetIds(existingMember.links);
+        for (const assetId of linkIconAssetIds) {
+            await uploadService.deleteImageAssetIfUnused(assetId, client);
+        }
+
         return true;
     });
 }
@@ -350,6 +428,9 @@ async function deleteMemberByUserId(userId) {
         const memberPhotoAssetId = Number(existingMember.photo_asset_id);
         const memberHeroAssetId = Number(memberDetail && memberDetail.hero_photo_asset_id);
         const adminHeroAssetId = Number(adminDetail && adminDetail.hero_photo_asset_id);
+        const memberLinksIconAssetIds = extractLinkIconAssetIds(existingMember.links);
+        const memberLinkIconAssetIds = extractLinkIconAssetIds(memberDetail && memberDetail.links);
+        const adminLinkIconAssetIds = extractLinkIconAssetIds(adminDetail && adminDetail.links);
 
         if (Number.isInteger(memberPhotoAssetId) && memberPhotoAssetId > 0) {
             assetIds.add(memberPhotoAssetId);
@@ -361,6 +442,18 @@ async function deleteMemberByUserId(userId) {
 
         if (Number.isInteger(adminHeroAssetId) && adminHeroAssetId > 0) {
             assetIds.add(adminHeroAssetId);
+        }
+
+        for (const assetId of memberLinksIconAssetIds) {
+            assetIds.add(assetId);
+        }
+
+        for (const assetId of memberLinkIconAssetIds) {
+            assetIds.add(assetId);
+        }
+
+        for (const assetId of adminLinkIconAssetIds) {
+            assetIds.add(assetId);
         }
 
         for (const assetId of assetIds) {

@@ -50,6 +50,7 @@
 
             <li class="sidebar-group-title">Site</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="homePageContentSection">Homepage Content</button></li>
+            <li><button class="sidebar-link sidebar-sublink" data-target="socialLinkIconsSection">Social Link Icons</button></li>
 
             <li class="sidebar-group-title">Seminars</li>
             <li><button class="sidebar-link sidebar-sublink" data-target="seminarManagementSection">Seminar Management</button></li>
@@ -289,6 +290,20 @@
 
                 <div class="home-news-form-actions home-news-span-2">
                     <button type="submit" id="homePageContentSaveBtn">Save Homepage Content</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="dashboard-section admin-panel" id="socialLinkIconsSection">
+            <h2>Social Link Icons</h2>
+
+            <form id="socialLinkIconsForm" class="settings-card">
+                <p class="settings-note">Upload one icon per social/profile label. Admin and members can then select from this shared list.</p>
+                <div id="socialLinkIconsList" class="social-icon-preset-list"></div>
+
+                <div class="settings-avatar-actions">
+                    <button type="button" id="addSocialLinkIconPresetBtn" class="btn-secondary">+ Add Preset</button>
+                    <button type="submit" id="saveSocialLinkIconsBtn" class="btn-primary">Save Social Link Icons</button>
                 </div>
             </form>
         </div>

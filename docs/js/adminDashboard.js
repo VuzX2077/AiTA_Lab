@@ -44,6 +44,12 @@ const PUBLIC_PAGE_LINK_PRESETS = [
     { label: "Web of Science", color: "#193e7c" },
     { label: "ResearchGate", color: "#00b5a0" }
 ];
+let socialLinkIconPresets = PUBLIC_PAGE_LINK_PRESETS.map((item) => ({
+    label: item.label,
+    color: item.color,
+    icon_asset_id: null,
+    icon_url: ""
+}));
 const statsState = {
     totalPublications: 0,
     pendingPublications: 0,
@@ -1903,6 +1909,106 @@ function formatPublicPageLinks(value) {
         .join("\n");
 }
 
+function normalizeSocialLinkIconPresetLabel(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function getSocialLinkIconPresetByLabel(label) {
+    const normalizedLabel = normalizeSocialLinkIconPresetLabel(label);
+    if (!normalizedLabel) {
+        return null;
+    }
+
+    return socialLinkIconPresets.find((item) => normalizeSocialLinkIconPresetLabel(item.label) === normalizedLabel) || null;
+}
+
+function setPublicPageLinkPresetDatalistOptions() {
+    const datalist = document.getElementById("publicPageLinkPresetList");
+    if (!datalist) {
+        return;
+    }
+
+    datalist.innerHTML = socialLinkIconPresets
+        .filter((item) => String(item.label || "").trim())
+        .map((item) => `<option value="${escapeHtml(String(item.label))}"></option>`)
+        .join("");
+}
+
+function buildSocialLinkIconPresetSelect(selectedPreset) {
+    const select = document.createElement("select");
+    select.className = "mf-link-preset-select";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "No preset icon";
+    select.appendChild(placeholder);
+
+    socialLinkIconPresets.forEach((preset) => {
+        const option = document.createElement("option");
+        option.value = String(preset.label || "");
+        option.textContent = String(preset.label || "");
+        select.appendChild(option);
+    });
+
+    if (selectedPreset && selectedPreset.label) {
+        if (!socialLinkIconPresets.some((item) => normalizeSocialLinkIconPresetLabel(item.label) === normalizeSocialLinkIconPresetLabel(selectedPreset.label))) {
+            const fallbackOption = document.createElement("option");
+            fallbackOption.value = String(selectedPreset.label);
+            fallbackOption.textContent = String(selectedPreset.label);
+            select.appendChild(fallbackOption);
+        }
+        select.value = String(selectedPreset.label);
+    }
+
+    return select;
+}
+
+function applySocialLinkPresetToRow({ preset, iconAssetIdInput, iconPreview }) {
+    const resolvedPreset = preset || null;
+
+    if (!resolvedPreset) {
+        iconAssetIdInput.value = "";
+        iconPreview.hidden = true;
+        iconPreview.removeAttribute("src");
+        return;
+    }
+
+    const parsedIconAssetId = Number(resolvedPreset.icon_asset_id);
+    const iconAssetId = Number.isInteger(parsedIconAssetId) && parsedIconAssetId > 0 ? parsedIconAssetId : null;
+    const iconUrl = String(resolvedPreset.icon_url || "").trim();
+
+    iconAssetIdInput.value = iconAssetId ? String(iconAssetId) : "";
+
+    if (iconUrl) {
+        iconPreview.src = iconUrl;
+        iconPreview.hidden = false;
+    } else {
+        iconPreview.hidden = true;
+        iconPreview.removeAttribute("src");
+    }
+
+}
+
+async function loadSocialLinkIconPresetsForPublicForms() {
+    try {
+        const data = await request("/api/social-link-icons/public", { method: "GET" });
+        const rows = Array.isArray(data) ? data : [];
+
+        if (rows.length) {
+            socialLinkIconPresets = rows.map((item) => ({
+                label: String(item && item.label ? item.label : "").trim(),
+                color: String(item && item.color ? item.color : "").trim(),
+                icon_asset_id: Number.isInteger(Number(item && item.icon_asset_id)) ? Number(item.icon_asset_id) : null,
+                icon_url: String(item && item.icon_url ? item.icon_url : "").trim()
+            })).filter((item) => item.label);
+        }
+    } catch (error) {
+        console.error("Could not load social link icon presets:", error);
+    }
+
+    setPublicPageLinkPresetDatalistOptions();
+}
+
 function buildPublicPageLinkRow(link = {}) {
     const container = document.getElementById("publicPageLinksContainer");
     if (!container) return;
@@ -1910,27 +2016,49 @@ function buildPublicPageLinkRow(link = {}) {
     const row = document.createElement("div");
     row.className = "mf-link-row";
 
-    const labelInput = document.createElement("input");
-    labelInput.type = "text";
-    labelInput.className = "mf-link-label";
-    labelInput.placeholder = "Label";
-    labelInput.value = String(link.label || "");
-    labelInput.setAttribute("list", "publicPageLinkPresetList");
-
     const urlInput = document.createElement("input");
     urlInput.type = "url";
     urlInput.className = "mf-link-url";
     urlInput.placeholder = "https://...";
     urlInput.value = String(link.url || "");
 
-    const colorInput = document.createElement("input");
-    colorInput.type = "color";
-    colorInput.className = "mf-link-color";
-    colorInput.value = String(link.color || "#1565c0");
+    const iconAssetIdInput = document.createElement("input");
+    iconAssetIdInput.type = "hidden";
+    iconAssetIdInput.className = "mf-link-icon-asset-id";
+    iconAssetIdInput.value = link.icon_asset_id ? String(link.icon_asset_id) : "";
 
-    labelInput.addEventListener("change", () => {
-        const preset = PUBLIC_PAGE_LINK_PRESETS.find((item) => item.label.toLowerCase() === labelInput.value.toLowerCase());
-        if (preset) colorInput.value = preset.color;
+    const iconPreview = document.createElement("img");
+    iconPreview.className = "mf-link-icon-preview";
+    iconPreview.alt = "Link icon preview";
+
+    const presetByLabel = getSocialLinkIconPresetByLabel(link.label);
+    const presetByAssetId = socialLinkIconPresets.find((item) => Number(item.icon_asset_id) === Number(link.icon_asset_id));
+    const selectedPreset = presetByAssetId || presetByLabel || null;
+    const presetSelect = buildSocialLinkIconPresetSelect(selectedPreset);
+
+    const directIconUrl = String(link.icon_url || "").trim();
+    if (directIconUrl) {
+        iconPreview.src = directIconUrl;
+        iconPreview.hidden = false;
+    } else {
+        iconPreview.hidden = true;
+    }
+
+    if (selectedPreset) {
+        applySocialLinkPresetToRow({
+            preset: selectedPreset,
+            iconAssetIdInput,
+            iconPreview
+        });
+    }
+
+    presetSelect.addEventListener("change", () => {
+        const selected = getSocialLinkIconPresetByLabel(presetSelect.value);
+        applySocialLinkPresetToRow({
+            preset: selected,
+            iconAssetIdInput,
+            iconPreview
+        });
     });
 
     const removeBtn = document.createElement("button");
@@ -1939,9 +2067,10 @@ function buildPublicPageLinkRow(link = {}) {
     removeBtn.textContent = "x";
     removeBtn.addEventListener("click", () => row.remove());
 
-    row.appendChild(labelInput);
     row.appendChild(urlInput);
-    row.appendChild(colorInput);
+    row.appendChild(presetSelect);
+    row.appendChild(iconAssetIdInput);
+    row.appendChild(iconPreview);
     row.appendChild(removeBtn);
     container.appendChild(row);
 }
@@ -1951,11 +2080,12 @@ function readPublicPageLinksFromRows() {
     const result = [];
 
     rows.forEach((row) => {
-        const labelValue = (row.querySelector(".mf-link-label")?.value || "").trim();
+        const labelValue = (row.querySelector(".mf-link-preset-select")?.value || "").trim();
         const urlValue = (row.querySelector(".mf-link-url")?.value || "").trim();
-        const colorValue = row.querySelector(".mf-link-color")?.value || "#1565c0";
+        const iconAssetValue = Number((row.querySelector(".mf-link-icon-asset-id")?.value || "").trim());
+        const iconAssetId = Number.isInteger(iconAssetValue) && iconAssetValue > 0 ? iconAssetValue : null;
         if (labelValue && urlValue) {
-            result.push({ label: labelValue, url: urlValue, color: colorValue });
+            result.push({ label: labelValue, url: urlValue, icon_asset_id: iconAssetId });
         }
     });
 
@@ -1973,6 +2103,206 @@ function populatePublicPageLinkRows(links) {
     }
 
     buildPublicPageLinkRow();
+}
+
+function buildSocialLinkIconPresetRow(preset = {}) {
+    const list = document.getElementById("socialLinkIconsList");
+    if (!list) {
+        return;
+    }
+
+    const row = document.createElement("div");
+    row.className = "social-icon-preset-row";
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.className = "social-icon-preset-label";
+    labelInput.placeholder = "Preset label";
+    labelInput.value = String(preset.label || "");
+
+    const assetIdInput = document.createElement("input");
+    assetIdInput.type = "hidden";
+    assetIdInput.className = "social-icon-preset-asset-id";
+    assetIdInput.value = preset.icon_asset_id ? String(preset.icon_asset_id) : "";
+    setPendingUploadAssetId(assetIdInput, null);
+
+    const preview = document.createElement("img");
+    preview.className = "social-icon-preset-preview";
+    preview.alt = "Preset icon preview";
+    const iconUrl = String(preset.icon_url || "").trim();
+    if (iconUrl) {
+        preview.src = iconUrl;
+        preview.hidden = false;
+    } else {
+        preview.hidden = true;
+    }
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.className = "social-icon-preset-file";
+    fileInput.accept = "image/jpeg,image/png,image/webp";
+
+    const uploadBtn = document.createElement("button");
+    uploadBtn.type = "button";
+    uploadBtn.className = "social-icon-preset-upload";
+    uploadBtn.textContent = "Upload Icon";
+
+    const status = document.createElement("span");
+    status.className = "social-icon-preset-status";
+
+    uploadBtn.addEventListener("click", async () => {
+        const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+        if (!file) {
+            showToast("Please choose an icon file first", "error");
+            return;
+        }
+
+        uploadBtn.disabled = true;
+        status.textContent = "Uploading...";
+
+        let uploadedAssetId = null;
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch(getApiUrl("/api/uploads/images"), {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
+                body: formData
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to upload icon");
+            }
+
+            uploadedAssetId = Number(data.id);
+            if (!Number.isInteger(uploadedAssetId) || uploadedAssetId <= 0) {
+                throw new Error("Upload response is missing icon asset id");
+            }
+
+            await cleanupPendingUploadAsset(assetIdInput);
+            assetIdInput.value = String(uploadedAssetId);
+            setPendingUploadAssetId(assetIdInput, uploadedAssetId);
+
+            if (data.url) {
+                preview.src = data.url;
+                preview.hidden = false;
+            } else {
+                preview.hidden = true;
+                preview.removeAttribute("src");
+            }
+
+            fileInput.value = "";
+            status.textContent = "Uploaded";
+            showToast("Icon uploaded successfully", "success");
+        } catch (error) {
+            if (uploadedAssetId) {
+                await deleteUploadedImageAssetById(uploadedAssetId);
+            }
+
+            status.textContent = "Upload failed";
+            showToast(error.message, "error");
+        } finally {
+            uploadBtn.disabled = false;
+        }
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "social-icon-preset-remove";
+    removeBtn.textContent = "x";
+    removeBtn.addEventListener("click", async () => {
+        removeBtn.disabled = true;
+        await cleanupPendingUploadAsset(assetIdInput);
+        row.remove();
+    });
+
+    row.appendChild(labelInput);
+    row.appendChild(assetIdInput);
+    row.appendChild(preview);
+    row.appendChild(fileInput);
+    row.appendChild(uploadBtn);
+    row.appendChild(status);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+}
+
+function readSocialLinkIconPresetRows() {
+    const rows = document.querySelectorAll("#socialLinkIconsList .social-icon-preset-row");
+    const result = [];
+
+    rows.forEach((row) => {
+        const label = String(row.querySelector(".social-icon-preset-label")?.value || "").trim();
+        const iconAssetValue = Number(String(row.querySelector(".social-icon-preset-asset-id")?.value || "").trim());
+        const iconAssetId = Number.isInteger(iconAssetValue) && iconAssetValue > 0 ? iconAssetValue : null;
+
+        if (label) {
+            result.push({
+                label,
+                icon_asset_id: iconAssetId
+            });
+        }
+    });
+
+    return result;
+}
+
+async function loadSocialLinkIconsAdmin() {
+    const list = document.getElementById("socialLinkIconsList");
+    if (!list) {
+        return;
+    }
+
+    try {
+        const rows = await request("/api/admin/social-link-icons", { method: "GET" });
+        socialLinkIconPresets = Array.isArray(rows) && rows.length ? rows : socialLinkIconPresets;
+    } catch (error) {
+        showToast(`Could not load social link icon presets: ${error.message}`, "error");
+    }
+
+    list.innerHTML = "";
+    const rowsToRender = Array.isArray(socialLinkIconPresets) && socialLinkIconPresets.length
+        ? socialLinkIconPresets
+        : PUBLIC_PAGE_LINK_PRESETS;
+    rowsToRender.forEach((item) => buildSocialLinkIconPresetRow(item));
+    setPublicPageLinkPresetDatalistOptions();
+}
+
+async function saveSocialLinkIcons(event) {
+    event.preventDefault();
+
+    const saveButton = document.getElementById("saveSocialLinkIconsBtn");
+    const presets = readSocialLinkIconPresetRows();
+    if (!presets.length) {
+        showToast("Please add at least one social link icon preset", "error");
+        return;
+    }
+
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
+
+    try {
+        const saved = await request("/api/admin/social-link-icons", {
+            method: "PUT",
+            body: JSON.stringify({ presets })
+        });
+
+        socialLinkIconPresets = Array.isArray(saved) ? saved : presets;
+        setPublicPageLinkPresetDatalistOptions();
+        addActivityLog("Updated social link icon presets");
+        showToast("Social link icon presets saved", "success");
+    } catch (error) {
+        showToast(`Could not save social link icon presets: ${error.message}`, "error");
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+        }
+    }
 }
 
 function showHidePublicPageFieldsBySection(data) {
@@ -2164,6 +2494,10 @@ async function saveOwnPublicPage(event) {
     if (heroAssetIdInput) {
         setPendingUploadAssetId(heroAssetIdInput, null);
     }
+
+    document.querySelectorAll("#publicPageLinksContainer .mf-link-icon-asset-id").forEach((input) => {
+        setPendingUploadAssetId(input, null);
+    });
 
     await loadOwnPublicPage();
     addActivityLog("Updated own public page");
@@ -2360,8 +2694,11 @@ window.editSeminar = startEditSeminar;
 window.deleteSeminarEntry = deleteSeminarEntry;
 
 if (isAuthValid) {
+    const socialPresetLoadPromise = loadSocialLinkIconPresetsForPublicForms();
+    loadSocialLinkIconsAdmin();
     loadAdminProfile();
-    loadOwnPublicPage().catch((error) => {
+    socialPresetLoadPromise.then(() => loadOwnPublicPage()).catch((error) => {
+        populatePublicPageLinkRows([]);
         if (error && error.message) {
             showToast(error.message, "error");
         }
@@ -2472,6 +2809,16 @@ if (isAuthValid) {
     const addPublicPageLinkBtn = document.getElementById("addPublicPageLinkBtn");
     if (addPublicPageLinkBtn) {
         addPublicPageLinkBtn.addEventListener("click", () => buildPublicPageLinkRow());
+    }
+
+    const socialLinkIconsForm = document.getElementById("socialLinkIconsForm");
+    if (socialLinkIconsForm) {
+        socialLinkIconsForm.addEventListener("submit", saveSocialLinkIcons);
+    }
+
+    const addSocialLinkIconPresetBtn = document.getElementById("addSocialLinkIconPresetBtn");
+    if (addSocialLinkIconPresetBtn) {
+        addSocialLinkIconPresetBtn.addEventListener("click", () => buildSocialLinkIconPresetRow());
     }
 
     const uploadPublicPageHeroPhotoBtn = document.getElementById("uploadPublicPageHeroPhotoBtn");

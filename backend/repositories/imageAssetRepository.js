@@ -66,6 +66,36 @@ async function countReferences(imageAssetId, db = pool) {
             (SELECT COUNT(*) FROM members WHERE photo_asset_id = $1) +
             (SELECT COUNT(*) FROM member_profile_details WHERE hero_photo_asset_id = $1) +
             (SELECT COUNT(*) FROM admin_profile_details WHERE hero_photo_asset_id = $1) +
+            (
+                SELECT COUNT(*)
+                FROM member_profile_details mpd
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(COALESCE(mpd.links, '[]'::jsonb)) AS link_item
+                    WHERE (link_item->>'icon_asset_id') ~ '^\\d+$'
+                      AND (link_item->>'icon_asset_id')::int = $1
+                )
+            ) +
+            (
+                SELECT COUNT(*)
+                FROM admin_profile_details apd
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(COALESCE(apd.links, '[]'::jsonb)) AS link_item
+                    WHERE (link_item->>'icon_asset_id') ~ '^\\d+$'
+                      AND (link_item->>'icon_asset_id')::int = $1
+                )
+            ) +
+            (
+                SELECT COUNT(*)
+                FROM social_link_icon_presets slip
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(COALESCE(slip.presets, '[]'::jsonb)) AS preset_item
+                    WHERE (preset_item->>'icon_asset_id') ~ '^\\d+$'
+                      AND (preset_item->>'icon_asset_id')::int = $1
+                )
+            ) +
             (SELECT COUNT(*) FROM lecturers WHERE photo_asset_id = $1) +
             (SELECT COUNT(*) FROM home_news WHERE image_asset_id = $1) +
             (SELECT COUNT(*) FROM home_news WHERE summary_image_asset_id = $1)

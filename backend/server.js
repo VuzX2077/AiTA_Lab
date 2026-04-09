@@ -93,6 +93,7 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const homeNewsRoutes = require("./routes/homeNewsRoutes");
 const lecturerRoutes = require("./routes/lecturerRoutes");
 const homepageContentRoutes = require("./routes/homepageContentRoutes");
+const socialLinkIconPresetRoutes = require("./routes/socialLinkIconPresetRoutes");
 
 app.use("/api", authRoutes);
 app.use("/api", publicationRoutes);
@@ -103,6 +104,7 @@ app.use("/api", uploadRoutes);
 app.use("/api", homeNewsRoutes);
 app.use("/api", lecturerRoutes);
 app.use("/api", homepageContentRoutes);
+app.use("/api", socialLinkIconPresetRoutes);
 
 const reservedTopLevelPaths = new Set([
   "",

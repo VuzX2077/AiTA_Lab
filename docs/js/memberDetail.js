@@ -49,6 +49,23 @@ function safeProjects(value) {
     };
 }
 
+function getSafeHttpUrl(value) {
+    if (typeof value !== "string" || !value.trim()) {
+        return "";
+    }
+
+    try {
+        const parsed = new URL(value.trim());
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            return parsed.toString();
+        }
+    } catch (error) {
+        return "";
+    }
+
+    return "";
+}
+
 function getMemberIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const queryId = Number(params.get("id"));
@@ -96,7 +113,7 @@ function renderLinks(data) {
 
     const links = safeArray(data)
         .filter((item) => item && typeof item === "object")
-        .filter((item) => String(item.label || "").trim() && String(item.url || "").trim());
+        .filter((item) => String(item.label || "").trim() && String(item.url || "").trim() && String(item.icon_url || "").trim());
 
     if (!links.length) {
         wrap.innerHTML = "";
@@ -108,20 +125,38 @@ function renderLinks(data) {
     wrap.innerHTML = "";
 
     links.forEach((item) => {
+        const linkUrl = getSafeHttpUrl(String(item.url || ""));
+        if (!linkUrl) {
+            return;
+        }
+
         const a = document.createElement("a");
         a.className = "tag-link";
-        a.href = String(item.url || "").trim();
+        a.href = linkUrl;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
-        a.textContent = String(item.label || "").trim();
+        const label = String(item.label || "").trim();
+        a.title = label;
+        a.setAttribute("aria-label", label);
 
-        const color = String(item.color || "").trim();
-        if (color) {
-            a.style.background = color;
+        const iconUrl = getSafeHttpUrl(String(item.icon_url || ""));
+        if (!iconUrl) {
+            return;
         }
+
+        const icon = document.createElement("img");
+        icon.className = "tag-link-icon";
+        icon.src = iconUrl;
+        icon.alt = "";
+        icon.setAttribute("aria-hidden", "true");
+        a.appendChild(icon);
 
         wrap.appendChild(a);
     });
+
+    if (!wrap.children.length) {
+        wrap.hidden = true;
+    }
 }
 
 function renderToc(entries) {
