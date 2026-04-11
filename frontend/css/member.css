@@ -450,6 +450,80 @@
     display: block;
 }
 
+/* Keep upload widgets consistent and stacked: upload/remove buttons equal width, preview centered. */
+#editProfileForm .form-group:nth-of-type(1),
+#editPublicPageForm .form-group:nth-of-type(1) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#profilePhotoFile,
+#uploadProfilePhotoBtn,
+#profilePhotoPreview,
+#profilePhotoUploadStatus,
+#publicPageHeroPhotoFile,
+#uploadPublicPageHeroPhotoBtn,
+#publicPageHeroPhotoPreview,
+#publicPageHeroPhotoUploadStatus {
+    width: 220px;
+    max-width: 100%;
+}
+
+#profilePhotoFile,
+#profilePhotoPreview,
+#publicPageHeroPhotoFile,
+#publicPageHeroPhotoPreview,
+#profilePhotoUploadStatus,
+#publicPageHeroPhotoUploadStatus {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#profilePhotoFile,
+#publicPageHeroPhotoFile {
+    order: 1;
+}
+
+#editProfileForm .form-group:nth-of-type(1) .settings-avatar-actions,
+#editPublicPageForm .form-group:nth-of-type(1) .settings-avatar-actions {
+    order: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 220px;
+    max-width: 100%;
+}
+
+#uploadProfilePhotoBtn,
+#removeProfilePhotoBtn,
+#uploadPublicPageHeroPhotoBtn,
+#removePublicPageHeroPhotoBtn {
+    width: 220px;
+    max-width: 100%;
+    min-width: 220px;
+    text-align: center;
+}
+
+#profilePhotoUploadStatus,
+#publicPageHeroPhotoUploadStatus {
+    order: 4;
+    text-align: left;
+    margin-top: 6px;
+}
+
+#profilePhotoPreview,
+#publicPageHeroPhotoPreview {
+    order: 2;
+    margin-top: 8px;
+    margin-bottom: 6px;
+    margin-left: 0;
+    margin-right: 0;
+    height: 220px;
+    border-radius: 8px;
+}
+
 @media (max-width: 768px) {
     .overview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

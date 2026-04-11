@@ -1,16 +1,17 @@
 const seminarService = require("../services/seminarService");
 
 function parseSeminarPayload(req, res) {
-	const { seminarDate, startTime, endTime, memberName, title, paperLink } = req.body;
+	const { seminarDate, startTime, endTime, memberName, title, location, paperLink } = req.body;
 	const normalizedDate = typeof seminarDate === "string" ? seminarDate.trim() : "";
 	const normalizedStartTime = String(startTime || "").trim();
 	const normalizedEndTime = String(endTime || "").trim();
 	const normalizedMemberName = String(memberName || "").trim();
 	const normalizedTitle = String(title || "").trim();
+	const normalizedLocation = String(location || "").trim();
 	const normalizedPaperLink = typeof paperLink === "string" ? paperLink.trim() : "";
 
-	if (!normalizedDate || !normalizedStartTime || !normalizedEndTime || !normalizedMemberName || !normalizedTitle) {
-		res.status(400).json({ message: "seminarDate, startTime, endTime, memberName and title are required" });
+	if (!normalizedDate || !normalizedStartTime || !normalizedEndTime || !normalizedMemberName || !normalizedTitle || !normalizedLocation) {
+		res.status(400).json({ message: "seminarDate, startTime, endTime, memberName, title and location are required" });
 		return null;
 	}
 
@@ -46,6 +47,7 @@ function parseSeminarPayload(req, res) {
 		endTime: normalizedEndTime,
 		memberName: normalizedMemberName,
 		title: normalizedTitle,
+		location: normalizedLocation,
 		paperLink: validatedPaperLink
 	};
 }

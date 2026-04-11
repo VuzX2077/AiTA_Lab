@@ -247,6 +247,17 @@ function showToast(message, type = "success") {
     }, 3500);
 }
 
+function scrollDashboardToTop() {
+    const contentPane = document.querySelector(".dashboard-content");
+    if (contentPane && typeof contentPane.scrollTo === "function") {
+        contentPane.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+}
+
 function showSection(sectionId) {
     dashboardPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.id === sectionId);
@@ -255,6 +266,8 @@ function showSection(sectionId) {
     sidebarLinks.forEach((link) => {
         link.classList.toggle("active", link.dataset.target === sectionId);
     });
+
+    scrollDashboardToTop();
 }
 
 sidebarLinks.forEach((link) => {

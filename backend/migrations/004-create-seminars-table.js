@@ -9,6 +9,7 @@ module.exports = {
 				end_time TEXT NOT NULL DEFAULT '',
 				member_name TEXT NOT NULL DEFAULT '',
 				title TEXT NOT NULL DEFAULT '',
+				location TEXT NOT NULL DEFAULT '',
 				paper_link TEXT,
 				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -37,6 +38,10 @@ module.exports = {
 		`);
 		await pool.query(`
 			ALTER TABLE seminars
+			ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT ''
+		`);
+		await pool.query(`
+			ALTER TABLE seminars
 			ADD COLUMN IF NOT EXISTS paper_link TEXT
 		`);
 		await pool.query(`
@@ -55,8 +60,18 @@ module.exports = {
 		`);
 
 		await pool.query(`
+			UPDATE seminars
+			SET location = ''
+			WHERE location IS NULL
+		`);
+
+		await pool.query(`
 			ALTER TABLE seminars
 			ALTER COLUMN seminar_date SET NOT NULL
+		`);
+		await pool.query(`
+			ALTER TABLE seminars
+			ALTER COLUMN location SET NOT NULL
 		`);
 	}
 };

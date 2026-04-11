@@ -167,6 +167,17 @@ function syncOverviewStats() {
     setBar("rejectedBar", "rejectedBarLabel", statsState.rejectedPublications, statsState.totalPublications);
 }
 
+function scrollDashboardToTop() {
+    const contentPane = document.querySelector(".dashboard-content");
+    if (contentPane && typeof contentPane.scrollTo === "function") {
+        contentPane.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+}
+
 function showSection(sectionId) {
     adminPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.id === sectionId);
@@ -175,6 +186,8 @@ function showSection(sectionId) {
     sidebarLinks.forEach((link) => {
         link.classList.toggle("active", link.dataset.target === sectionId);
     });
+
+    scrollDashboardToTop();
 }
 
 sidebarLinks.forEach((link) => {
@@ -668,11 +681,12 @@ function startEditSeminar(item) {
     const seminarEndTime = document.getElementById("seminarEndTime");
     const seminarMemberName = document.getElementById("seminarMemberName");
     const seminarTitle = document.getElementById("seminarTitle");
+    const seminarLocation = document.getElementById("seminarLocation");
     const seminarPaperLink = document.getElementById("seminarPaperLink");
     const saveBtn = document.getElementById("seminarSaveBtn");
     const cancelBtn = document.getElementById("seminarCancelEditBtn");
 
-    if (!editId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarPaperLink) {
+    if (!editId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarLocation || !seminarPaperLink) {
         return;
     }
 
@@ -682,6 +696,7 @@ function startEditSeminar(item) {
     seminarEndTime.value = item.end_time || "";
     seminarMemberName.value = item.member_name || "";
     seminarTitle.value = item.title || "";
+    seminarLocation.value = item.location || "";
     seminarPaperLink.value = item.paper_link || "";
 
     if (saveBtn) {
@@ -731,6 +746,7 @@ function renderSeminarsAdmin(rows) {
                 <p><strong>${escapeHtml(item.title || "Untitled")}</strong></p>
                 <p><small>${escapeHtml(formatDateForDisplay(item.seminar_date))} | ${escapeHtml(item.start_time || "N/A")} - ${escapeHtml(item.end_time || "N/A")}</small></p>
                 <p><small>Member: ${escapeHtml(item.member_name || "N/A")}</small></p>
+                <p><small>Location: ${escapeHtml(item.location || "N/A")}</small></p>
                 <p><small>Paper Link: ${item.paper_link ? `<a href="${escapeHtml(item.paper_link)}" target="_blank" rel="noopener noreferrer">Open link</a>` : "N/A"}</small></p>
             </div>
             <div class="seminar-admin-actions">
@@ -823,9 +839,10 @@ async function saveSeminar(event) {
     const seminarEndTime = document.getElementById("seminarEndTime");
     const seminarMemberName = document.getElementById("seminarMemberName");
     const seminarTitle = document.getElementById("seminarTitle");
+    const seminarLocation = document.getElementById("seminarLocation");
     const seminarPaperLink = document.getElementById("seminarPaperLink");
 
-    if (!seminarEditId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarPaperLink) {
+    if (!seminarEditId || !seminarDate || !seminarStartTime || !seminarEndTime || !seminarMemberName || !seminarTitle || !seminarLocation || !seminarPaperLink) {
         return;
     }
 
@@ -835,6 +852,7 @@ async function saveSeminar(event) {
         endTime: seminarEndTime.value.trim(),
         memberName: seminarMemberName.value.trim(),
         title: seminarTitle.value.trim(),
+        location: seminarLocation.value.trim(),
         paperLink: seminarPaperLink.value.trim()
     };
 

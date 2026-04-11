@@ -116,6 +116,7 @@ function renderSeminarModalDetail(item) {
 		<p><strong>Time:</strong> ${formatSeminarTime(item.start_time, item.end_time)}</p>
 		<p><strong>Member:</strong> ${escapeHtml(item.member_name || "N/A")}</p>
 		<p><strong>Title:</strong> ${escapeHtml(item.title || "Untitled")}</p>
+		<p><strong>Location:</strong> ${escapeHtml(item.location || "N/A")}</p>
 		<p><strong>Paper Link:</strong> ${paperLinkMarkup}</p>
 	`;
 }
