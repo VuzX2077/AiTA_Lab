@@ -320,6 +320,16 @@
     background-color: #b91c1c;
 }
 
+.publication-member-filters {
+    margin: 4px 0 12px;
+}
+
+.publication-member-search {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
 #createPubForm button[type="submit"] {
     background-color: #ff9800;
     color: white;

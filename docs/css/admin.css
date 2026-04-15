@@ -868,6 +868,50 @@ margin-right: 6px;
     align-items: start;
 }
 
+#lecturerForm .lecturer-photo-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#lecturerPhotoFile,
+#uploadLecturerPhotoBtn,
+#lecturerPhotoPreview,
+#lecturerPhotoUploadStatus {
+    width: 220px;
+    max-width: 100%;
+}
+
+#lecturerPhotoFile,
+#lecturerPhotoPreview,
+#lecturerPhotoUploadStatus {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#lecturerPhotoFile {
+    order: 1;
+}
+
+#lecturerPhotoPreview {
+    order: 2;
+    margin-top: 8px;
+    margin-bottom: 6px;
+    height: 220px;
+    aspect-ratio: 1 / 1;
+}
+
+#uploadLecturerPhotoBtn {
+    order: 3;
+    text-align: center;
+}
+
+#lecturerPhotoUploadStatus {
+    order: 4;
+    text-align: left;
+    margin-top: 6px;
+}
+
 .home-page-hero-row .homepage-hero-upload {
     align-items: center;
 }
@@ -970,6 +1014,16 @@ margin-right: 6px;
     margin: 0;
     width: 18px;
     height: 18px;
+}
+
+#lecturerForm .home-news-checkbox {
+    margin-top: 34px;
+}
+
+@media (max-width: 768px) {
+    #lecturerForm .home-news-checkbox {
+        margin-top: 0;
+    }
 }
 
 .home-news-form-actions {

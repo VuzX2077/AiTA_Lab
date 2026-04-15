@@ -158,6 +158,154 @@ function getSafeHttpUrl(value) {
 	return "";
 }
 
+function getImageShellElement(imageElement) {
+	if (!imageElement) {
+		return null;
+	}
+
+	const shell = imageElement.closest(".image-loading-shell") || imageElement.parentElement;
+	if (!shell) {
+		return null;
+	}
+
+	shell.classList.add("image-loading-shell");
+	return shell;
+}
+
+function setImageShellState(imageElement, state) {
+	const shell = getImageShellElement(imageElement);
+	if (!shell) {
+		return;
+	}
+
+	shell.classList.remove("is-image-loading", "is-image-ready", "is-image-empty", "is-image-error");
+	if (state) {
+		shell.classList.add(state);
+	}
+}
+
+function loadImageWithPlaceholder(imageElement, value) {
+	if (!imageElement) {
+		return;
+	}
+
+	const safeUrl = getSafeHttpUrl(value);
+	if (!safeUrl) {
+		imageElement.removeAttribute("src");
+		imageElement.hidden = true;
+		setImageShellState(imageElement, "is-image-empty");
+		return;
+	}
+
+	const requestId = String((Number(imageElement.dataset.imageRequestId || "0") || 0) + 1);
+	imageElement.dataset.imageRequestId = requestId;
+	imageElement.hidden = true;
+	setImageShellState(imageElement, "is-image-loading");
+
+	const preloader = new Image();
+	preloader.onload = () => {
+		if (imageElement.dataset.imageRequestId !== requestId) {
+			return;
+		}
+
+		imageElement.src = safeUrl;
+		imageElement.hidden = false;
+		setImageShellState(imageElement, "is-image-ready");
+	};
+
+	preloader.onerror = () => {
+		if (imageElement.dataset.imageRequestId !== requestId) {
+			return;
+		}
+
+		imageElement.removeAttribute("src");
+		imageElement.hidden = true;
+		setImageShellState(imageElement, "is-image-error");
+	};
+
+	preloader.src = safeUrl;
+}
+
+function hydrateDeferredImages(container = document) {
+	const scopedContainer = container || document;
+	const images = scopedContainer.querySelectorAll("img.js-deferred-image");
+	images.forEach((imageElement) => {
+		if (imageElement.dataset.imageHydrated === "true") {
+			return;
+		}
+
+		imageElement.dataset.imageHydrated = "true";
+		loadImageWithPlaceholder(imageElement, imageElement.dataset.src || "");
+	});
+}
+
+function hydrateManagedImageElement(imageElement) {
+	if (!(imageElement instanceof HTMLImageElement)) {
+		return;
+	}
+
+	if (imageElement.dataset.imageHydrated === "true") {
+		return;
+	}
+
+	const sourceValue = imageElement.dataset.src || imageElement.getAttribute("src") || "";
+	const safeUrl = getSafeHttpUrl(sourceValue);
+	if (!safeUrl) {
+		return;
+	}
+
+	imageElement.dataset.imageHydrated = "true";
+	imageElement.dataset.src = safeUrl;
+	loadImageWithPlaceholder(imageElement, safeUrl);
+}
+
+function hydrateManagedImages(container = document) {
+	const scopedContainer = container || document;
+	if (scopedContainer instanceof HTMLImageElement) {
+		hydrateManagedImageElement(scopedContainer);
+		return;
+	}
+
+	const images = scopedContainer.querySelectorAll("img[src], img[data-src]");
+	images.forEach(hydrateManagedImageElement);
+}
+
+function startGlobalImageHydration() {
+	hydrateDeferredImages(document);
+	hydrateManagedImages(document);
+
+	if (!document.body || typeof MutationObserver !== "function") {
+		return;
+	}
+
+	const observer = new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			mutation.addedNodes.forEach((node) => {
+				if (!(node instanceof Element)) {
+					return;
+				}
+
+				if (node instanceof HTMLImageElement) {
+					hydrateManagedImageElement(node);
+					return;
+				}
+
+				hydrateDeferredImages(node);
+				hydrateManagedImages(node);
+			});
+		});
+	});
+
+	observer.observe(document.body, {
+		childList: true,
+		subtree: true
+	});
+}
+
+window.loadImageWithPlaceholder = loadImageWithPlaceholder;
+window.hydrateDeferredImages = hydrateDeferredImages;
+window.hydrateManagedImages = hydrateManagedImages;
+
 function applyOptionalHttpLink(anchor, value) {
 	if (!anchor) {
 		return;
@@ -187,15 +335,7 @@ function applyOptionalImage(imageElement, value) {
 		return;
 	}
 
-	const safeUrl = getSafeHttpUrl(value);
-	if (safeUrl) {
-		imageElement.src = safeUrl;
-		imageElement.hidden = false;
-		return;
-	}
-
-	imageElement.removeAttribute("src");
-	imageElement.hidden = true;
+	loadImageWithPlaceholder(imageElement, value);
 }
 
 const DEFAULT_HOME_CONTENT = {
@@ -277,6 +417,7 @@ async function initHomePageContent() {
 	const heroTitle = document.getElementById("homeHeroTitle");
 	const introParagraph1 = document.getElementById("homeIntroParagraph1");
 	const introParagraph2 = document.getElementById("homeIntroParagraph2");
+	const showcaseText = document.getElementById("homeShowcaseText");
 	const githubLink = document.getElementById("homeFollowGithub");
 	const facebookLink = document.getElementById("homeFollowFacebook");
 	const heroImage1 = document.getElementById("homeHeroImage1");
@@ -286,6 +427,19 @@ async function initHomePageContent() {
 	if (!heroTitle || !introParagraph1 || !introParagraph2) {
 		return;
 	}
+
+	if (showcaseText) {
+		showcaseText.classList.add("is-loading");
+	}
+
+	heroTitle.textContent = "";
+	introParagraph1.textContent = "";
+	introParagraph2.textContent = "";
+	applyOptionalHttpLink(githubLink, "");
+	applyOptionalHttpLink(facebookLink, "");
+	applyOptionalImage(heroImage1, "");
+	applyOptionalImage(heroImage2, "");
+	applyOptionalImage(heroImage3, "");
 
 	try {
 		homePageContentState = await fetchHomePageContent();
@@ -308,6 +462,10 @@ async function initHomePageContent() {
 		applyOptionalImage(heroImage1, DEFAULT_HOME_CONTENT.hero_image_url_1);
 		applyOptionalImage(heroImage2, DEFAULT_HOME_CONTENT.hero_image_url_2);
 		applyOptionalImage(heroImage3, DEFAULT_HOME_CONTENT.hero_image_url_3);
+	} finally {
+		if (showcaseText) {
+			showcaseText.classList.remove("is-loading");
+		}
 	}
 }
 
@@ -355,14 +513,14 @@ async function initHomeLatestPosts() {
 	};
 
 	try {
-		const response = await fetch(getApiUrl("/api/home-news/public?limit=5"));
+		const response = await fetch(getApiUrl("/api/home-news/public?limit=2"));
 		const rows = await response.json();
 
 		if (!response.ok) {
 			throw new Error((rows && rows.message) || "Failed to load latest posts");
 		}
 
-		const items = Array.isArray(rows) ? rows : [];
+		const items = Array.isArray(rows) ? rows.slice(0, 2) : [];
 		if (!items.length) {
 			renderEmpty("No latest posts yet.");
 			return;
@@ -589,10 +747,10 @@ async function initPublicationSearch() {
 	};
 
 	try {
-		       const [publicationResult, newsResult] = await Promise.allSettled([
-			       fetch(getApiUrl("/api/publications/public")),
-			       fetch(getApiUrl("/api/home-news/public?limit=12"))
-		       ]);
+		const [publicationResult, newsResult] = await Promise.allSettled([
+			fetch(getApiUrl("/api/publications/public")),
+			fetch(getApiUrl("/api/home-news/public?limit=12"))
+		]);
 		let hasAnySource = false;
 
 		if (publicationResult.status === "fulfilled") {
@@ -688,6 +846,7 @@ async function initPublicationSearch() {
 	setFloatingNavVisibility();
 }
 
+startGlobalImageHydration();
 initPublicationSearch();
 initGlobalFooterText();
 initHomePageContent();

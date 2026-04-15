@@ -28,6 +28,7 @@ const activityLogs = [];
 let seminarItemsCache = [];
 let seminarAdminFiltersBound = false;
 let publicationItemsCache = [];
+let pendingPublicationItemsCache = [];
 let publicationSearchEventsBound = false;
 let memberItemsCache = [];
 let memberSearchEventsBound = false;
@@ -327,34 +328,9 @@ async function cleanupPendingUploadAsset(inputElement) {
 async function loadPendingPublications() {
     try {
         const data = await request("/api/publications/pending", { method: "GET" });
-        const list = document.getElementById("pendingPublicationList");
-
-        if (data.length === 0) {
-            list.innerHTML = "<p>No pending publications.</p>";
-            statsState.pendingPublications = 0;
-            syncOverviewStats();
-            return;
-        }
-
-        list.innerHTML = data.map(pub => `
-            <div>
-                <div>
-                    <p><strong>${pub.title}</strong></p>
-                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
-                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
-                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
-                    <p><small>Year: ${pub.year || "N/A"}</small></p>
-                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
-                    <p>${pub.description}</p>
-                    <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
-                </div>
-                <div class="pub-btn-group">
-                    <button class="pub-action-btn approve-btn" onclick="approvePublication(${pub.id})">Approve</button>
-                    <button class="pub-action-btn reject-btn" onclick="rejectPublication(${pub.id})">Reject</button>
-                    <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
-                </div>
-            </div>
-        `).join("");
+        pendingPublicationItemsCache = data;
+        bindPublicationSearchEvents();
+        renderPublicationSections();
 
         statsState.pendingPublications = data.length;
         syncOverviewStats();
@@ -436,7 +412,40 @@ function renderPublicationList(listElementId, rows, emptyMessage) {
     list.innerHTML = rows.map(publicationTemplate).join("");
 }
 
+function renderPendingPublicationList(rows, emptyMessage) {
+    const list = document.getElementById("pendingPublicationList");
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = `<p>${emptyMessage}</p>`;
+        return;
+    }
+
+    list.innerHTML = rows.map((pub) => `
+        <div>
+            <div>
+                <p><strong>${pub.title}</strong></p>
+                <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
+                <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                <p><small>Journal: ${pub.journal || "N/A"}</small></p>
+                <p><small>Year: ${pub.year || "N/A"}</small></p>
+                <p><small>DOI: ${pub.doi || "N/A"}</small></p>
+                <p>${pub.description}</p>
+                <p><small>By: ${pub.owner_email || "Unknown"}</small></p>
+            </div>
+            <div class="pub-btn-group">
+                <button class="pub-action-btn approve-btn" onclick="approvePublication(${pub.id})">Approve</button>
+                <button class="pub-action-btn reject-btn" onclick="rejectPublication(${pub.id})">Reject</button>
+                <button class="pub-action-btn delete-btn" onclick="deletePublication(${pub.id})">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
+
 function renderPublicationSections() {
+    const pendingFiltered = filterPublicationsByKeyword(pendingPublicationItemsCache, getPublicationSearchKeyword("pendingPublicationSearchInput"));
     const approvedRows = publicationItemsCache.filter((pub) => String(pub.status || "").toLowerCase() === "approved");
     const rejectedRows = publicationItemsCache.filter((pub) => String(pub.status || "").toLowerCase() === "rejected");
 
@@ -444,6 +453,10 @@ function renderPublicationSections() {
     const approvedFiltered = filterPublicationsByKeyword(approvedRows, getPublicationSearchKeyword("approvedPublicationSearchInput"));
     const rejectedFiltered = filterPublicationsByKeyword(rejectedRows, getPublicationSearchKeyword("rejectedPublicationSearchInput"));
 
+    renderPendingPublicationList(
+        pendingFiltered,
+        pendingPublicationItemsCache.length ? "No pending publications match your search." : "No pending publications."
+    );
     renderPublicationList("publicationList", allFiltered, publicationItemsCache.length ? "No publications match your search." : "No publications.");
     renderPublicationList("approvedPublicationList", approvedFiltered, approvedRows.length ? "No approved publications match your search." : "No approved publications.");
     renderPublicationList("rejectedPublicationList", rejectedFiltered, rejectedRows.length ? "No rejected publications match your search." : "No rejected publications.");
@@ -455,6 +468,7 @@ function bindPublicationSearchEvents() {
     }
 
     const ids = [
+        "pendingPublicationSearchInput",
         "allPublicationSearchInput",
         "approvedPublicationSearchInput",
         "rejectedPublicationSearchInput"

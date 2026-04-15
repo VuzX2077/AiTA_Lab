@@ -41,6 +41,7 @@ const isAuthValid = checkAuth();
 
 let editingPublicationId = null;
 let myPublications = [];
+let myPublicationSearchEventsBound = false;
 let selectedAuthors = [];
 let authorSearchTimeout = null;
 let doiLookupSequence = 0;
@@ -1041,54 +1042,110 @@ async function loadMyPublications() {
         const data = await request("/api/my-publications", { method: "GET" });
         myPublications = data;
         updateOverviewStats(data);
-        const list = document.getElementById("publicationList");
-
-        if (data.length === 0) {
-            list.innerHTML = "<p>You have no publications yet.</p>";
-            return;
-        }
-
-        list.innerHTML = data.map(pub => `
-            <div>
-                <div>
-                    <p><strong>${pub.title}</strong> (${pub.status})</p>
-                    <p><small>Type: ${PUBLICATION_TYPE_LABELS[pub.publication_type] || "Journal Publications"}</small></p>
-                    <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
-                    <p><small>Authors: ${pub.authors || "N/A"}</small></p>
-                    <p><small>Journal: ${pub.journal || "N/A"}</small></p>
-                    <p><small>Year: ${pub.year || "N/A"}</small></p>
-                    <p><small>DOI: ${pub.doi || "N/A"}</small></p>
-                    <p>${pub.description}</p>
-                </div>
-                <div class="pub-btn-group">
-                    <button class="edit-pub-btn" data-id="${pub.id}">Edit</button>
-                    <button class="delete-pub-btn" data-id="${pub.id}">Delete</button>
-                </div>
-            </div>
-        `).join("");
-
-        list.querySelectorAll(".edit-pub-btn").forEach((button) => {
-            button.addEventListener("click", () => {
-                const id = Number(button.dataset.id);
-                const publication = myPublications.find((item) => item.id === id);
-
-                if (!publication) {
-                    return;
-                }
-
-                startEditPublication(publication);
-            });
-        });
-
-        list.querySelectorAll(".delete-pub-btn").forEach((button) => {
-            button.addEventListener("click", async () => {
-                const id = Number(button.dataset.id);
-                await deletePublication(id);
-            });
-        });
+        bindMyPublicationSearchEvents();
+        renderMyPublicationSection();
     } catch (error) {
         showToast(error.message, "error");
     }
+}
+
+function getMyPublicationSearchKeyword() {
+    const input = document.getElementById("myPublicationSearchInput");
+    return String(input ? input.value : "").trim().toLowerCase();
+}
+
+function filterMyPublicationsByKeyword(rows, keyword) {
+    if (!keyword) {
+        return rows;
+    }
+
+    return rows.filter((pub) => {
+        const haystack = [
+            pub.title,
+            pub.authors,
+            pub.journal,
+            pub.doi,
+            pub.year,
+            pub.status,
+            pub.publication_type
+        ]
+            .map((value) => String(value || "").toLowerCase())
+            .join(" ");
+
+        return haystack.includes(keyword);
+    });
+}
+
+function renderMyPublicationList(rows, emptyMessage) {
+    const list = document.getElementById("publicationList");
+    if (!list) {
+        return;
+    }
+
+    if (!rows.length) {
+        list.innerHTML = `<p>${emptyMessage}</p>`;
+        return;
+    }
+
+    list.innerHTML = rows.map((pub) => `
+        <div>
+            <div>
+                <p><strong>${pub.title}</strong> (${pub.status})</p>
+                <p><small>Type: ${PUBLICATION_TYPE_LABELS[pub.publication_type] || "Journal Publications"}</small></p>
+                <p><small>Link: ${pub.link ? `<a href="${pub.link}" target="_blank" rel="noopener noreferrer">Open publication</a>` : "N/A"}</small></p>
+                <p><small>Authors: ${pub.authors || "N/A"}</small></p>
+                <p><small>Journal: ${pub.journal || "N/A"}</small></p>
+                <p><small>Year: ${pub.year || "N/A"}</small></p>
+                <p><small>DOI: ${pub.doi || "N/A"}</small></p>
+                <p>${pub.description}</p>
+            </div>
+            <div class="pub-btn-group">
+                <button class="edit-pub-btn" data-id="${pub.id}">Edit</button>
+                <button class="delete-pub-btn" data-id="${pub.id}">Delete</button>
+            </div>
+        </div>
+    `).join("");
+
+    list.querySelectorAll(".edit-pub-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            const publication = myPublications.find((item) => item.id === id);
+
+            if (!publication) {
+                return;
+            }
+
+            startEditPublication(publication);
+        });
+    });
+
+    list.querySelectorAll(".delete-pub-btn").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const id = Number(button.dataset.id);
+            await deletePublication(id);
+        });
+    });
+}
+
+function renderMyPublicationSection() {
+    const filteredRows = filterMyPublicationsByKeyword(myPublications, getMyPublicationSearchKeyword());
+    renderMyPublicationList(
+        filteredRows,
+        myPublications.length ? "No publications match your search." : "You have no publications yet."
+    );
+}
+
+function bindMyPublicationSearchEvents() {
+    if (myPublicationSearchEventsBound) {
+        return;
+    }
+
+    const input = document.getElementById("myPublicationSearchInput");
+    if (input) {
+        input.addEventListener("input", renderMyPublicationSection);
+    }
+
+    myPublicationSearchEventsBound = true;
 }
 
 function updateOverviewStats(publications) {

@@ -126,6 +126,15 @@
 
         <div class="dashboard-section admin-panel" id="pendingPublicationsSection">
             <h2>Pending Approval</h2>
+            <div class="publication-admin-filters" aria-label="Search pending publications">
+                <input
+                    type="text"
+                    id="pendingPublicationSearchInput"
+                    class="publication-admin-search"
+                    placeholder="Search pending publications by title, author, journal, DOI, year or owner"
+                    aria-label="Search pending publications"
+                >
+            </div>
             <div id="pendingPublicationList"></div>
         </div>
 
@@ -393,7 +402,7 @@
 
                 <label class="home-news-span-2">
                     Teaching Subjects (one per line)
-                    <textarea id="lecturerSubjects" rows="4" placeholder="Machine Learning&#10;Deep Learning&#10;Natural Language Processing"></textarea>
+                    <textarea id="lecturerSubjects" rows="4" placeholder="PRN212&#10;MAS291&#10;SWR302"></textarea>
                 </label>
 
                 <label class="home-news-span-2">
@@ -411,7 +420,7 @@
                     Published on public page
                 </label>
 
-                <label class="home-news-span-2">
+                <label class="home-news-span-2 lecturer-photo-upload">
                     Photo (optional)
                     <input type="file" id="lecturerPhotoFile" accept="image/jpeg,image/png,image/webp">
                     <button type="button" id="uploadLecturerPhotoBtn" class="btn-primary">Upload Photo</button>

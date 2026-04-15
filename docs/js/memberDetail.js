@@ -184,6 +184,59 @@ function renderToc(entries) {
     });
 }
 
+function setHeroImageShellState(imageWrap, state) {
+    if (!imageWrap) return;
+
+    imageWrap.classList.remove("is-image-loading", "is-image-ready", "is-image-empty", "is-image-error");
+    if (state) {
+        imageWrap.classList.add(state);
+    }
+}
+
+function loadMemberHeroImage(imageWrap, imageEl, imageUrl) {
+    if (!imageWrap || !imageEl) {
+        return;
+    }
+
+    const trimmedUrl = String(imageUrl || "").trim();
+    if (!trimmedUrl) {
+        imageEl.hidden = true;
+        imageEl.removeAttribute("src");
+        imageWrap.hidden = true;
+        setHeroImageShellState(imageWrap, "is-image-empty");
+        return;
+    }
+
+    const requestId = String((Number(imageEl.dataset.imageRequestId || "0") || 0) + 1);
+    imageEl.dataset.imageRequestId = requestId;
+    imageEl.hidden = true;
+    imageWrap.hidden = false;
+    setHeroImageShellState(imageWrap, "is-image-loading");
+
+    const preloader = new Image();
+    preloader.onload = () => {
+        if (imageEl.dataset.imageRequestId !== requestId) {
+            return;
+        }
+
+        imageEl.src = trimmedUrl;
+        imageEl.hidden = false;
+        setHeroImageShellState(imageWrap, "is-image-ready");
+    };
+
+    preloader.onerror = () => {
+        if (imageEl.dataset.imageRequestId !== requestId) {
+            return;
+        }
+
+        imageEl.hidden = true;
+        imageEl.removeAttribute("src");
+        setHeroImageShellState(imageWrap, "is-image-error");
+    };
+
+    preloader.src = trimmedUrl;
+}
+
 async function loadMemberDetail() {
     const memberId = getMemberIdFromUrl();
     const nameEl = document.getElementById("memberName");
@@ -216,13 +269,8 @@ async function loadMemberDetail() {
         const heroUrl = String(payload.hero_photo_url || "").trim();
 
         if (imageWrap && heroImage) {
-            if (heroUrl) {
-                heroImage.src = heroUrl;
-                heroImage.alt = payload.name || "Member hero picture";
-                imageWrap.hidden = false;
-            } else {
-                imageWrap.hidden = true;
-            }
+            heroImage.alt = payload.name || "Member hero picture";
+            loadMemberHeroImage(imageWrap, heroImage, heroUrl);
         }
 
         renderLinks(payload.links);
