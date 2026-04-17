@@ -35,6 +35,19 @@ if (session) {
     window.location.href = session.role === "admin" ? getPageUrl("adminDashboard.html") : getPageUrl("memberDashboard.html");
 }
 
+const backToHomeLink = document.getElementById("backToHomeLink");
+if (backToHomeLink) {
+    backToHomeLink.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        if (typeof window.scrollTo === "function") {
+            window.scrollTo(0, 0);
+        }
+
+        window.location.replace(getPageUrl("index.html"));
+    });
+}
+
 function resolveApiUrl(path) {
     if (typeof window.getApiUrl === "function") {
         return window.getApiUrl(path);

@@ -19,6 +19,20 @@ app.use(cors({
   origin: "https://aitalab.net",
   credentials: true
 }));
+
+app.use((req, res, next) => {
+  const hostname = String(req.hostname || "").toLowerCase();
+  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+
+  if (isLocalHost) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+
+  next();
+});
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
