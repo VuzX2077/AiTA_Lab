@@ -7,6 +7,7 @@ const docsDir = path.join(rootDir, "docs");
 const docsCssDir = path.join(docsDir, "css");
 const docsJsDir = path.join(docsDir, "js");
 const docsPagesDir = path.join(docsDir, "pages");
+const assetVersion = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
 
 const routeReplacements = [
     ["href=\"/\"", "href=\"./index.html\""],
@@ -146,6 +147,13 @@ function normalizeHtml(content) {
             '<script src="/js/config.js"></script>\n<script src="/js/'
         );
     }
+
+    // Cache-bust local static assets so mobile browsers on DirectAdmin do not keep stale files.
+    normalized = normalized
+        .replace(/href="(\/css\/[^"]+\.css)(?:\?[^\"]*)?"/g, `href="$1?v=${assetVersion}"`)
+        .replace(/src="(\/js\/[^"]+\.js)(?:\?[^\"]*)?"/g, `src="$1?v=${assetVersion}"`)
+        .replace(/href="(css\/[^"]+\.css)(?:\?[^\"]*)?"/g, `href="$1?v=${assetVersion}"`)
+        .replace(/src="(js\/[^"]+\.js)(?:\?[^\"]*)?"/g, `src="$1?v=${assetVersion}"`);
 
     return normalized;
 }
