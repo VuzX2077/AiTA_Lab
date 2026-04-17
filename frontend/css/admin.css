@@ -1172,6 +1172,28 @@ margin-right: 6px;
     justify-content: center;
 }
 
+@media (max-width: 900px) {
+    .social-icon-preset-row {
+        grid-template-columns: 1fr 56px minmax(160px, 1fr) 120px 36px;
+        gap: 8px;
+    }
+
+    .roles-actions {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .roles-actions select {
+        width: 100%;
+        max-width: 220px;
+    }
+
+    .settings-card {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+}
+
 @media (max-width: 768px) {
     .admin-overview-grid {
         grid-template-columns: 1fr;
@@ -1237,6 +1259,7 @@ margin-right: 6px;
 
     .home-news-admin-actions {
         flex-direction: row;
+        flex-wrap: wrap;
     }
 
     .lecturer-admin-item {
@@ -1245,5 +1268,28 @@ margin-right: 6px;
 
     .lecturer-admin-item .home-news-admin-actions {
         justify-content: flex-start;
+    }
+
+    #publicPageLinksContainer .mf-link-row {
+        grid-template-columns: 1fr;
+    }
+
+    .social-icon-preset-row {
+        grid-template-columns: 1fr;
+    }
+
+    .social-icon-preset-preview {
+        width: 64px;
+        height: 36px;
+    }
+
+    .social-icon-preset-remove {
+        width: 100%;
+        max-width: 64px;
+    }
+
+    .change-password-actions .btn-primary {
+        width: 100%;
+        min-width: 0;
     }
 }

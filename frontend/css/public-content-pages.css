@@ -5,8 +5,8 @@
 .seminars-page,
 .archives-page,
 .contact-page {
-    max-width: 900px;
-    margin: 25px 300px 25px;
+    width: min(900px, calc(100vw - 24px));
+    margin: 25px auto;
     padding: 24px 24px 40px;
     background-color: white;
     border-radius: 20px;
@@ -569,6 +569,17 @@ body.seminar-modal-open {
 }
 
 @media (max-width: 900px) {
+    .members-page,
+    .publications-page,
+    .researches-page,
+    .lecturers-page,
+    .seminars-page,
+    .archives-page,
+    .contact-page {
+        width: min(900px, calc(100vw - 16px));
+        margin: 12px auto 20px;
+    }
+
     .researches-page {
         padding: 20px 16px 32px;
     }
@@ -598,9 +609,12 @@ body.seminar-modal-open {
         font-size: 28px;
     }
 
-    .contact-section h2,
+    .contact-section h2 {
+        font-size: 26px;
+    }
+
     .contact-section h3 {
-        font-size: 34px;
+        font-size: 20px;
     }
 
     .publication-group h2 {
@@ -661,5 +675,33 @@ body.seminar-modal-open {
     .seminar-modal-card {
         width: min(92vw, 520px);
         padding: 20px 16px 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    .content-hero h1 {
+        font-size: 34px;
+    }
+
+    .content-hero p {
+        font-size: 15px;
+    }
+
+    .publication-group h2,
+    .research-item h2,
+    .seminar-date-group h2 {
+        font-size: 24px;
+    }
+
+    .publication-group p,
+    .publication-bullet-list li,
+    .research-item p,
+    .contact-section p,
+    .contact-section li {
+        font-size: 15px;
+    }
+
+    .contact-map {
+        height: 240px;
     }
 }

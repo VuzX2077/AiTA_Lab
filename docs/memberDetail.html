@@ -2,7 +2,9 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
+    
+        <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Profile - AiTA Lab</title>
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/layout.css">
@@ -35,7 +37,55 @@
     </nav>
 </header>
 
-<main class="member-detail-page">
+<main class="member-detail-page is-loading" aria-busy="true">
+    <div class="member-detail-loading" id="memberDetailLoading" aria-hidden="true">
+        <section class="container mdl-hero" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-title"></div>
+        </section>
+
+        <section class="container mdl-image" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-image-hero"></div>
+        </section>
+
+        <section class="container mdl-quote" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-quote"></div>
+        </section>
+
+        <section class="container mdl-links" aria-hidden="true">
+            <span class="md-skeleton md-skeleton-pill"></span>
+            <span class="md-skeleton md-skeleton-pill"></span>
+            <span class="md-skeleton md-skeleton-pill"></span>
+            <span class="md-skeleton md-skeleton-pill"></span>
+        </section>
+
+        <section class="container mdl-toc" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-heading"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+        </section>
+
+        <section class="container mdl-section" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-heading md-skeleton-heading-wide"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line md-skeleton-line-short"></div>
+        </section>
+
+        <section class="container mdl-section" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-heading"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line md-skeleton-line-short"></div>
+        </section>
+
+        <section class="container mdl-section" aria-hidden="true">
+            <div class="md-skeleton md-skeleton-heading"></div>
+            <div class="md-skeleton md-skeleton-line"></div>
+            <div class="md-skeleton md-skeleton-line md-skeleton-line-short"></div>
+        </section>
+    </div>
+
     <section class="container detail-hero">
         <h1 id="memberName">Member Profile</h1>
     </section>
@@ -136,5 +186,7 @@
 </body>
 
 </html>
+
+
 
 

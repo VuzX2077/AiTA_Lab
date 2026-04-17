@@ -38,3 +38,17 @@
 .back-home a:hover {
     text-decoration: underline;
 }
+
+@media (max-width: 600px) {
+    .login-page {
+        padding: 16px;
+        min-height: 100vh;
+        height: auto;
+        box-sizing: border-box;
+    }
+
+    .login-card {
+        padding: 24px 18px;
+        border-radius: 10px;
+    }
+}

@@ -539,6 +539,35 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    #profileInfo {
+        padding: 14px;
+    }
+
+    #profileInfo .dashboard-profile-overview {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .settings-card {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+
+    .settings-card-header h3 {
+        font-size: 18px;
+    }
+
+    #publicationList .pub-btn-group {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    #publicPageLinksContainer .mf-link-row {
+        grid-template-columns: 1fr;
+    }
+
     .change-password-form {
         grid-template-columns: 1fr;
     }
@@ -552,5 +581,10 @@
 @media (max-width: 480px) {
     .overview-grid {
         grid-template-columns: 1fr;
+    }
+
+    .change-password-actions .btn-primary {
+        width: 100%;
+        min-width: 0;
     }
 }

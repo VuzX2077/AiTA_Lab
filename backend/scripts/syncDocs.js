@@ -192,6 +192,7 @@ function writeRootPages() {
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - AiTA Lab</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
@@ -227,6 +228,7 @@ function writePageRedirect(relativeDir, fileName, targetFile) {
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="0; url=${redirectTarget}">
     <title>Redirecting...</title>
 </head>

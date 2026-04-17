@@ -389,6 +389,53 @@ body.site-search-active {
 }
 
 @media (max-width: 900px) {
+    .nav-container {
+        padding: 14px 12px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        flex: 1 1 auto;
+    }
+
+    .logo a {
+        font-size: 26px;
+    }
+
+    .menu {
+        order: 3;
+        width: 100%;
+        margin: 4px 0 0;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        font-size: 15px;
+    }
+
+    .auth {
+        flex: none;
+        margin-left: auto;
+        gap: 10px;
+    }
+
+    .auth a {
+        font-size: 15px;
+    }
+
+    .auth a + a {
+        padding-left: 10px;
+    }
+
+    .auth a + a::before {
+        height: 14px;
+    }
+
+    .dashboard {
+        margin: 24px auto;
+        padding: 16px;
+    }
+
     .site-search-shell {
         padding: 10px 12px;
         min-height: 56px;
@@ -410,6 +457,23 @@ body.site-search-active {
 }
 
 @media (max-width: 768px) {
+    .menu {
+        gap: 8px 12px;
+        font-size: 14px;
+    }
+
+    .menu a::before {
+        bottom: -4px;
+    }
+
+    .auth a {
+        font-size: 14px;
+    }
+
+    .footer-content p {
+        font-size: 13px;
+    }
+
     .dashboard-shell {
         grid-template-columns: 1fr;
         padding: 0 10px;

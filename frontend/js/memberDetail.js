@@ -193,6 +193,16 @@ function setHeroImageShellState(imageWrap, state) {
     }
 }
 
+function setMemberDetailLoading(isLoading) {
+    const root = document.querySelector(".member-detail-page");
+    if (!root) {
+        return;
+    }
+
+    root.classList.toggle("is-loading", Boolean(isLoading));
+    root.setAttribute("aria-busy", isLoading ? "true" : "false");
+}
+
 function loadMemberHeroImage(imageWrap, imageEl, imageUrl) {
     if (!imageWrap || !imageEl) {
         return;
@@ -238,12 +248,15 @@ function loadMemberHeroImage(imageWrap, imageEl, imageUrl) {
 }
 
 async function loadMemberDetail() {
+    setMemberDetailLoading(true);
+
     const memberId = getMemberIdFromUrl();
     const nameEl = document.getElementById("memberName");
     const quoteEl = document.getElementById("memberQuote");
     const emptyEl = document.getElementById("detailEmpty");
 
     if (!memberId) {
+        setMemberDetailLoading(false);
         if (nameEl) nameEl.textContent = "Member not found";
         if (quoteEl) quoteEl.textContent = "Invalid member id.";
         if (emptyEl) emptyEl.hidden = false;
@@ -347,6 +360,8 @@ async function loadMemberDetail() {
             quoteEl.textContent = error.message || "Failed to load member detail.";
         }
         if (emptyEl) emptyEl.hidden = false;
+    } finally {
+        setMemberDetailLoading(false);
     }
 }
 
