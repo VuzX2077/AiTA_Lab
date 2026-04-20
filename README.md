@@ -1,167 +1,98 @@
 # AiTA Lab
 
-AiTA Lab is a web application for managing lab members and research publications with JWT authentication and role-based access control.
+AiTA Lab is a lab website and management system for news, members, lecturers, seminars, and publications.
 
-## Overview
+Live website: https://aitalab.net
 
-- Public users can view approved publications.
-- Members (`role: user`) can manage their own publications.
-- Admins (`role: admin`) can review publications and manage users/members.
+## Production Deployment
 
-## Architecture
+This project is running in a split deployment model (all free tier):
+
+- Frontend host: DirectAdmin (domain: https://aitalab.net)
+- Backend API: Render (example endpoint: https://aita-lab.onrender.com)
+- Database + object storage: Supabase (PostgreSQL + Storage)
+
+## System Architecture
 
 ```text
-Browser (HTML/CSS/JS)
+Browser (aitalab.net)
         |
-        | HTTP (REST)
+        | HTTPS (REST)
         v
-Node.js + Express
+Render Node.js/Express API
         |
-        v
-PostgreSQL
+        +--> Supabase PostgreSQL (application data)
+        |
+        +--> Supabase Storage (uploaded images)
 ```
 
-The backend serves both:
-- API endpoints under `/api`
-- Static frontend files from `frontend/`
+## Main Features
 
-This project follows a layered structure:
-- Routes -> Controllers -> Services -> Database
-- Middleware handles authentication and authorization
+- Public pages: homepage, news, publications, researches, members, lecturers, seminars, archives, contact.
+- Authentication: login/register with JWT.
+- Role model:
+  - `user`: own profile and publication management.
+  - `admin`: content moderation and full dashboard management.
+- Admin content modules:
+  - home news
+  - homepage sections
+  - social icon presets
+  - members and member profile details
+  - lecturers
+  - seminars
+  - publications moderation
+- Image upload/delete pipeline integrated with Supabase Storage.
 
 ## Tech Stack
 
-- Frontend: HTML5, CSS3, Vanilla JavaScript (Fetch API)
+- Frontend: HTML, CSS, Vanilla JavaScript
 - Backend: Node.js, Express
-- Database: PostgreSQL (`pg`)
-- Security: JWT (`jsonwebtoken`), Password hashing (`bcrypt`)
+- Database: PostgreSQL (`pg`) via Supabase
+- File storage: Supabase Storage (`@supabase/supabase-js`)
+- Auth/Security: JWT (`jsonwebtoken`), password hashing (`bcrypt`)
 
-## Key Features
-
-### Public
-- View home and public pages
-- View approved publications
-
-### Member (`user`)
-- Login / Logout
-- View profile
-- View own publications
-- Create publication
-- Edit/Delete own publication only
-
-### Admin (`admin`)
-- View pending publications
-- Approve / Reject / Delete publications
-- View members
-- Create/Delete members
-- Update member role (`user` <-> `admin`)
-
-## Clean Page Routes
-
-The app uses clean routes and maps them to files in `frontend/pages`:
-
-- `/` -> public index
-- `/publications`, `/researches`, `/members`, `/lecturers`, `/seminars`, `/archives`, `/contact`
-- `/login`, `/register`
-- `/adminDashboard`, `/memberDashboard`
-
-Legacy `.html` paths are redirected to these clean routes.
-
-## API Endpoints
-
-Base prefix: `/api`
-
-### Auth
-- `POST /api/login`
-- `POST /api/register`
-
-### Profile
-- `GET /api/profile` (user/admin)
-
-### Publications
-- `GET /api/publications/public` (public, approved only)
-- `GET /api/publications` (user/admin)
-- `GET /api/my-publications` (user/admin)
-- `POST /api/publications` (user only)
-- `PUT /api/publications/:id` (user only, own publication)
-- `DELETE /api/publications/:id` (user only, own publication)
-
-### Admin
-- `GET /api/publications/pending` (admin)
-- `PATCH /api/publications/:id/approve` (admin)
-- `PATCH /api/publications/:id/reject` (admin)
-- `DELETE /api/admin/publications/:id` (admin)
-- `GET /api/members` (admin)
-- `POST /api/members` (admin)
-- `DELETE /api/members/:id` (admin)
-- `PATCH /api/members/:id/role` (admin)
-
-## Project Structure
+## Project Structure (Short)
 
 ```text
 AiTA_Lab/
-|-- package.json
-|-- README.md
-|-- backend/
-|   |-- db.js
-|   |-- server.js
-|   |-- controllers/
-|   |   |-- adminController.js
-|   |   |-- authController.js
-|   |   |-- memberController.js
-|   |   |-- publicationController.js
-|   |-- middleware/
-|   |   |-- authMiddleware.js
-|   |-- routes/
-|   |   |-- adminRoutes.js
-|   |   |-- authRoutes.js
-|   |   |-- memberRoutes.js
-|   |   |-- publicationRoutes.js
-|   |-- services/
-|       |-- adminService.js
-|       |-- authService.js
-|       |-- memberService.js
-|       |-- publicationService.js
-|
-|-- frontend/
-|   |-- script.js
-|   |-- css/
-|   |   |-- admin.css
-|   |   |-- base.css
-|   |   |-- components.css
-|   |   |-- layout.css
-|   |   |-- member.css
-|   |   |-- auth.css
-|   |   |-- public-home.css
-|   |   |-- public-news.css
-|   |   |-- public-content-pages.css
-|   |   |-- public-members.css
-|   |-- js/
-|   |   |-- adminDashboard.js
-|   |   |-- login.js
-|   |   |-- main.js
-|   |   |-- publications.js
-|   |   |-- userDashboard.js
-|   |-- pages/
-|       |-- admin/
-|       |   |-- adminDashboard.html
-|       |-- auth/
-|       |   |-- login.html
-|       |   |-- register.html
-|       |-- member/
-|       |   |-- memberDashboard.html
-|       |-- public/
-|           |-- index.html
-|           |-- publications.html
-|           |-- researches.html
-|           |-- members.html
-|           |-- lecturers.html
-|           |-- seminars.html
-|           |-- archives.html
-|           |-- contact.html
+|- backend/
+|  |- controllers/
+|  |- middleware/
+|  |- migrations/
+|  |- repositories/
+|  |- routes/
+|  |- scripts/
+|  |- services/
+|  |- server.js
+|  |- db.js
+|  |- supabaseClient.js
+|- frontend/
+|  |- css/
+|  |- js/
+|  |- pages/
+|- docs/
+|  |- css/
+|  |- js/
+|  |- *.html
+|- package.json
 ```
 
-## Local Setup
+## API Overview
+
+All API routes are under `/api`.
+
+- Auth: `/login`, `/register`, `/change-password`
+- Member/Profile: `/profile`, `/members/public`, `/members/public/:id`, `/profile/public-page`
+- Publications: `/publications/public`, `/publications`, `/my-publications`, `/publications/resolve-doi`
+- Admin publication review: `/publications/pending`, `/publications/:id/approve`, `/publications/:id/reject`
+- Home news: `/home-news/public/*`, `/home-news` (admin)
+- Homepage content (admin/public): `/homepage-content/public`, `/admin/homepage-content*`
+- Lecturers: `/lecturers/public`, `/admin/lecturers*`
+- Seminars: `/seminars/public`, `/seminars` (admin)
+- Social icon presets: `/social-link-icons/public`, `/admin/social-link-icons`
+- Uploads: `/uploads/images` (POST/DELETE)
+
+## Local Development
 
 ### 1) Install dependencies
 
@@ -169,71 +100,68 @@ AiTA_Lab/
 npm install
 ```
 
-### 2) Configure environment
+### 2) Create backend environment file
 
 Create `backend/.env`:
 
 ```env
 PORT=3000
+
+# PostgreSQL (Supabase or local Postgres)
 DATABASE_URL=postgresql://username:password@host:5432/database_name
-JWT_SECRET=your_strong_secret_key
+
+# JWT
+JWT_SECRET=replace_with_a_strong_secret
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 Notes:
-- `PORT` defaults to `3000` if omitted.
-- `DATABASE_URL` is preferred; fallback vars (`DB_USER`, `DB_HOST`, `DB_NAME`, `DB_PASSWORD`, `DB_PORT`) are also supported.
 
-### 3) Run the app
+- If `DATABASE_URL` is missing, fallback variables are used: `DB_USER`, `DB_HOST`, `DB_NAME`, `DB_PASSWORD`, `DB_PORT`.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` private and never expose it in frontend files.
+
+### 3) Start application
 
 ```bash
 npm start
 ```
 
-Open: `http://localhost:3000`
+Local URL: http://localhost:3000
 
-## Frontend to Docs Sync Workflow
+## Frontend Configuration
 
-Use `frontend/` as the source of truth for UI changes.
+Frontend config is in `frontend/js/config.js` (and mirrored to `docs/js/config.js`).
 
-- Edit HTML/CSS/JS in `frontend/`
-- Run the sync command to regenerate `docs/` for GitHub Pages
+- Local: `http://localhost:3000`
+- Production API base: `https://aita-lab.onrender.com`
+
+## Docs Sync Workflow
+
+Use `frontend/` as source and generate `docs/` by:
 
 ```bash
 npm run sync:docs
 ```
 
-What the sync script does:
-- Copies `frontend/css` into `docs/css`
-- Copies `frontend/js` into `docs/js`
-- Keeps `docs/js/config.js` for GitHub Pages API configuration
-- Generates root pages like `docs/index.html`, `docs/publications.html`, `docs/login.html`
-- Regenerates `docs/pages/*` as redirects to the root `docs/*.html` pages
+This command syncs HTML/CSS/JS from `frontend/` into `docs/` for static deployment scenarios.
 
-Recommended workflow:
-1. Update the UI in `frontend/`
-2. Run `npm run sync:docs`
-3. Review the generated `docs/` changes
-4. Commit and push
+## Helpful Scripts
 
-For GitHub Pages, set the source to the `/docs` folder and update `docs/js/config.js` with your deployed backend URL if needed.
+- `npm start`: run backend server
+- `npm run sync:docs`: sync frontend assets/pages to `docs/`
+- `npm run cleanup:orphan-images`: remove unreferenced uploaded images
 
 ## Security Notes
 
 - Protected endpoints require `Authorization: Bearer <token>`.
-- JWT payload contains `id` and `role`, expires in 1 hour.
+- JWT token includes user `id` and `role`.
 - Passwords are hashed with bcrypt.
-- Legacy plain-text passwords are migrated to bcrypt on successful login.
 
-## Deployment (GitHub + Render/Railway)
+## Free-Tier Operational Notes
 
-1. Push source code to GitHub.
-2. Create a Node web service from the repository.
-3. Set build/start commands:
-   - Build: `npm install`
-   - Start: `npm start`
-4. Provision PostgreSQL and set environment variables:
-   - `DATABASE_URL`
-   - `JWT_SECRET`
-   - `PORT` (if required by platform)
-
-Because Express serves frontend static files, one backend service is enough for the full app.
+- Render free tier may sleep on inactivity, so the first API response can be slower (cold start).
+- Supabase free tier has storage/database limits; monitor usage regularly.
+- DirectAdmin static hosting and Render API deployment are decoupled, so keep API base URL in frontend config aligned with the active backend service.
